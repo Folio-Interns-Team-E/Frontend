@@ -1,0 +1,154 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { FormEvent, useState } from "react";
+import { TopBar } from "../components/TopBar";
+import { demoLogout, setIntegration, updateProfile } from "../store/appSlice";
+import { logoutAccount } from "../store/apiThunks";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+
+export const Route = createFileRoute("/_app/settings")({
+  head: () => ({ meta: [{ title: "Settings · SalesSync AI" }] }),
+  component: Settings,
+});
+
+function Settings() {
+  const dispatch = useAppDispatch();
+  const profile = useAppSelector((state) => state.app.profile);
+  const auth = useAppSelector((state) => state.app.auth);
+  const integrations = useAppSelector((state) => state.app.integrations);
+  const [draft, setDraft] = useState(profile);
+  const [saved, setSaved] = useState(false);
+
+  function saveProfile(event: FormEvent) {
+    event.preventDefault();
+    dispatch(updateProfile(draft));
+    setSaved(true);
+  }
+
+  return (
+    <>
+      <TopBar title="Settings" />
+      <div className="page-shell max-w-5xl space-y-5">
+        <section className="rounded-xl border border-outline-variant bg-white p-6">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold">Profile</h2>
+            <p className="text-sm text-on-surface-variant">
+              Basic account information used across emails and proposals.
+            </p>
+          </div>
+          <form onSubmit={saveProfile} className="grid gap-4 md:grid-cols-2">
+            {(Object.keys(draft) as (keyof typeof draft)[]).map((key) => (
+              <label key={key} className="text-sm font-semibold capitalize">
+                {key}
+                <input
+                  className="mt-2 w-full rounded-lg border border-outline-variant px-4 py-2.5 font-normal outline-none focus:border-primary"
+                  value={draft[key]}
+                  onChange={(event) => setDraft({ ...draft, [key]: event.target.value })}
+                />
+              </label>
+            ))}
+            <div className="flex items-center gap-3 md:col-span-2">
+              <button className="rounded-lg bg-primary px-5 py-2.5 font-semibold text-white">
+                Save profile
+              </button>
+              {saved && <span className="text-sm font-semibold text-green-700">Changes saved</span>}
+            </div>
+          </form>
+        </section>
+
+        <section className="rounded-xl border border-outline-variant bg-white p-6">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold">Integrations</h2>
+            <p className="text-sm text-on-surface-variant">
+              Connect the must-have services that power lead intake, outreach, and booking.
+            </p>
+          </div>
+          <div className="divide-y divide-outline-variant">
+            <Integration
+              icon="mail"
+              name="Gmail"
+              description="Send personalized outreach and track replies."
+              connected={integrations.gmail}
+              onToggle={() =>
+                dispatch(setIntegration({ integration: "gmail", connected: !integrations.gmail }))
+              }
+            />
+            <Integration
+              icon="calendar_month"
+              name="Google Calendar"
+              description="Book meetings and keep the sales calendar synchronized."
+              connected={integrations.calendar}
+              onToggle={() =>
+                dispatch(
+                  setIntegration({ integration: "calendar", connected: !integrations.calendar }),
+                )
+              }
+            />
+            <Integration
+              icon="person_search"
+              name="Apollo"
+              description="Pull leads using filters generated from your ICP."
+              connected={integrations.apollo}
+              onToggle={() =>
+                dispatch(setIntegration({ integration: "apollo", connected: !integrations.apollo }))
+              }
+            />
+          </div>
+        </section>
+
+        <section className="flex items-center justify-between rounded-xl border border-outline-variant bg-white p-6">
+          <div>
+            <h2 className="font-bold">Account session</h2>
+            <p className="text-sm text-on-surface-variant">
+              Authentication is represented as a frontend flow until the backend provider is added.
+            </p>
+          </div>
+          <Link
+            to="/login"
+            onClick={() => {
+              if (auth.accessToken) void dispatch(logoutAccount(auth.accessToken));
+              dispatch(demoLogout());
+            }}
+            className="rounded-lg border border-error px-4 py-2 text-sm font-semibold text-error"
+          >
+            Log out
+          </Link>
+        </section>
+      </div>
+    </>
+  );
+}
+
+function Integration({
+  icon,
+  name,
+  description,
+  connected,
+  onToggle,
+}: {
+  icon: string;
+  name: string;
+  description: string;
+  connected: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container text-primary">
+        <span className="material-symbols-outlined">{icon}</span>
+      </div>
+      <div className="flex-1">
+        <p className="font-semibold">{name}</p>
+        <p className="text-sm text-on-surface-variant">{description}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+          connected ? "border border-green-200 bg-green-50 text-green-700" : "bg-primary text-white"
+        }`}
+      >
+        {connected ? "Connected" : "Connect"}
+      </button>
+    </div>
+  );
+}

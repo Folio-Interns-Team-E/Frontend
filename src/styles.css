@@ -1,0 +1,240 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * SalesSync AI design system.
+ */
+
+@theme {
+  --color-on-secondary: #ffffff;
+  --color-surface-container-low: #f2f3ff;
+  --color-tertiary-fixed: #ffdcbf;
+  --color-on-secondary-fixed-variant: #38485d;
+  --color-on-secondary-container: #54647a;
+  --color-tertiary-container: #a86516;
+  --color-inverse-on-surface: #eef0ff;
+  --color-outline: #6e797e;
+  --color-tertiary-fixed-dim: #ffb873;
+  --color-primary: #087f8c;
+  --color-error: #ba1a1a;
+  --color-on-secondary-fixed: #0b1c30;
+  --color-secondary-container: #d0e1fb;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-high: #e2e7ff;
+  --color-inverse-primary: #6cd3f7;
+  --color-on-primary-fixed: #001f28;
+  --color-on-tertiary: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-surface-variant: #3e484d;
+  --color-background: #f4f7fb;
+  --color-on-primary-fixed-variant: #004e61;
+  --color-primary-fixed-dim: #6cd3f7;
+  --color-outline-variant: #bdc8ce;
+  --color-surface: #faf8ff;
+  --color-surface-dim: #d2d9f4;
+  --color-tertiary: #894e00;
+  --color-on-primary: #ffffff;
+  --color-primary-fixed: #b7eaff;
+  --color-surface-container-highest: #dae2fd;
+  --color-on-error: #ffffff;
+  --color-on-primary-container: #fafdff;
+  --color-secondary-fixed-dim: #b7c8e1;
+  --color-surface-tint: #006780;
+  --color-secondary: #505f76;
+  --color-surface-bright: #faf8ff;
+  --color-on-tertiary-fixed-variant: #6a3b00;
+  --color-surface-variant: #dae2fd;
+  --color-inverse-surface: #283044;
+  --color-on-tertiary-fixed: #2d1600;
+  --color-on-surface: #122033;
+  --color-on-tertiary-container: #fffbff;
+  --color-surface-container: #eaedff;
+  --color-on-error-container: #93000a;
+  --color-secondary-fixed: #d3e4fe;
+  --color-primary-container: #007f9d;
+  --color-on-background: #131b2e;
+
+  --spacing-container_padding: 20px;
+  --spacing-sidebar_width: 196px;
+  --spacing-ai_panel_width: 276px;
+  --spacing-stack_gap_md: 16px;
+  --spacing-stack_gap_sm: 8px;
+  --spacing-gutter: 16px;
+
+  --font-body-base: Inter, sans-serif;
+  --font-headline-md: Inter, sans-serif;
+  --font-body-sm: Inter, sans-serif;
+  --font-mono-label: Inter, sans-serif;
+  --font-label-caps: Inter, sans-serif;
+  --font-display-lg: Inter, sans-serif;
+
+  --text-body-base: 13px;
+  --text-body-base--line-height: 19px;
+  --text-headline-md: 18px;
+  --text-headline-md--line-height: 25px;
+  --text-headline-md--letter-spacing: -0.01em;
+  --text-headline-md--font-weight: 600;
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 18px;
+  --text-mono-label: 12px;
+  --text-mono-label--line-height: 16px;
+  --text-label-caps: 11px;
+  --text-label-caps--line-height: 16px;
+  --text-label-caps--letter-spacing: 0.05em;
+  --text-label-caps--font-weight: 600;
+  --text-display-lg: 28px;
+  --text-display-lg--line-height: 36px;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 600;
+
+  --radius: 0.75rem;
+}
+
+@layer base {
+  * {
+    border-color: color-mix(in srgb, var(--color-outline-variant) 60%, transparent);
+  }
+
+  html {
+    background: #212121;
+  }
+
+  body {
+    background-color: var(--color-background);
+    background-image:
+      radial-gradient(circle at 12% 0%, rgba(92, 243, 62, 0.08), transparent 28rem),
+      radial-gradient(circle at 82% 10%, rgba(35, 195, 195, 0.06), transparent 30rem);
+    background-attachment: fixed;
+    color: var(--color-on-surface);
+    font-family: "Inter", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 14px;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings:
+      "FILL" 0,
+      "wght" 400,
+      "GRAD" 0,
+      "opsz" 24;
+    font-family: "Material Symbols Outlined";
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #bdc8ce;
+  }
+}
+
+@layer components {
+  .app-card {
+    border: 1px solid rgb(189 200 206 / 55%);
+    border-radius: 0.5rem;
+    background: linear-gradient(180deg, rgb(255 255 255 / 92%), rgb(255 255 255 / 82%));
+    box-shadow:
+      0 1px 2px rgb(15 23 42 / 4%),
+      0 12px 32px rgb(15 23 42 / 5%);
+    backdrop-filter: blur(16px);
+  }
+
+  .app-card-hover {
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease,
+      border-color 180ms ease;
+  }
+
+  .app-card-hover:hover {
+    transform: translateY(-3px);
+    border-color: rgb(8 127 140 / 30%);
+    box-shadow:
+      0 2px 4px rgb(15 23 42 / 5%),
+      0 18px 40px rgb(15 23 42 / 9%);
+  }
+
+  .icon-button {
+    display: inline-flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    color: var(--color-on-surface-variant);
+    transition:
+      color 150ms ease,
+      background-color 150ms ease;
+  }
+
+  .icon-button:hover {
+    background: rgb(8 127 140 / 8%);
+    color: var(--color-primary);
+  }
+
+  .page-shell {
+    margin-inline: auto;
+    max-width: 1220px;
+    padding: var(--spacing-container_padding);
+  }
+
+  .section-heading {
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+  }
+
+  .soft-panel {
+    border: 1px solid rgb(189 200 206 / 48%);
+    border-radius: 1rem;
+    background: rgb(255 255 255 / 72%);
+    box-shadow: 0 10px 24px rgb(15 23 42 / 4%);
+  }
+
+  .primary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.85rem;
+    background: linear-gradient(135deg, #0d2d39, var(--color-primary));
+    padding: 0.65rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: white;
+    box-shadow: 0 10px 22px rgb(8 127 140 / 18%);
+    transition:
+      transform 160ms ease,
+      filter 160ms ease;
+  }
+
+  .primary-action:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes linkProgress {
+  0% {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  100% {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
