@@ -1,10 +1,22 @@
-import { createFileRoute, Outlet, redirect, useNavigate, useLocation } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useNavigate,
+  useLocation,
+} from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { AIChatPanel } from "../components/AIChatPanel";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { closeSidebar, setActiveTeam } from "../store/appSlice";
-import { fetchMyTeams } from "../store/apiThunks";
+import {
+  fetchMyTeams,
+  fetchLeads,
+  fetchMeetings,
+  fetchProposals,
+  fetchKnowledgeAssets,
+} from "../store/apiThunks";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: ({ context, location }) => {
@@ -29,9 +41,12 @@ function AppLayout() {
   const location = useLocation();
   const sidebarOpen = useAppSelector((state) => state.app.sidebarOpen);
   const auth = useAppSelector((state) => state.app.auth);
+  const teamId = useAppSelector((state) => state.app.team.id);
   const [aiPanelOpen, setAiPanelOpen] = useState(true);
 
-  const accessToken = auth.accessToken ?? (typeof window !== "undefined" ? localStorage.getItem("access_token") : null);
+  const accessToken =
+    auth.accessToken ??
+    (typeof window !== "undefined" ? localStorage.getItem("access_token") : null);
 
   useEffect(() => {
     const token = accessToken && accessToken !== "undefined" ? accessToken : null;
@@ -39,6 +54,15 @@ function AppLayout() {
       dispatch(fetchMyTeams(token));
     }
   }, [accessToken, auth.userTeamsStatus, dispatch]);
+
+  useEffect(() => {
+    if (teamId) {
+      dispatch(fetchLeads());
+      dispatch(fetchMeetings());
+      dispatch(fetchProposals());
+      dispatch(fetchKnowledgeAssets());
+    }
+  }, [teamId, dispatch]);
 
   useEffect(() => {
     if (auth.userTeamsStatus !== "succeeded") return;
@@ -51,7 +75,14 @@ function AppLayout() {
         navigate({ to: "/dashboard" });
       }
     }
-  }, [auth.userTeamsStatus, auth.userTeams, auth.teamChoiceCompleted, navigate, dispatch, location.pathname]);
+  }, [
+    auth.userTeamsStatus,
+    auth.userTeams,
+    auth.teamChoiceCompleted,
+    navigate,
+    dispatch,
+    location.pathname,
+  ]);
 
   if (auth.userTeamsStatus === "idle" || auth.userTeamsStatus === "loading") {
     return (
@@ -64,7 +95,11 @@ function AppLayout() {
     );
   }
 
-  if (auth.userTeamsStatus === "succeeded" && auth.userTeams.length > 0 && !auth.teamChoiceCompleted) {
+  if (
+    auth.userTeamsStatus === "succeeded" &&
+    auth.userTeams.length > 0 &&
+    !auth.teamChoiceCompleted
+  ) {
     return (
       <TeamSelector
         teams={auth.userTeams}
@@ -91,16 +126,12 @@ function AppLayout() {
       {aiPanelOpen ? (
         <AIChatPanel onClose={() => setAiPanelOpen(false)} />
       ) : (
-       <button
-  onClick={() => setAiPanelOpen(true)}
-  className="fixed bottom-5 right-5 z-30 flex items-center gap-2 rounded-full bg-gradient-to-br from-primary to-[#16a3a9] p-2 text-xs font-black text-white shadow-2xl shadow-primary/25 transition hover:-translate-y-1"
->
-  <img
-    src="/robot.png"
-    alt="AI Robot"
-    className="h-6 w-6 pb-[2px] object-contain"
-  />
-</button>
+        <button
+          onClick={() => setAiPanelOpen(true)}
+          className="fixed bottom-5 right-5 z-30 flex items-center gap-2 rounded-full bg-gradient-to-br from-primary to-[#16a3a9] p-2 text-xs font-black text-white shadow-2xl shadow-primary/25 transition hover:-translate-y-1"
+        >
+          <img src="/robot.png" alt="AI Robot" className="h-6 w-6 pb-[2px] object-contain" />
+        </button>
       )}
     </div>
   );
@@ -120,9 +151,7 @@ function TeamSelector({
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#0d1f2d] to-primary text-white shadow-lg">
             <span className="material-symbols-outlined text-[24px]">groups</span>
           </div>
-          <h1 className="text-2xl font-black tracking-[-0.03em] text-on-surface">
-            Choose a team
-          </h1>
+          <h1 className="text-2xl font-black tracking-[-0.03em] text-on-surface">Choose a team</h1>
           <p className="mt-2 text-sm text-on-surface-variant">
             You are a member of multiple teams. Select which one to manage.
           </p>
@@ -131,7 +160,9 @@ function TeamSelector({
           {teams.map((team) => (
             <button
               key={team.id}
-              onClick={() => onSelect(team as { id: string; name: string; role: "admin" | "manager" | "rep" })}
+              onClick={() =>
+                onSelect(team as { id: string; name: string; role: "admin" | "manager" | "rep" })
+              }
               className="app-card app-card-hover flex items-center gap-4 p-5 text-left"
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">

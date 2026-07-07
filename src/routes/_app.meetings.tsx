@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { TopBar } from "../components/TopBar";
 import { selectMeeting } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { Skeleton, SkeletonList } from "../components/ui/skeleton";
+import { fetchMeetings } from "../store/apiThunks";
 
 export const Route = createFileRoute("/_app/meetings")({
   head: () => ({
@@ -56,8 +59,13 @@ const upcoming = [
 function Meetings() {
   const dispatch = useAppDispatch();
   const meetings = useAppSelector((state) => state.app.meetings);
+  const meetingsStatus = useAppSelector((state) => state.app.meetingsStatus);
   const selectedMeetingId = useAppSelector((state) => state.app.selectedMeetingId);
   const calendarConnected = useAppSelector((state) => state.app.integrations.calendar);
+
+  useEffect(() => {
+    if (meetingsStatus === "idle") dispatch(fetchMeetings());
+  }, [meetingsStatus, dispatch]);
   const selectedMeeting =
     meetings.find((meeting) => meeting.id === selectedMeetingId) ?? meetings[0];
 
@@ -235,43 +243,47 @@ function Meetings() {
               View All
             </button>
           </div>
-          <div className="space-y-3">
-            {meetings.map((u) => (
-              <div
-                key={u.id}
-                onClick={() => dispatch(selectMeeting(u.id))}
-                className={`flex cursor-pointer items-center justify-between p-4 bg-white border rounded-xl transition-colors ${
-                  u.id === selectedMeetingId
-                    ? "border-primary ring-2 ring-primary/10"
-                    : "border-outline-variant hover:border-primary/40"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center">
-                    <span className="material-symbols-outlined text-on-surface-variant">
-                      video_camera_front
+          {meetingsStatus === "loading" ? (
+            <SkeletonList count={3} />
+          ) : (
+            <div className="space-y-3">
+              {meetings.map((u) => (
+                <div
+                  key={u.id}
+                  onClick={() => dispatch(selectMeeting(u.id))}
+                  className={`flex cursor-pointer items-center justify-between p-4 bg-white border rounded-xl transition-colors ${
+                    u.id === selectedMeetingId
+                      ? "border-primary ring-2 ring-primary/10"
+                      : "border-outline-variant hover:border-primary/40"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center">
+                      <span className="material-symbols-outlined text-on-surface-variant">
+                        video_camera_front
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-body-base">
+                        {u.company} · {u.client}
+                      </p>
+                      <p className="text-body-sm text-on-surface-variant">
+                        {u.date} at {u.time} · {u.duration}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold">
+                      {u.status}
                     </span>
-                  </div>
-                  <div>
-                    <p className="font-bold text-body-base">
-                      {u.company} · {u.client}
-                    </p>
-                    <p className="text-body-sm text-on-surface-variant">
-                      {u.date} at {u.time} · {u.duration}
-                    </p>
+                    <button className="px-4 py-1.5 border border-outline-variant rounded-lg text-body-sm font-medium hover:bg-surface-container transition-colors">
+                      Details
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="rounded-full bg-surface-container px-3 py-1 text-xs font-semibold">
-                    {u.status}
-                  </span>
-                  <button className="px-4 py-1.5 border border-outline-variant rounded-lg text-body-sm font-medium hover:bg-surface-container transition-colors">
-                    Details
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </>

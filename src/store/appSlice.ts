@@ -10,6 +10,18 @@ import {
   registerAccount,
   removeMemberRemote,
   updateMemberRoleRemote,
+  submitOnboardingRemote,
+  fetchLeads,
+  qualifyLeadRemote,
+  discardLeadRemote,
+  sendEmailRemote,
+  draftEmailRemote,
+  fetchMeetings,
+  fetchProposals,
+  updateProposalStatusRemote,
+  updateProposalOutcomeRemote,
+  reviseProposalRemote,
+  fetchKnowledgeAssets,
 } from "./apiThunks";
 
 export type LeadStatus =
@@ -146,11 +158,14 @@ type AppState = {
     message: string | null;
   };
   leads: Lead[];
+  leadsStatus: "idle" | "loading" | "succeeded" | "failed";
   notifications: Notification[];
   meetings: Meeting[];
-  selectedMeetingId: string;
+  meetingsStatus: "idle" | "loading" | "succeeded" | "failed";
+  selectedMeetingId: string | null;
   proposalTemplate: ProposalTemplate;
   proposals: Proposal[];
+  proposalsStatus: "idle" | "loading" | "succeeded" | "failed";
   assistantMessages: AssistantMessage[];
   knowledgeAssets: {
     id: string;
@@ -160,7 +175,8 @@ type AppState = {
     date: string;
     status: "Indexed" | "Processing";
   }[];
-  sidebarOpen: true;
+  knowledgeAssetsStatus: "idle" | "loading" | "succeeded" | "failed";
+  sidebarOpen: boolean;
 };
 
 export const initialState: AppState = {
@@ -177,28 +193,22 @@ export const initialState: AppState = {
   },
   onboarding: {
     completed: false,
-    productName: "SalesSync AI",
-    productDescription:
-      "A multi-agent sales copilot that carries context from prospecting through proposal generation.",
-    targetCustomer: "B2B SaaS sales teams with 5–50 representatives",
-    goals: "Reduce manual research and turn discovery calls into grounded proposals faster.",
-    icp: [
-      "B2B SaaS or technology-enabled services",
-      "20–500 employees with an active outbound motion",
-      "Sales leader, founder, or revenue operations decision-maker",
-      "Pain around fragmented tools, slow follow-up, or inconsistent proposals",
-    ],
+    productName: "",
+    productDescription: "",
+    targetCustomer: "",
+    goals: "",
+    icp: [],
   },
   profile: {
-    name: "Alex Morgan",
-    company: "SalesSync AI",
-    role: "Sales Lead",
-    email: "alex@salessync.ai",
+    name: "",
+    company: "",
+    role: "",
+    email: "",
   },
   integrations: {
     gmail: false,
     calendar: false,
-    apollo: true,
+    apollo: false,
   },
   team: {
     id: null,
@@ -210,219 +220,24 @@ export const initialState: AppState = {
     error: null,
     message: null,
   },
-  leads: [
-    {
-      id: "lead-1",
-      initials: "SM",
-      name: "Sarah Miller",
-      company: "Lumina Tech",
-      title: "VP of Sales",
-      email: "sarah.m@luminatech.ai",
-      source: "Apollo",
-      score: 98,
-      status: "New",
-      reasoning:
-        "Lumina is scaling its B2B sales team and Sarah owns revenue operations. Recent hiring activity strongly matches the ICP.",
-    },
-    {
-      id: "lead-2",
-      initials: "JK",
-      name: "James Kovic",
-      company: "Northstar Cloud",
-      title: "Chief Revenue Officer",
-      email: "james@northstarcloud.io",
-      source: "Apollo",
-      score: 91,
-      status: "Analyzed",
-      reasoning:
-        "Northstar has a mature outbound motion and recently expanded into enterprise accounts, making proposal consistency a likely priority.",
-    },
-    {
-      id: "lead-3",
-      initials: "EL",
-      name: "Elena Lopez",
-      company: "Flowstate",
-      title: "Founder",
-      email: "elena@flowstate.co",
-      source: "Apollo",
-      score: 86,
-      status: "Qualified",
-      reasoning:
-        "Founder-led sales and a small team create a strong need for automated research, follow-up, and proposal generation.",
-    },
-    {
-      id: "lead-4",
-      initials: "AW",
-      name: "Alex Wong",
-      company: "Neo Bank",
-      title: "Sales Operations Manager",
-      email: "alex@neobank.example",
-      source: "Apollo",
-      score: 79,
-      status: "Drafted",
-      reasoning:
-        "The role is highly relevant, although the regulated buying environment may lengthen the sales cycle.",
-    },
-    {
-      id: "lead-5",
-      initials: "DB",
-      name: "David Brown",
-      company: "SecurePay",
-      title: "Engineering Manager",
-      email: "david@securepay.example",
-      source: "Apollo",
-      score: 48,
-      status: "Analyzed",
-      reasoning:
-        "The company fits, but David does not appear to own sales tooling or the revenue process.",
-    },
-  ],
-  notifications: [
-    {
-      id: "notification-1",
-      title: "Welcome to SalesSync AI",
-      body: "Finish ICP onboarding, then generate leads that match your target customer profile.",
-      time: "Now",
-      unread: true,
-    },
-  ],
-  meetings: [
-    {
-      id: "meeting-1",
-      client: "Sarah Miller",
-      company: "Lumina Tech",
-      date: "Today",
-      time: "1:30 PM",
-      duration: "30 min",
-      agenda: ["Current sales workflow", "Discovery-to-proposal handoff", "Success criteria"],
-      status: "Upcoming",
-      transcript: [],
-    },
-    {
-      id: "meeting-2",
-      client: "Elena Lopez",
-      company: "Flowstate",
-      date: "Today",
-      time: "3:00 PM",
-      duration: "45 min",
-      agenda: ["Founder-led sales bottlenecks", "Lead qualification", "Pilot scope"],
-      status: "Live",
-      transcript: [
-        "Elena: We lose the context from calls when we start writing a proposal.",
-        "You: How much time does the team spend rebuilding that context?",
-        "Elena: Usually two or three hours for every serious opportunity.",
-      ],
-    },
-    {
-      id: "meeting-3",
-      client: "James Kovic",
-      company: "Northstar Cloud",
-      date: "Yesterday",
-      time: "11:00 AM",
-      duration: "30 min",
-      agenda: ["Enterprise expansion", "Proposal governance", "Next steps"],
-      status: "Completed",
-      transcript: [
-        "James: Enterprise proposals currently need three separate reviews.",
-        "James: We want faster drafts without inventing capabilities or pricing.",
-      ],
-    },
-  ],
-  selectedMeetingId: "meeting-2",
+  leads: [],
+  leadsStatus: "idle",
+  notifications: [],
+  meetings: [],
+  meetingsStatus: "idle",
+  selectedMeetingId: null,
   proposalTemplate: {
     companyName: "",
     templateName: "",
     logoDataUrl: null,
     updatedAt: null,
   },
-  proposals: [
-    {
-      id: "proposal-1",
-      company: "Northstar Cloud",
-      title: "Enterprise Sales Orchestration Pilot",
-      status: "Draft",
-      outcome: "Open",
-      value: "$45,000",
-      updatedAt: "Today, 10:45 AM",
-      summary:
-        "A 90-day pilot connecting lead qualification, discovery intelligence, and source-grounded proposal generation for Northstar’s enterprise sales team.",
-      sources: [
-        "Northstar discovery transcript",
-        "CloudScale pilot proposal",
-        "Enterprise rollout case study",
-      ],
-      revisions: [
-        {
-          id: "revision-1",
-          title: "Enterprise Sales Orchestration Pilot",
-          summary:
-            "Initial proposal generated from Northstar discovery context and enterprise rollout proof points.",
-          value: "$45,000",
-          editedAt: "Today, 10:45 AM",
-          editedBy: "SalesSync AI",
-          note: "Initial draft",
-        },
-      ],
-    },
-    {
-      id: "proposal-2",
-      company: "Flowstate",
-      title: "Founder-led Sales Automation",
-      status: "Under Review",
-      outcome: "Open",
-      value: "$18,000",
-      updatedAt: "Yesterday",
-      summary:
-        "A focused implementation to reduce manual lead research and convert discovery notes into consistent proposal drafts.",
-      sources: ["Flowstate meeting notes", "Startup sales case study"],
-      revisions: [
-        {
-          id: "revision-2",
-          title: "Founder-led Sales Automation",
-          summary:
-            "Initial proposal generated from Flowstate meeting notes and startup sales case study.",
-          value: "$18,000",
-          editedAt: "Yesterday",
-          editedBy: "SalesSync AI",
-          note: "Initial draft",
-        },
-      ],
-    },
-  ],
-  assistantMessages: [
-    {
-      id: "message-1",
-      author: "assistant",
-      body: "I’m ready to help across the funnel. I can explain fit scores, prepare meeting briefs, or draft a grounded proposal.",
-      time: "12:30 PM",
-    },
-  ],
-  knowledgeAssets: [
-    {
-      id: "asset-1",
-      title: "Northstar discovery call",
-      type: "Transcript",
-      company: "Northstar Cloud",
-      date: "Jun 23, 2026",
-      status: "Indexed",
-    },
-    {
-      id: "asset-2",
-      title: "CloudScale enterprise pilot",
-      type: "Proposal",
-      company: "CloudScale",
-      date: "Jun 18, 2026",
-      status: "Indexed",
-    },
-    {
-      id: "asset-3",
-      title: "B2B SaaS rollout results",
-      type: "Case Study",
-      company: "Internal",
-      date: "Jun 10, 2026",
-      status: "Indexed",
-    },
-  ],
+  proposals: [],
+  proposalsStatus: "idle",
+  assistantMessages: [],
+  knowledgeAssets: [],
+  knowledgeAssetsStatus: "idle",
+  sidebarOpen: true,
 };
 
 const appSlice = createSlice({
@@ -432,7 +247,10 @@ const appSlice = createSlice({
     skipTeamSetup(state) {
       state.auth.teamChoiceCompleted = true;
     },
-    setActiveTeam(state, action: PayloadAction<{ id: string; name: string; role: "admin" | "manager" | "rep" }>) {
+    setActiveTeam(
+      state,
+      action: PayloadAction<{ id: string; name: string; role: "admin" | "manager" | "rep" }>,
+    ) {
       state.team.id = action.payload.id;
       state.team.name = action.payload.name;
       state.team.currentUserRole = action.payload.role;
@@ -865,7 +683,7 @@ const appSlice = createSlice({
         state.auth.userId = action.payload.user_id;
         state.profile.name = action.payload.full_name;
         state.profile.email = action.payload.email;
-        state.auth.teamChoiceCompleted = action.payload.teamChoiceCompleted;
+        // backend doesn't return teamChoiceCompleted; keep existing value
       })
       .addCase(logoutAccount.fulfilled, (state) => {
         state.auth.loggedIn = false;
@@ -891,9 +709,9 @@ const appSlice = createSlice({
       .addCase(fetchTeamRemote.fulfilled, (state, action) => applyTeam(state, action.payload))
       .addCase(inviteMemberRemote.pending, teamPending)
       .addCase(inviteMemberRemote.rejected, teamRejected)
-      .addCase(inviteMemberRemote.fulfilled, (state, action) => {
+      .addCase(inviteMemberRemote.fulfilled, (state) => {
         state.team.status = "succeeded";
-        state.team.message = action.payload.message;
+        state.team.message = "Team member added successfully.";
       })
       .addCase(updateMemberRoleRemote.pending, teamPending)
       .addCase(updateMemberRoleRemote.rejected, teamRejected)
@@ -909,6 +727,153 @@ const appSlice = createSlice({
         state.team.members = state.team.members.filter((item) => item.id !== action.payload);
         state.team.status = "succeeded";
         state.team.message = "Member removed.";
+      })
+
+      // === Onboarding ===
+      .addCase(submitOnboardingRemote.fulfilled, (state, action) => {
+        try {
+          const data = JSON.parse(action.payload.icp);
+          state.onboarding.productName = data.productName || "";
+          state.onboarding.productDescription = data.productDescription || "";
+          state.onboarding.targetCustomer = data.targetCustomer || "";
+          state.onboarding.goals = data.goals || "";
+          state.onboarding.completed = action.payload.completed;
+        } catch {
+          state.onboarding.completed = true;
+        }
+      })
+
+      // === Leads ===
+      .addCase(fetchLeads.pending, (state) => {
+        state.leadsStatus = "loading";
+      })
+      .addCase(fetchLeads.rejected, (state) => {
+        state.leadsStatus = "failed";
+      })
+      .addCase(fetchLeads.fulfilled, (state, action) => {
+        state.leads = action.payload.map((lead) => ({
+          id: lead.id,
+          initials: (lead.name || "")
+            .split(" ")
+            .map((p) => p[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase(),
+          name: lead.name,
+          company: lead.company || "",
+          title: lead.title || "",
+          email: lead.email || "",
+          source: lead.source || "",
+          score: lead.score ?? 50,
+          status: lead.status as LeadStatus,
+          reasoning: lead.reasoning || "",
+        }));
+        state.leadsStatus = "succeeded";
+      })
+      .addCase(qualifyLeadRemote.fulfilled, (state, action) => {
+        const lead = state.leads.find((item) => item.id === action.payload.id);
+        if (lead) lead.status = "Qualified";
+      })
+      .addCase(discardLeadRemote.fulfilled, (state, action) => {
+        const lead = state.leads.find((item) => item.id === action.payload.id);
+        if (lead) lead.status = "Discarded";
+      })
+
+      // === Emails ===
+      .addCase(sendEmailRemote.fulfilled, (state, action) => {
+        const lead = state.leads.find((item) => item.id === action.payload.leadId);
+        if (lead) lead.status = "Sent";
+      })
+      .addCase(draftEmailRemote.fulfilled, (state, action) => {
+        const lead = state.leads.find((item) => item.id === action.payload.leadId);
+        if (lead) lead.status = "Drafted";
+      })
+
+      // === Meetings ===
+      .addCase(fetchMeetings.pending, (state) => {
+        state.meetingsStatus = "loading";
+      })
+      .addCase(fetchMeetings.rejected, (state) => {
+        state.meetingsStatus = "failed";
+      })
+      .addCase(fetchMeetings.fulfilled, (state, action) => {
+        state.meetings = action.payload.map((m) => ({
+          id: m.id,
+          client: m.client || "",
+          company: m.company || "",
+          date: m.date,
+          time: m.time,
+          duration: m.duration || "30 min",
+          agenda: m.agenda,
+          status: m.status as "Upcoming" | "Live" | "Completed",
+          transcript: m.transcript,
+        }));
+        state.meetingsStatus = "succeeded";
+      })
+
+      // === Proposals ===
+      .addCase(fetchProposals.pending, (state) => {
+        state.proposalsStatus = "loading";
+      })
+      .addCase(fetchProposals.rejected, (state) => {
+        state.proposalsStatus = "failed";
+      })
+      .addCase(fetchProposals.fulfilled, (state, action) => {
+        state.proposals = action.payload.map((p) => ({
+          id: p.id,
+          company: p.company,
+          title: p.title,
+          status: p.status as Proposal["status"],
+          outcome: p.outcome as Proposal["outcome"],
+          value: p.value ? `$${p.value.toLocaleString()}` : "$0",
+          updatedAt: p.updated_at,
+          summary: p.summary || "",
+          sources: [],
+          revisions: [],
+        }));
+        state.proposalsStatus = "succeeded";
+      })
+      .addCase(updateProposalStatusRemote.fulfilled, (state, action) => {
+        const proposal = state.proposals.find((item) => item.id === action.payload.id);
+        if (proposal) proposal.status = action.payload.status as Proposal["status"];
+      })
+      .addCase(updateProposalOutcomeRemote.fulfilled, (state, action) => {
+        const proposal = state.proposals.find((item) => item.id === action.payload.id);
+        if (!proposal) return;
+        proposal.outcome = action.payload.outcome as Proposal["outcome"];
+        proposal.status =
+          action.payload.outcome === "Won"
+            ? "Accepted"
+            : action.payload.outcome === "Lost"
+              ? "Rejected"
+              : proposal.status;
+      })
+      .addCase(reviseProposalRemote.fulfilled, (state, action) => {
+        const proposal = state.proposals.find((item) => item.id === action.payload.id);
+        if (!proposal) return;
+        proposal.title = action.payload.title;
+        proposal.summary = action.payload.summary;
+        if (action.payload.value) proposal.value = action.payload.value;
+        proposal.updatedAt = "Now";
+      })
+
+      // === Knowledge Base ===
+      .addCase(fetchKnowledgeAssets.pending, (state) => {
+        state.knowledgeAssetsStatus = "loading";
+      })
+      .addCase(fetchKnowledgeAssets.rejected, (state) => {
+        state.knowledgeAssetsStatus = "failed";
+      })
+      .addCase(fetchKnowledgeAssets.fulfilled, (state, action) => {
+        state.knowledgeAssets = action.payload.map((a) => ({
+          id: a.id,
+          title: a.title,
+          type: a.type as "Transcript" | "Proposal" | "Case Study",
+          company: a.company || "",
+          date: a.created_at,
+          status: a.status as "Indexed" | "Processing",
+        }));
+        state.knowledgeAssetsStatus = "succeeded";
       });
   },
 });

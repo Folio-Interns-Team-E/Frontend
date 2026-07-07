@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { TopBar } from "../components/TopBar";
 import { useAppSelector } from "../store/hooks";
+import { Skeleton, SkeletonKPIGrid } from "../components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -105,8 +106,14 @@ const activity = [
 function Index() {
   const onboarding = useAppSelector((state) => state.app.onboarding);
   const leads = useAppSelector((state) => state.app.leads);
+  const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
   const meetings = useAppSelector((state) => state.app.meetings);
+  const meetingsStatus = useAppSelector((state) => state.app.meetingsStatus);
   const proposals = useAppSelector((state) => state.app.proposals);
+  const proposalsStatus = useAppSelector((state) => state.app.proposalsStatus);
+  const profile = useAppSelector((state) => state.app.profile);
+  const isLoading =
+    leadsStatus === "loading" || meetingsStatus === "loading" || proposalsStatus === "loading";
   const liveKpis = [
     {
       icon: "groups",
@@ -159,7 +166,7 @@ function Index() {
                 </span>
               </div>
               <h1 className="text-[24px] font-black tracking-tight">
-                Hi Alex. Your pipeline is moving.
+                Hi{profile.name ? ` ${profile.name.split(" ")[0]}` : ""}. Your pipeline is moving.
               </h1>
             </div>
             <div className="flex shrink-0 flex-wrap gap-3">
@@ -203,29 +210,33 @@ function Index() {
           </section>
         )}
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
-          {liveKpis.map((k) => (
-            <div key={k.label} className="app-card app-card-hover relative overflow-hidden p-4">
-              <div className="mb-5 flex items-start justify-between">
-                <span className="flex h-10 w-10 items-center justify-center ">
-                  <span
-                    className={`material-symbols-outlined text-[20px] p-2 rounded-xl leading-none ${k.iconClass}`}
-                  >
-                    {k.icon}
+        {isLoading ? (
+          <SkeletonKPIGrid />
+        ) : (
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
+            {liveKpis.map((k) => (
+              <div key={k.label} className="app-card app-card-hover relative overflow-hidden p-4">
+                <div className="mb-5 flex items-start justify-between">
+                  <span className="flex h-10 w-10 items-center justify-center ">
+                    <span
+                      className={`material-symbols-outlined text-[20px] p-2 rounded-xl leading-none ${k.iconClass}`}
+                    >
+                      {k.icon}
+                    </span>
                   </span>
-                </span>
 
-                <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">
-                  <span className="material-symbols-outlined text-[12px]">north_east</span>
-                  {k.delta}
-                </span>
+                  <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">
+                    <span className="material-symbols-outlined text-[12px]">north_east</span>
+                    {k.delta}
+                  </span>
+                </div>
+                <p className="text-[26px] font-black tracking-tight text-on-surface">{k.value}</p>
+                <h3 className="mt-1 text-xs font-semibold text-on-surface-variant">{k.label}</h3>
+                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-primary/60 via-primary/15 to-transparent" />
               </div>
-              <p className="text-[26px] font-black tracking-tight text-on-surface">{k.value}</p>
-              <h3 className="mt-1 text-xs font-semibold text-on-surface-variant">{k.label}</h3>
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-primary/60 via-primary/15 to-transparent" />
-            </div>
-          ))}
-        </section>
+            ))}
+          </section>
+        )}
 
         <section className="app-card overflow-hidden">
           <div className="flex items-center justify-between border-b border-outline-variant/50 px-5 py-4">

@@ -26,7 +26,12 @@ function migrateState(savedState: unknown) {
     app: {
       ...appInitialState,
       ...savedApp,
-      auth: { ...appInitialState.auth, ...savedApp.auth, userTeams: [], userTeamsStatus: "idle" as const },
+      auth: {
+        ...appInitialState.auth,
+        ...savedApp.auth,
+        userTeams: [],
+        userTeamsStatus: "idle" as const,
+      },
       onboarding: { ...appInitialState.onboarding, ...savedApp.onboarding },
       profile: { ...appInitialState.profile, ...savedApp.profile },
       integrations: { ...appInitialState.integrations, ...savedApp.integrations },

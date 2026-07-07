@@ -5,6 +5,8 @@ import type { TeamRole } from "./appSlice";
 const errorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Something went wrong";
 
+const getToken = () => localStorage.getItem("access_token");
+
 export const registerAccount = createAsyncThunk(
   "app/registerAccount",
   async (payload: { fullName: string; email: string; password: string }, { rejectWithValue }) => {
@@ -141,6 +143,207 @@ export const removeMemberRemote = createAsyncThunk(
     try {
       await api.removeMember(payload.teamId, payload.userId, payload.accessToken);
       return payload.userId;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+// === Onboarding Thunks ===
+export const submitOnboardingRemote = createAsyncThunk(
+  "app/submitOnboardingRemote",
+  async (
+    payload: {
+      productName?: string;
+      productDescription: string;
+      targetCustomer: string;
+      goals: string;
+    },
+    { rejectWithValue },
+  ) => {
+    try {
+      const token = getToken();
+      const res = await api.submitOnboarding(payload, token!);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+// === Leads Thunks ===
+export const fetchLeads = createAsyncThunk(
+  "app/fetchLeads",
+  async (status: string | undefined, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.getLeads(status, token);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const qualifyLeadRemote = createAsyncThunk(
+  "app/qualifyLeadRemote",
+  async (leadId: string, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.qualifyLead(leadId, token!);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const discardLeadRemote = createAsyncThunk(
+  "app/discardLeadRemote",
+  async (leadId: string, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.discardLead(leadId, token!);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+// === Email Thunks ===
+export const sendEmailRemote = createAsyncThunk(
+  "app/sendEmailRemote",
+  async (
+    payload: { leadId: string; subject: string; body: string; tone?: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const token = getToken();
+      const res = await api.sendEmail(
+        {
+          lead_id: payload.leadId,
+          subject: payload.subject,
+          body: payload.body,
+          tone: payload.tone,
+        },
+        token!,
+      );
+      return { leadId: payload.leadId, ...res.data };
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const draftEmailRemote = createAsyncThunk(
+  "app/draftEmailRemote",
+  async (payload: { leadId: string; subject: string; body: string }, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.draftEmail(
+        {
+          lead_id: payload.leadId,
+          subject: payload.subject,
+          body: payload.body,
+        },
+        token!,
+      );
+      return { leadId: payload.leadId, ...res.data };
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+// === Meetings Thunks ===
+export const fetchMeetings = createAsyncThunk(
+  "app/fetchMeetings",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.getMeetings(token!);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+// === Proposals Thunks ===
+export const fetchProposals = createAsyncThunk(
+  "app/fetchProposals",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.getProposals(token!);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const updateProposalStatusRemote = createAsyncThunk(
+  "app/updateProposalStatusRemote",
+  async (payload: { id: string; status: string }, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      await api.updateProposal(payload.id, { status: payload.status }, token!);
+      return { id: payload.id, status: payload.status };
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const updateProposalOutcomeRemote = createAsyncThunk(
+  "app/updateProposalOutcomeRemote",
+  async (payload: { id: string; outcome: string }, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      await api.updateProposal(payload.id, { outcome: payload.outcome }, token!);
+      return { id: payload.id, outcome: payload.outcome };
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const reviseProposalRemote = createAsyncThunk(
+  "app/reviseProposalRemote",
+  async (
+    payload: { id: string; title: string; summary: string; value?: string; note?: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const token = getToken();
+      const val = payload.value ? parseFloat(payload.value.replace(/[^0-9.]/g, "")) : undefined;
+      await api.addProposalRevision(
+        payload.id,
+        {
+          title: payload.title,
+          summary: payload.summary,
+          value: val,
+          note: payload.note,
+        },
+        token!,
+      );
+      return payload;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+// === Knowledge Base Thunks ===
+export const fetchKnowledgeAssets = createAsyncThunk(
+  "app/fetchKnowledgeAssets",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.getKnowledgeAssets(token!);
+      return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }

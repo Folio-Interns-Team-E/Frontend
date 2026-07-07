@@ -54,7 +54,7 @@ function LandingPage() {
   return (
     <div className="min-h-screen relative isolate overflow-hidden selection:bg-primary/20">
       {/* Decorative Background Glows */}
-         <div
+      <div
         className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
         aria-hidden="true"
       >
@@ -66,7 +66,6 @@ function LandingPage() {
           }}
         />
       </div>
-
 
       {/* Navigation Header */}
 
@@ -89,9 +88,8 @@ function LandingPage() {
           </h1>
 
           <p className="mt-6 text-base sm:text-lg leading-relaxed text-[#505f76] max-w-2xl mx-auto">
-            Discover hyper-targeted
-            leads, qualifying prospects natively, sending custom omni-channel triggers, and closing
-            contracts without touching structural friction.
+            Discover hyper-targeted leads, qualifying prospects natively, sending custom
+            omni-channel triggers, and closing contracts without touching structural friction.
           </p>
 
           <div className="mt-10 flex items-center justify-center gap-x-6">

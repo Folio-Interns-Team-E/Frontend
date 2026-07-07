@@ -21,7 +21,9 @@ function TeamSetup() {
   const [teamName, setTeamName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
 
-  const accessToken = auth.accessToken ?? (typeof window !== "undefined" ? localStorage.getItem("access_token") : null);
+  const accessToken =
+    auth.accessToken ??
+    (typeof window !== "undefined" ? localStorage.getItem("access_token") : null);
 
   useEffect(() => {
     const token = accessToken && accessToken !== "undefined" ? accessToken : null;
@@ -76,7 +78,11 @@ function TeamSetup() {
     );
   }
 
-  if (auth.userTeamsStatus === "succeeded" && auth.userTeams.length > 0 && !auth.teamChoiceCompleted) {
+  if (
+    auth.userTeamsStatus === "succeeded" &&
+    auth.userTeams.length > 0 &&
+    !auth.teamChoiceCompleted
+  ) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f4f7fb] p-5">
         <div className="w-full max-w-lg">

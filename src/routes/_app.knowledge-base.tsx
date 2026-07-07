@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { TopBar } from "../components/TopBar";
 import { useAppSelector } from "../store/hooks";
+import { Skeleton, SkeletonList } from "../components/ui/skeleton";
+import { fetchKnowledgeAssets } from "../store/apiThunks";
+import { useAppDispatch } from "../store/hooks";
 
 export const Route = createFileRoute("/_app/knowledge-base")({
   head: () => ({
@@ -16,7 +20,13 @@ export const Route = createFileRoute("/_app/knowledge-base")({
 });
 
 function KnowledgeBase() {
+  const dispatch = useAppDispatch();
   const assets = useAppSelector((state) => state.app.knowledgeAssets);
+  const assetsStatus = useAppSelector((state) => state.app.knowledgeAssetsStatus);
+
+  useEffect(() => {
+    if (assetsStatus === "idle") dispatch(fetchKnowledgeAssets());
+  }, [assetsStatus, dispatch]);
 
   return (
     <>
@@ -73,31 +83,35 @@ function KnowledgeBase() {
               />
             </div>
           </div>
-          <div className="divide-y divide-outline-variant">
-            {assets.map((asset) => (
-              <div key={asset.id} className="flex items-center gap-4 p-5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container text-primary">
-                  <span className="material-symbols-outlined">
-                    {asset.type === "Transcript"
-                      ? "record_voice_over"
-                      : asset.type === "Proposal"
-                        ? "description"
-                        : "menu_book"}
+          {assetsStatus === "loading" ? (
+            <SkeletonList count={4} />
+          ) : (
+            <div className="divide-y divide-outline-variant">
+              {assets.map((asset) => (
+                <div key={asset.id} className="flex items-center gap-4 p-5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container text-primary">
+                    <span className="material-symbols-outlined">
+                      {asset.type === "Transcript"
+                        ? "record_voice_over"
+                        : asset.type === "Proposal"
+                          ? "description"
+                          : "menu_book"}
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold">{asset.title}</p>
+                    <p className="text-xs text-on-surface-variant">
+                      {asset.type} · {asset.company} · {asset.date}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700">
+                    {asset.status}
                   </span>
+                  <button className="material-symbols-outlined text-outline">more_horiz</button>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold">{asset.title}</p>
-                  <p className="text-xs text-on-surface-variant">
-                    {asset.type} · {asset.company} · {asset.date}
-                  </p>
-                </div>
-                <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700">
-                  {asset.status}
-                </span>
-                <button className="material-symbols-outlined text-outline">more_horiz</button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </>

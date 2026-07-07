@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import { sendEmail } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { Skeleton, SkeletonList } from "../components/ui/skeleton";
+import { fetchLeads } from "../store/apiThunks";
 
 export const Route = createFileRoute("/_app/outreach")({
   head: () => ({
@@ -149,6 +151,11 @@ function Outreach() {
   const dispatch = useAppDispatch();
   const gmailConnected = useAppSelector((state) => state.app.integrations.gmail);
   const leadsState = useAppSelector((state) => state.app.leads);
+  const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
+
+  useEffect(() => {
+    if (leadsStatus === "idle") dispatch(fetchLeads());
+  }, [leadsStatus, dispatch]);
 
   const outreachLeads = useMemo(
     () =>
@@ -279,54 +286,63 @@ function Outreach() {
 
         <div className="flex gap-4 flex-1 min-h-0">
           {/* Sidebar Area */}
-          <div className="w-[35%] bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-outline-variant flex justify-between items-center shrink-0">
-              <h3 className="font-headline-md text-body-base font-bold">Priority Leads</h3>
-              <span className="material-symbols-outlined text-on-surface-variant cursor-pointer">
-                filter_list
-              </span>
+          {leadsStatus === "loading" ? (
+            <div className="w-[35%] bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-outline-variant">
+                <Skeleton className="h-5 w-24" />
+              </div>
+              <SkeletonList count={4} />
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-              {outreachLeads.map((l) => (
-                <div
-                  key={l.id}
-                  onClick={() => setSelectedId(l.id)}
-                  className={`flex items-center gap-3 p-4 border-l-4 transition-colors cursor-pointer border-b border-outline-variant/50 ${
-                    l.id === selectedLead?.id
-                      ? "border-primary bg-primary/5"
-                      : "border-transparent hover:bg-surface-container"
-                  }`}
-                >
+          ) : (
+            <div className="w-[35%] bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-outline-variant flex justify-between items-center shrink-0">
+                <h3 className="font-headline-md text-body-base font-bold">Priority Leads</h3>
+                <span className="material-symbols-outlined text-on-surface-variant cursor-pointer">
+                  filter_list
+                </span>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                {outreachLeads.map((l) => (
                   <div
-                    className={`w-10 h-10 rounded flex items-center justify-center font-bold shrink-0 ${
+                    key={l.id}
+                    onClick={() => setSelectedId(l.id)}
+                    className={`flex items-center gap-3 p-4 border-l-4 transition-colors cursor-pointer border-b border-outline-variant/50 ${
                       l.id === selectedLead?.id
-                        ? "bg-secondary-container text-primary"
-                        : "bg-surface-container text-on-surface-variant"
+                        ? "border-primary bg-primary/5"
+                        : "border-transparent hover:bg-surface-container"
                     }`}
                   >
-                    {l.initials}
+                    <div
+                      className={`w-10 h-10 rounded flex items-center justify-center font-bold shrink-0 ${
+                        l.id === selectedLead?.id
+                          ? "bg-secondary-container text-primary"
+                          : "bg-surface-container text-on-surface-variant"
+                      }`}
+                    >
+                      {l.initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-body-base font-semibold truncate">{l.name}</h4>
+                      <p className="text-body-sm text-on-surface-variant truncate">
+                        {l.title} @ {l.company}
+                      </p>
+                    </div>
+                    <span
+                      className={`px-2 py-1 text-[10px] font-bold rounded uppercase shrink-0 ${
+                        l.status === "Replied"
+                          ? "bg-green-50 text-green-700"
+                          : l.status === "Sent"
+                            ? "bg-secondary-container text-on-secondary-container"
+                            : "bg-primary/10 text-primary"
+                      }`}
+                    >
+                      {l.status}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-body-base font-semibold truncate">{l.name}</h4>
-                    <p className="text-body-sm text-on-surface-variant truncate">
-                      {l.title} @ {l.company}
-                    </p>
-                  </div>
-                  <span
-                    className={`px-2 py-1 text-[10px] font-bold rounded uppercase shrink-0 ${
-                      l.status === "Replied"
-                        ? "bg-green-50 text-green-700"
-                        : l.status === "Sent"
-                          ? "bg-secondary-container text-on-secondary-container"
-                          : "bg-primary/10 text-primary"
-                    }`}
-                  >
-                    {l.status}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Inline Email Composer */}
           <div className="w-[65%] bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col overflow-hidden">

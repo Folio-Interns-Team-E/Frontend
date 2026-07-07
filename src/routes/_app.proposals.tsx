@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import {
   reviseProposal,
@@ -11,6 +11,8 @@ import {
   updateProposalStatus,
 } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { Skeleton, SkeletonKPIGrid } from "../components/ui/skeleton";
+import { fetchProposals } from "../store/apiThunks";
 
 export const Route = createFileRoute("/_app/proposals")({
   head: () => ({
@@ -36,8 +38,13 @@ type ProposalDraft = {
 function Proposals() {
   const dispatch = useAppDispatch();
   const proposals = useAppSelector((state) => state.app.proposals);
+  const proposalsStatus = useAppSelector((state) => state.app.proposalsStatus);
   const profile = useAppSelector((state) => state.app.profile);
   const proposalTemplate = useAppSelector((state) => state.app.proposalTemplate);
+
+  useEffect(() => {
+    if (proposalsStatus === "idle") dispatch(fetchProposals());
+  }, [proposalsStatus, dispatch]);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [editing, setEditing] = useState<ProposalDraft | null>(null);
   const [historyId, setHistoryId] = useState<string | null>(null);
@@ -115,84 +122,91 @@ function Proposals() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
-          {featured && (
-            // You can safely remove 'xl:col-span-2' from here now since the track is naturally full-width
-            <div className="app-card app-card-hover overflow-hidden p-5 ring-1 ring-primary/10">
-              <ProposalHeader proposal={featured} />
-              <div className="mb-5 rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/6 to-white p-5">
-                <h4 className="mb-3 font-label-caps text-label-caps uppercase tracking-wider text-primary">
-                  Executive Summary
-                </h4>
-                <p className="text-body-base leading-relaxed text-on-surface-variant">
-                  {featured.summary}
-                </p>
-              </div>
-
-              <div className="mb-5 grid gap-4 md:grid-cols-[1fr_260px]">
-                <div className="overflow-hidden rounded-2xl border border-outline-variant/70 bg-white">
-                  <table className="w-full border-collapse text-left">
-                    <thead className="bg-surface-container-low">
-                      <tr>
-                        {["Service Tier", "Features", "Investment"].map((heading) => (
-                          <th
-                            key={heading}
-                            className="p-3 text-[11px] font-bold uppercase text-on-surface-variant"
-                          >
-                            {heading}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="text-body-sm">
-                      <tr className="border-t border-outline-variant">
-                        <td className="p-3 font-semibold text-primary">SalesSync Pilot</td>
-                        <td className="p-3 text-on-surface-variant">
-                          ICP scoring, discovery intelligence, proposal revision workflow
-                        </td>
-                        <td className="p-3 font-mono font-bold">{featured.value}</td>
-                      </tr>
-                      <tr className="border-t border-outline-variant">
-                        <td className="p-3 font-semibold text-primary">Knowledge grounding</td>
-                        <td className="p-3 text-on-surface-variant">
-                          Uses transcripts, past proposals, and case studies
-                        </td>
-                        <td className="p-3 font-mono font-bold">Included</td>
-                      </tr>
-                    </tbody>
-                  </table>
+        {proposalsStatus === "loading" ? (
+          <div className="space-y-4">
+            <Skeleton className="h-48 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6">
+            {featured && (
+              // You can safely remove 'xl:col-span-2' from here now since the track is naturally full-width
+              <div className="app-card app-card-hover overflow-hidden p-5 ring-1 ring-primary/10">
+                <ProposalHeader proposal={featured} />
+                <div className="mb-5 rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/6 to-white p-5">
+                  <h4 className="mb-3 font-label-caps text-label-caps uppercase tracking-wider text-primary">
+                    Executive Summary
+                  </h4>
+                  <p className="text-body-base leading-relaxed text-on-surface-variant">
+                    {featured.summary}
+                  </p>
                 </div>
-                <OutcomePanel proposal={featured} />
-              </div>
 
-              <ProposalActions
-                proposal={featured}
-                onEdit={() => openEditor(featured)}
-                onPreview={() => setPreviewId(featured.id)}
-                onHistory={() => setHistoryId(featured.id)}
-              />
-            </div>
-          )}
+                <div className="mb-5 grid gap-4 md:grid-cols-[1fr_260px]">
+                  <div className="overflow-hidden rounded-2xl border border-outline-variant/70 bg-white">
+                    <table className="w-full border-collapse text-left">
+                      <thead className="bg-surface-container-low">
+                        <tr>
+                          {["Service Tier", "Features", "Investment"].map((heading) => (
+                            <th
+                              key={heading}
+                              className="p-3 text-[11px] font-bold uppercase text-on-surface-variant"
+                            >
+                              {heading}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="text-body-sm">
+                        <tr className="border-t border-outline-variant">
+                          <td className="p-3 font-semibold text-primary">SalesSync Pilot</td>
+                          <td className="p-3 text-on-surface-variant">
+                            ICP scoring, discovery intelligence, proposal revision workflow
+                          </td>
+                          <td className="p-3 font-mono font-bold">{featured.value}</td>
+                        </tr>
+                        <tr className="border-t border-outline-variant">
+                          <td className="p-3 font-semibold text-primary">Knowledge grounding</td>
+                          <td className="p-3 text-on-surface-variant">
+                            Uses transcripts, past proposals, and case studies
+                          </td>
+                          <td className="p-3 font-mono font-bold">Included</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <OutcomePanel proposal={featured} />
+                </div>
 
-          {filteredProposals.slice(1).map((proposal) => (
-            <div key={proposal.id} className="app-card app-card-hover p-5">
-              <ProposalHeader proposal={proposal} compact />
-              <p className="mt-4 line-clamp-3 text-sm leading-6 text-on-surface-variant">
-                {proposal.summary}
-              </p>
-              <div className="mt-5">
-                <OutcomePanel proposal={proposal} compact />
+                <ProposalActions
+                  proposal={featured}
+                  onEdit={() => openEditor(featured)}
+                  onPreview={() => setPreviewId(featured.id)}
+                  onHistory={() => setHistoryId(featured.id)}
+                />
               </div>
-              <ProposalActions
-                proposal={proposal}
-                compact
-                onEdit={() => openEditor(proposal)}
-                onPreview={() => setPreviewId(proposal.id)}
-                onHistory={() => setHistoryId(proposal.id)}
-              />
-            </div>
-          ))}
-        </div>
+            )}
+
+            {filteredProposals.slice(1).map((proposal) => (
+              <div key={proposal.id} className="app-card app-card-hover p-5">
+                <ProposalHeader proposal={proposal} compact />
+                <p className="mt-4 line-clamp-3 text-sm leading-6 text-on-surface-variant">
+                  {proposal.summary}
+                </p>
+                <div className="mt-5">
+                  <OutcomePanel proposal={proposal} compact />
+                </div>
+                <ProposalActions
+                  proposal={proposal}
+                  compact
+                  onEdit={() => openEditor(proposal)}
+                  onPreview={() => setPreviewId(proposal.id)}
+                  onHistory={() => setHistoryId(proposal.id)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {preview && (
