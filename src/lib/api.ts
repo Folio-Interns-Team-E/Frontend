@@ -195,6 +195,9 @@ export const api = {
       accessToken,
     );
   },
+  getEmails(leadId: string, accessToken: string) {
+    return request<{ data: EmailApi[] }>(`/emails/?lead_id=${leadId}`, {}, accessToken);
+  },
 
   // === Meetings ===
   getMeetings(accessToken: string) {

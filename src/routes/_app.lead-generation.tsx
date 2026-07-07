@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import {
-  discardLead,
   draftEmail,
   generateLeadsFromIcp,
-  qualifyLead,
   sendEmail,
 } from "../store/appSlice";
+import {
+  discardLeadRemote,
+  qualifyLeadRemote,
+} from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { SkeletonTable } from "../components/ui/skeleton";
 import { fetchLeads } from "../store/apiThunks";
@@ -150,7 +152,7 @@ function LeadGeneration() {
                             index === 0 ? "text-primary" : "text-on-surface-variant/80"
                           }`}
                         >
-                          {r.score}
+                          {r.score === 0 ? "TBD" : r.score}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -178,7 +180,7 @@ function LeadGeneration() {
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-1.5">
                           <button
-                            onClick={() => dispatch(qualifyLead(r.id))}
+                            onClick={() => dispatch(qualifyLeadRemote(r.id))}
                             className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 transition hover:bg-emerald-100"
                           >
                             Qualify
@@ -192,7 +194,7 @@ function LeadGeneration() {
                             {r.status === "Drafted" ? "Send" : "Draft"}
                           </button>
                           <button
-                            onClick={() => dispatch(discardLead(r.id))}
+                            onClick={() => dispatch(discardLeadRemote(r.id))}
                             className="rounded-lg border border-error/20 bg-error/5 px-2.5 py-1 text-[10px] font-bold text-error hover:bg-error/10"
                           >
                             Discard

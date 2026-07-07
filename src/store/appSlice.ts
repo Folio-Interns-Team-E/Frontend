@@ -24,6 +24,8 @@ import {
   reviseProposalRemote,
   fetchKnowledgeAssets,
   sendChatMessage,
+  fetchOutreachLeads,
+  fetchLeadEmails,
 } from "./apiThunks";
 
 export type LeadStatus =
@@ -174,6 +176,9 @@ type AppState = {
     status: "Indexed" | "Processing";
   }[];
   knowledgeAssetsStatus: "idle" | "loading" | "succeeded" | "failed";
+  outreachLeads: Lead[];
+  outreachLeadsStatus: "idle" | "loading" | "succeeded" | "failed";
+  leadDraftEmails: Record<string, { subject: string; body: string }>;
   sidebarOpen: boolean;
 };
 
@@ -231,6 +236,9 @@ export const initialState: AppState = {
   assistantMessages: [],
   knowledgeAssets: [],
   knowledgeAssetsStatus: "idle",
+  outreachLeads: [],
+  outreachLeadsStatus: "idle",
+  leadDraftEmails: {},
   sidebarOpen: true,
 };
 
@@ -763,20 +771,71 @@ const appSlice = createSlice({
       .addCase(qualifyLeadRemote.fulfilled, (state, action) => {
         const lead = state.leads.find((item) => item.id === action.payload.id);
         if (lead) lead.status = "Qualified";
+        const oLead = state.outreachLeads.find((item) => item.id === action.payload.id);
+        if (oLead) oLead.status = "Qualified";
       })
       .addCase(discardLeadRemote.fulfilled, (state, action) => {
         const lead = state.leads.find((item) => item.id === action.payload.id);
         if (lead) lead.status = "Discarded";
+        state.outreachLeads = state.outreachLeads.filter((item) => item.id !== action.payload.id);
+      })
+
+      // === Outreach ===
+      .addCase(fetchOutreachLeads.pending, (state) => {
+        state.outreachLeadsStatus = "loading";
+      })
+      .addCase(fetchOutreachLeads.rejected, (state) => {
+        state.outreachLeadsStatus = "failed";
+      })
+      .addCase(fetchOutreachLeads.fulfilled, (state, action) => {
+        state.outreachLeads = action.payload.map((lead) => ({
+          id: lead.id,
+          initials: (lead.name || "")
+            .split(" ")
+            .map((p) => p[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase(),
+          name: lead.name,
+          company: lead.company || "",
+          title: lead.title || "",
+          email: lead.email || "",
+          source: lead.source || "",
+          score: lead.score ?? 50,
+          status: lead.status as LeadStatus,
+          reasoning: lead.reasoning || "",
+        }));
+        state.outreachLeadsStatus = "succeeded";
+      })
+      .addCase(fetchLeadEmails.fulfilled, (state, action) => {
+        const { leadId, emails } = action.payload;
+        const draft = emails.find((e) => e.status.toLowerCase() === "draft");
+        if (draft) {
+          state.leadDraftEmails[leadId] = { subject: draft.subject, body: draft.body };
+        } else if (emails.length > 0) {
+          const latest = emails[0];
+          state.leadDraftEmails[leadId] = { subject: latest.subject, body: latest.body };
+        } else {
+          state.leadDraftEmails[leadId] = { subject: "", body: "" };
+        }
       })
 
       // === Emails ===
       .addCase(sendEmailRemote.fulfilled, (state, action) => {
         const lead = state.leads.find((item) => item.id === action.payload.leadId);
         if (lead) lead.status = "Sent";
+        const oLead = state.outreachLeads.find((item) => item.id === action.payload.leadId);
+        if (oLead) oLead.status = "Sent";
+        state.leadDraftEmails[action.payload.leadId] = {
+          subject: action.payload.subject,
+          body: action.payload.body,
+        };
       })
       .addCase(draftEmailRemote.fulfilled, (state, action) => {
         const lead = state.leads.find((item) => item.id === action.payload.leadId);
         if (lead) lead.status = "Drafted";
+        const oLead = state.outreachLeads.find((item) => item.id === action.payload.leadId);
+        if (oLead) oLead.status = "Drafted";
       })
 
       // === Meetings ===

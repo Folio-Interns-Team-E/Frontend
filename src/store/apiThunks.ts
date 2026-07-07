@@ -269,6 +269,33 @@ export const draftEmailRemote = createAsyncThunk(
   },
 );
 
+// === Outreach Thunks ===
+export const fetchOutreachLeads = createAsyncThunk(
+  "app/fetchOutreachLeads",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.getLeads(undefined, token);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const fetchLeadEmails = createAsyncThunk(
+  "app/fetchLeadEmails",
+  async (leadId: string, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.getEmails(leadId, token!);
+      return { leadId, emails: res.data };
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
 // === Chat Thunks ===
 export const sendChatMessage = createAsyncThunk(
   "app/sendChatMessage",

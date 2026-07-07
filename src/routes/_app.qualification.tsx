@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import { discardLead, draftEmail, qualifyLead } from "../store/appSlice";
+import { draftEmail } from "../store/appSlice";
+import { discardLeadRemote, qualifyLeadRemote } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { SkeletonCardGrid } from "../components/ui/skeleton";
 import { fetchLeads } from "../store/apiThunks";
@@ -34,7 +35,7 @@ function Qualification() {
   const [sortMode, setSortMode] = useState<SortMode>("score-desc");
   const cards = useMemo(() => {
     const visible = leads.filter((lead) => {
-      if (lead.status === "Discarded") return false;
+      if (lead.status !== "Analyzed") return false;
       if (filterMode === "high") return lead.score >= 85;
       if (filterMode === "qualified")
         return lead.status === "Qualified" || lead.status === "Drafted";
@@ -162,7 +163,7 @@ function Qualification() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
-                      dispatch(qualifyLead(c.id));
+                      dispatch(qualifyLeadRemote(c.id));
                       dispatch(draftEmail(c.id));
                     }}
                     className="flex-1 py-2 bg-primary text-white rounded-lg font-label-caps text-[12px] hover:opacity-90 active:scale-[0.98] transition-all"
@@ -170,7 +171,7 @@ function Qualification() {
                     {c.status === "Qualified" || c.status === "Drafted" ? "Qualified" : "Qualify"}
                   </button>
                   <button
-                    onClick={() => dispatch(discardLead(c.id))}
+                    onClick={() => dispatch(discardLeadRemote(c.id))}
                     className="px-4 py-2 border border-outline-variant text-on-surface-variant rounded-lg font-label-caps text-[12px] hover:bg-error/5 hover:text-error hover:border-error transition-colors"
                   >
                     Discard

@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import { sendEmail } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { Skeleton, SkeletonList } from "../components/ui/skeleton";
-import { fetchLeads } from "../store/apiThunks";
+import { fetchLeads, fetchLeadEmails, sendEmailRemote } from "../store/apiThunks";
 
 export const Route = createFileRoute("/_app/outreach")({
   head: () => ({
@@ -147,26 +146,32 @@ const ComposerActions = ({ onSend, disabled, isSent }: ComposerActionsProps) => 
 );
 
 // --- MAIN OUTREACH AREA ---
+const OUTREACH_STATUSES = ["Qualified", "Discarded", "Drafted", "Sent", "Replied", "Converted"];
+
 function Outreach() {
   const dispatch = useAppDispatch();
   const gmailConnected = useAppSelector((state) => state.app.integrations.gmail);
-  const leadsState = useAppSelector((state) => state.app.leads);
+  const allLeads = useAppSelector((state) => state.app.leads);
   const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
+  const leadDraftEmails = useAppSelector((state) => state.app.leadDraftEmails);
+
+  const outreachLeads = useMemo(
+    () => allLeads.filter((l) => OUTREACH_STATUSES.includes(l.status)),
+    [allLeads],
+  );
 
   useEffect(() => {
     if (leadsStatus === "idle") dispatch(fetchLeads());
   }, [leadsStatus, dispatch]);
 
-  const outreachLeads = useMemo(
-    () =>
-      leadsState.filter((lead) =>
-        ["Qualified", "Drafted", "Sent", "Replied"].includes(lead.status),
-      ),
-    [leadsState],
-  );
-
-  const [selectedId, setSelectedId] = useState(outreachLeads[0]?.id ?? "");
+  const [selectedId, setSelectedId] = useState("");
   const selectedLead = outreachLeads.find((lead) => lead.id === selectedId) ?? outreachLeads[0];
+
+  useEffect(() => {
+    if (!selectedId && outreachLeads.length > 0) {
+      setSelectedId(outreachLeads[0].id);
+    }
+  }, [outreachLeads, selectedId]);
 
   const [subject, setSubject] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -180,7 +185,7 @@ function Outreach() {
   const updateBody = (nextBody: string) => {
     setPast((prev) => [...prev, body]);
     setBodyState(nextBody);
-    setFuture([]); // Clear redo timeline on new input additions
+    setFuture([]);
   };
 
   const handleUndo = () => {
@@ -212,13 +217,13 @@ function Outreach() {
       if (modifier && e.key.toLowerCase() === "z") {
         e.preventDefault();
         if (e.shiftKey) {
-          handleRedo(); // Command + Shift + Z on MacOS platforms
+          handleRedo();
         } else {
           handleUndo();
         }
       } else if (modifier && e.key.toLowerCase() === "y") {
         e.preventDefault();
-        handleRedo(); // Ctrl + Y on Windows/Linux platforms
+        handleRedo();
       }
     };
 
@@ -226,26 +231,32 @@ function Outreach() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [body, past, future]);
 
-  // Sync composer fields cleanly when leads mutate
+  // Fetch draft email when selected lead changes
+  useEffect(() => {
+    if (selectedLead?.id) {
+      dispatch(fetchLeadEmails(selectedLead.id));
+    }
+  }, [selectedLead?.id, dispatch]);
+
+  // Sync composer fields from draft or empty when selected lead changes
   useEffect(() => {
     if (selectedLead) {
-      setSubject(`A faster sales handoff for ${selectedLead.company}`);
-      const initialTemplate = `Hi ${selectedLead.name.split(" ")[0]},\n\nI noticed ${selectedLead.company} is investing in its sales motion. Teams at this stage often lose valuable context between prospecting, discovery calls, and proposal creation.\n\nSalesSync AI carries that context across the entire funnel, helping teams qualify faster and draft source-grounded proposals without rebuilding the story from scratch.\n\nWould you be open to a 15-minute conversation next week?\n\nBest,\nAlex`;
-
-      setBodyState(initialTemplate);
-      setPast([]); // Flush history stack for unique leads
-      setFuture([]);
-    } else {
-      setSubject("Personalized outreach");
-      setBodyState("");
+      const draft = leadDraftEmails[selectedLead.id];
+      if (draft) {
+        setSubject(draft.subject);
+        setBodyState(draft.body);
+      } else {
+        setSubject("");
+        setBodyState("");
+      }
       setPast([]);
       setFuture([]);
     }
-  }, [selectedLead]);
+  }, [selectedLead?.id, leadDraftEmails]);
 
   const handleSend = () => {
-    if (selectedLead) {
-      dispatch(sendEmail(selectedLead.id));
+    if (selectedLead && subject && body) {
+      dispatch(sendEmailRemote({ leadId: selectedLead.id, subject, body }));
       setIsExpanded(false);
     }
   };
@@ -302,7 +313,13 @@ function Outreach() {
                 </span>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar">
-                {outreachLeads.map((l) => (
+                {outreachLeads.length === 0 ? (
+                  <div className="p-6 text-center">
+                    <span className="material-symbols-outlined text-3xl text-outline">person_off</span>
+                    <p className="mt-2 text-body-sm text-on-surface-variant">No qualified leads yet.</p>
+                    <p className="text-[11px] text-outline">Qualify leads from the Lead Generation page.</p>
+                  </div>
+                ) : outreachLeads.map((l) => (
                   <div
                     key={l.id}
                     onClick={() => setSelectedId(l.id)}
