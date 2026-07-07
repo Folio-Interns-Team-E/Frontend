@@ -86,9 +86,9 @@ function LeadGeneration() {
             Generate from ICP
           </button>
         </div>
-        {onboarding.icp.length > 0 && (
+        {onboarding.icp && (
           <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-primary">
-            Current ICP: {onboarding.icp.join(" • ")}
+            ICP: {onboarding.icp}
           </div>
         )}
         {!apolloConnected && (

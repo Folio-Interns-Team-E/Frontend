@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { closeSidebar, setActiveTeam } from "../store/appSlice";
 import {
   fetchMyTeams,
+  fetchOnboardingStatus,
   fetchLeads,
   fetchMeetings,
   fetchProposals,
@@ -57,6 +58,7 @@ function AppLayout() {
 
   useEffect(() => {
     if (teamId) {
+      dispatch(fetchOnboardingStatus());
       dispatch(fetchLeads());
       dispatch(fetchMeetings());
       dispatch(fetchProposals());

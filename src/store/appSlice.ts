@@ -10,6 +10,7 @@ import {
   registerAccount,
   removeMemberRemote,
   updateMemberRoleRemote,
+  fetchOnboardingStatus,
   submitOnboardingRemote,
   fetchLeads,
   qualifyLeadRemote,
@@ -130,11 +131,7 @@ type AppState = {
   };
   onboarding: {
     completed: boolean;
-    productName: string;
-    productDescription: string;
-    targetCustomer: string;
-    goals: string;
-    icp: string[];
+    icp: string;
   };
   profile: {
     name: string;
@@ -193,11 +190,7 @@ export const initialState: AppState = {
   },
   onboarding: {
     completed: false,
-    productName: "",
-    productDescription: "",
-    targetCustomer: "",
-    goals: "",
-    icp: [],
+    icp: "",
   },
   profile: {
     name: "",
@@ -312,21 +305,9 @@ const appSlice = createSlice({
       state.team.error = null;
       state.team.message = null;
     },
-    completeOnboarding(
-      state,
-      action: PayloadAction<{
-        productName: string;
-        productDescription: string;
-        targetCustomer: string;
-        goals: string;
-      }>,
-    ) {
-      state.onboarding = {
-        ...state.onboarding,
-        ...action.payload,
-        completed: true,
-        icp: buildIcp(action.payload),
-      };
+    completeOnboarding(state, action: PayloadAction<{ icp: string }>) {
+      state.onboarding.icp = action.payload.icp;
+      state.onboarding.completed = true;
       state.notifications.unshift({
         id: `notification-${Date.now()}`,
         title: "ICP updated",
@@ -336,7 +317,7 @@ const appSlice = createSlice({
       });
     },
     generateLeadsFromIcp(state) {
-      state.leads = buildLeads(state.onboarding).sort((a, b) => b.score - a.score);
+      state.leads = buildLeads(state.onboarding.icp).sort((a, b) => b.score - a.score);
       state.notifications.unshift({
         id: `notification-${Date.now()}`,
         title: "ICP-matched leads generated",
@@ -730,16 +711,24 @@ const appSlice = createSlice({
       })
 
       // === Onboarding ===
+      .addCase(fetchOnboardingStatus.fulfilled, (state, action) => {
+        const icp = action.payload.icp || "";
+        try {
+          const data = JSON.parse(icp);
+          state.onboarding.icp = data.productDescription || data.icp || "";
+        } catch {
+          state.onboarding.icp = icp;
+        }
+        state.onboarding.completed = action.payload.completed;
+      })
       .addCase(submitOnboardingRemote.fulfilled, (state, action) => {
         try {
           const data = JSON.parse(action.payload.icp);
-          state.onboarding.productName = data.productName || "";
-          state.onboarding.productDescription = data.productDescription || "";
-          state.onboarding.targetCustomer = data.targetCustomer || "";
-          state.onboarding.goals = data.goals || "";
+          state.onboarding.icp = data.productDescription || data.icp || "";
           state.onboarding.completed = action.payload.completed;
         } catch {
-          state.onboarding.completed = true;
+          state.onboarding.icp = action.payload.icp;
+          state.onboarding.completed = action.payload.completed;
         }
       })
 
@@ -914,27 +903,9 @@ export const {
 
 export default appSlice.reducer;
 
-function buildIcp(input: {
-  productName: string;
-  productDescription: string;
-  targetCustomer: string;
-  goals: string;
-}) {
-  const target = input.targetCustomer || "B2B revenue teams";
-  const goals = input.goals || "faster prospecting and follow-up";
-  return [
-    target,
-    `Clear pain related to ${goals.toLowerCase()}`,
-    "Decision-makers in sales, revenue operations, founder, or GTM leadership roles",
-    `Companies likely to benefit from ${input.productName || "SalesSync AI"}`,
-  ];
-}
-
-function buildLeads(onboarding: AppState["onboarding"]): Lead[] {
-  const target = onboarding.targetCustomer.toLowerCase();
-  const isSaas = /saas|software|tech|b2b/.test(target);
-  const isSmallMidMarket = /5|20|50|200|500|startup|mid|smb/.test(target);
-  const baseScore = 68 + (isSaas ? 12 : 4) + (isSmallMidMarket ? 8 : 2);
+function buildLeads(icp: string): Lead[] {
+  const hasMatch = icp.length > 10;
+  const baseScore = hasMatch ? 78 : 60;
 
   const prospects = [
     ["Maya Chen", "RevPilot", "VP of Sales", "maya@revpilot.io", "Apollo", 13],
@@ -962,7 +933,7 @@ function buildLeads(onboarding: AppState["onboarding"]): Lead[] {
       status: score >= 80 ? "Analyzed" : "New",
       reasoning:
         score >= 80
-          ? `${company} strongly matches your ICP: ${onboarding.icp[0]}. ${title} is close to the revenue workflow.`
+          ? `${company} strongly matches your ICP description. ${title} is close to the revenue workflow.`
           : `${company} has partial fit, but the role or segment is weaker against your ICP.`,
     };
   });

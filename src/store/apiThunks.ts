@@ -150,20 +150,33 @@ export const removeMemberRemote = createAsyncThunk(
 );
 
 // === Onboarding Thunks ===
-export const submitOnboardingRemote = createAsyncThunk(
-  "app/submitOnboardingRemote",
-  async (
-    payload: {
-      productName?: string;
-      productDescription: string;
-      targetCustomer: string;
-      goals: string;
-    },
-    { rejectWithValue },
-  ) => {
+export const fetchOnboardingStatus = createAsyncThunk(
+  "app/fetchOnboardingStatus",
+  async (_, { rejectWithValue }) => {
     try {
       const token = getToken();
-      const res = await api.submitOnboarding(payload, token!);
+      const res = await api.getOnboardingStatus(token!);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const submitOnboardingRemote = createAsyncThunk(
+  "app/submitOnboardingRemote",
+  async (payload: { icp: string }, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.submitOnboarding(
+        {
+          productName: "",
+          productDescription: payload.icp,
+          targetCustomer: "",
+          goals: "",
+        },
+        token!,
+      );
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));

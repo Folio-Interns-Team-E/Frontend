@@ -32,7 +32,16 @@ function migrateState(savedState: unknown) {
         userTeams: [],
         userTeamsStatus: "idle" as const,
       },
-      onboarding: { ...appInitialState.onboarding, ...savedApp.onboarding },
+      onboarding: {
+        ...appInitialState.onboarding,
+        ...savedApp.onboarding,
+        icp: (() => {
+          const icp: unknown = savedApp.onboarding?.icp;
+          if (typeof icp === "string") return icp;
+          if (Array.isArray(icp)) return icp.join(", ");
+          return appInitialState.onboarding.icp;
+        })(),
+      },
       profile: { ...appInitialState.profile, ...savedApp.profile },
       integrations: { ...appInitialState.integrations, ...savedApp.integrations },
       team: { ...appInitialState.team, ...savedApp.team, status: "idle" as const },
@@ -43,8 +52,7 @@ function migrateState(savedState: unknown) {
       notifications: Array.isArray(savedApp.notifications)
         ? savedApp.notifications
         : appInitialState.notifications,
-      proposals: savedProposals.map((proposal, index) => ({
-        ...appInitialState.proposals[index % appInitialState.proposals.length],
+      proposals: savedProposals.map((proposal) => ({
         ...proposal,
         outcome: proposal.outcome ?? "Open",
         revisions: Array.isArray(proposal.revisions) ? proposal.revisions : [],

@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { FormEvent, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import { useAppSelector } from "../store/hooks";
+import { completeOnboarding } from "../store/appSlice";
+import { submitOnboardingRemote } from "../store/apiThunks";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { Skeleton, SkeletonKPIGrid } from "../components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/dashboard")({
@@ -104,7 +107,10 @@ const activity = [
 ];
 
 function Index() {
+  const dispatch = useAppDispatch();
   const onboarding = useAppSelector((state) => state.app.onboarding);
+  const [icpInput, setIcpInput] = useState(onboarding.icp);
+  const [icpSaved, setIcpSaved] = useState(false);
   const leads = useAppSelector((state) => state.app.leads);
   const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
   const meetings = useAppSelector((state) => state.app.meetings);
@@ -188,27 +194,49 @@ function Index() {
           </div>
         </section>
 
-        {!onboarding.completed && (
-          <section className="app-card flex flex-col justify-between gap-4 border-l-4 border-l-primary p-4 md:flex-row md:items-center">
-            <div className="flex items-center gap-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <span className="material-symbols-outlined">tune</span>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-on-surface">Finish your workspace setup</p>
-                <p className="mt-1 text-sm text-on-surface-variant">
-                  Confirm your product and target customer so lead scores use the right ICP.
-                </p>
-              </div>
+        <section className="app-card p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary">tune</span>
+            <p className="text-sm font-bold text-on-surface">Ideal Customer Profile</p>
+          </div>
+          <p className="mb-3 text-xs text-on-surface-variant">
+            Describe who you sell to — industry, company size, decision-maker roles, and their pain
+            points. This is used to score leads and ground every recommendation.
+          </p>
+          <form
+            onSubmit={(event: FormEvent) => {
+              event.preventDefault();
+              const text = icpInput.trim();
+              if (!text) return;
+              dispatch(completeOnboarding({ icp: text }));
+              dispatch(submitOnboardingRemote({ icp: text }));
+              setIcpSaved(true);
+            }}
+          >
+            <textarea
+              value={icpInput}
+              onChange={(event) => setIcpInput(event.target.value)}
+              className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+              rows={3}
+              placeholder="e.g. B2B SaaS, 50-500 employees, Head of Sales or CRO running outbound..."
+            />
+            <div className="mt-3 flex justify-end gap-2">
+              <Link
+                to="/onboarding"
+                className="rounded-lg border border-outline-variant px-4 py-2 text-xs font-semibold text-on-surface-variant hover:bg-surface-container"
+              >
+                Full editor
+              </Link>
+              <button
+                type="submit"
+                disabled={!icpInput.trim()}
+                className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+              >
+                {icpSaved ? "Saved!" : "Save ICP"}
+              </button>
             </div>
-            <Link
-              to="/onboarding"
-              className="shrink-0 rounded-xl bg-primary px-5 py-2.5 text-center text-sm font-semibold text-white shadow-md shadow-primary/20"
-            >
-              Generate ICP
-            </Link>
-          </section>
-        )}
+          </form>
+        </section>
 
         {isLoading ? (
           <SkeletonKPIGrid />
