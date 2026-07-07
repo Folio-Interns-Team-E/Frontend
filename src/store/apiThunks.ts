@@ -269,6 +269,20 @@ export const draftEmailRemote = createAsyncThunk(
   },
 );
 
+// === Chat Thunks ===
+export const sendChatMessage = createAsyncThunk(
+  "app/sendChatMessage",
+  async (message: string, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.sendChat(message, token!);
+      return { userMessage: message, reply: res.data.reply };
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
 // === Meetings Thunks ===
 export const fetchMeetings = createAsyncThunk(
   "app/fetchMeetings",

@@ -30,8 +30,6 @@ function LeadGeneration() {
   const dispatch = useAppDispatch();
   const leads = useAppSelector((state) => state.app.leads);
   const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
-  const onboarding = useAppSelector((state) => state.app.onboarding);
-  const apolloConnected = useAppSelector((state) => state.app.integrations.apollo);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -86,16 +84,7 @@ function LeadGeneration() {
             Generate from ICP
           </button>
         </div>
-        {onboarding.icp && (
-          <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-primary">
-            ICP: {onboarding.icp}
-          </div>
-        )}
-        {!apolloConnected && (
-          <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
-            Connect Apollo in Settings before pulling production leads.
-          </div>
-        )}
+
 
         {leadsStatus === "loading" ? (
           <SkeletonTable rows={5} cols={6} />

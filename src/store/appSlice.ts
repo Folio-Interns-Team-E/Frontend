@@ -23,6 +23,7 @@ import {
   updateProposalOutcomeRemote,
   reviseProposalRemote,
   fetchKnowledgeAssets,
+  sendChatMessage,
 } from "./apiThunks";
 
 export type LeadStatus =
@@ -863,6 +864,50 @@ const appSlice = createSlice({
           status: a.status as "Indexed" | "Processing",
         }));
         state.knowledgeAssetsStatus = "succeeded";
+      })
+
+      // === Chat ===
+      .addCase(sendChatMessage.pending, (state, action) => {
+        state.assistantMessages.push({
+          id: `user-${Date.now()}`,
+          author: "user",
+          body: action.meta.arg,
+          time: "Now",
+        });
+        state.assistantMessages.push({
+          id: `assistant-${Date.now()}`,
+          author: "assistant",
+          body: "Thinking...",
+          time: "Now",
+        });
+      })
+      .addCase(sendChatMessage.fulfilled, (state, action) => {
+        const msgs = state.assistantMessages;
+        for (let i = msgs.length - 1; i >= 0; i--) {
+          if (msgs[i].author === "assistant" && msgs[i].body === "Thinking...") {
+            msgs[i] = {
+              id: `assistant-${Date.now()}`,
+              author: "assistant",
+              body: action.payload.reply,
+              time: "Now",
+            };
+            break;
+          }
+        }
+      })
+      .addCase(sendChatMessage.rejected, (state) => {
+        const msgs = state.assistantMessages;
+        for (let i = msgs.length - 1; i >= 0; i--) {
+          if (msgs[i].author === "assistant" && msgs[i].body === "Thinking...") {
+            msgs[i] = {
+              id: `assistant-${Date.now()}`,
+              author: "assistant",
+              body: "Sorry, I couldn't process that request. Please check your backend connection and try again.",
+              time: "Now",
+            };
+            break;
+          }
+        }
       });
   },
 });

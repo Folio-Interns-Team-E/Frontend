@@ -325,6 +325,13 @@ export const api = {
       accessToken,
     );
   },
+  sendChat(message: string, accessToken: string) {
+    return request<{ data: { reply: string } }>(
+      "/chat/",
+      { method: "POST", body: JSON.stringify({ message }) },
+      accessToken,
+    );
+  },
 };
 
 export type LeadApi = {

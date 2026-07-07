@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { addAssistantMessage } from "../store/appSlice";
+import { sendChatMessage } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
 export function AIChatPanel({ onClose }: { onClose: () => void }) {
@@ -12,7 +12,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
     event.preventDefault();
     const value = message.trim();
     if (!value) return;
-    dispatch(addAssistantMessage(value));
+    dispatch(sendChatMessage(value));
     setMessage("");
   }
 
