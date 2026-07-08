@@ -12,7 +12,12 @@ import {
 } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { Skeleton, SkeletonKPIGrid } from "../components/ui/skeleton";
-import { fetchProposals } from "../store/apiThunks";
+import {
+  fetchProposals,
+  reviseProposalRemote,
+  updateProposalOutcomeRemote,
+  updateProposalStatusRemote,
+} from "../store/apiThunks";
 
 export const Route = createFileRoute("/_app/proposals")({
   head: () => ({
@@ -41,6 +46,7 @@ function Proposals() {
   const proposalsStatus = useAppSelector((state) => state.app.proposalsStatus);
   const profile = useAppSelector((state) => state.app.profile);
   const proposalTemplate = useAppSelector((state) => state.app.proposalTemplate);
+  const accessToken = useAppSelector((state) => state.app.auth.accessToken);
 
   useEffect(() => {
     if (proposalsStatus === "idle") dispatch(fetchProposals());
@@ -83,7 +89,11 @@ function Proposals() {
   function saveRevision(event: FormEvent) {
     event.preventDefault();
     if (!editing) return;
-    dispatch(reviseProposal(editing));
+    if (accessToken) {
+      dispatch(reviseProposalRemote(editing));
+    } else {
+      dispatch(reviseProposal(editing));
+    }
     setEditing(null);
   }
 
@@ -216,7 +226,11 @@ function Proposals() {
           defaultCompanyName={profile.company}
           onClose={() => setPreviewId(null)}
           onSend={() => {
-            dispatch(updateProposalStatus({ id: preview.id, status: "Sent" }));
+            if (accessToken) {
+              dispatch(updateProposalStatusRemote({ id: preview.id, status: "Sent" }));
+            } else {
+              dispatch(updateProposalStatus({ id: preview.id, status: "Sent" }));
+            }
             setPreviewId(null);
           }}
         />
@@ -459,6 +473,7 @@ function Badge({
 
 function OutcomePanel({ proposal, compact = false }: { proposal: Proposal; compact?: boolean }) {
   const dispatch = useAppDispatch();
+  const accessToken = useAppSelector((state) => state.app.auth.accessToken);
   const outcome = getOutcome(proposal);
 
   return (
@@ -474,7 +489,13 @@ function OutcomePanel({ proposal, compact = false }: { proposal: Proposal; compa
         {(["Open", "Won", "Lost"] as const).map((option) => (
           <button
             key={option}
-            onClick={() => dispatch(updateProposalOutcome({ id: proposal.id, outcome: option }))}
+            onClick={() => {
+              if (accessToken) {
+                dispatch(updateProposalOutcomeRemote({ id: proposal.id, outcome: option }));
+              } else {
+                dispatch(updateProposalOutcome({ id: proposal.id, outcome: option }));
+              }
+            }}
             className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
               outcome === option
                 ? option === "Won"
@@ -507,6 +528,7 @@ function ProposalActions({
   onHistory: () => void;
 }) {
   const dispatch = useAppDispatch();
+  const accessToken = useAppSelector((state) => state.app.auth.accessToken);
 
   return (
     <div className={`mt-5 flex flex-wrap justify-end gap-2 ${compact ? "" : "border-t pt-5"}`}>
@@ -529,7 +551,13 @@ function ProposalActions({
         Preview
       </button>
       <button
-        onClick={() => dispatch(updateProposalStatus({ id: proposal.id, status: "Sent" }))}
+        onClick={() => {
+          if (accessToken) {
+            dispatch(updateProposalStatusRemote({ id: proposal.id, status: "Sent" }));
+          } else {
+            dispatch(updateProposalStatus({ id: proposal.id, status: "Sent" }));
+          }
+        }}
         className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
       >
         {proposal.status === "Sent" ? "Sent" : "Send"}

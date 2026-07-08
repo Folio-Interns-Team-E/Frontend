@@ -638,6 +638,44 @@ const appSlice = createSlice({
       state.team.status = "succeeded";
       state.auth.teamChoiceCompleted = true;
     };
+    const applyProposal = (
+      state: AppState,
+      proposal: {
+        id: string;
+        company: string;
+        title: string;
+        status: string;
+        outcome: string;
+        value?: number;
+        summary?: string;
+        updated_at?: string;
+      },
+    ) => {
+      const formatted: Proposal = {
+        id: proposal.id,
+        company: proposal.company,
+        title: proposal.title,
+        status: proposal.status as Proposal["status"],
+        outcome: proposal.outcome as Proposal["outcome"],
+        value: proposal.value ? `$${proposal.value.toLocaleString()}` : "$0",
+        updatedAt: proposal.updated_at ?? "Now",
+        summary: proposal.summary || "",
+        sources: [],
+        revisions: [],
+      };
+      const index = state.proposals.findIndex((item) => item.id === proposal.id);
+      if (index >= 0) {
+        state.proposals[index] = {
+          ...state.proposals[index],
+          ...formatted,
+          revisions: state.proposals[index].revisions,
+          sources: state.proposals[index].sources,
+        };
+      } else {
+        state.proposals.unshift(formatted);
+      }
+      state.proposalsStatus = "succeeded";
+    };
 
     builder
       .addCase(registerAccount.pending, authPending)
@@ -699,8 +737,8 @@ const appSlice = createSlice({
       .addCase(fetchTeamRemote.fulfilled, (state, action) => applyTeam(state, action.payload))
       .addCase(inviteMemberRemote.pending, teamPending)
       .addCase(inviteMemberRemote.rejected, teamRejected)
-      .addCase(inviteMemberRemote.fulfilled, (state) => {
-        state.team.status = "succeeded";
+      .addCase(inviteMemberRemote.fulfilled, (state, action) => {
+        applyTeam(state, action.payload);
         state.team.message = "Team member added successfully.";
       })
       .addCase(updateMemberRoleRemote.pending, teamPending)
@@ -883,27 +921,13 @@ const appSlice = createSlice({
         state.proposalsStatus = "succeeded";
       })
       .addCase(updateProposalStatusRemote.fulfilled, (state, action) => {
-        const proposal = state.proposals.find((item) => item.id === action.payload.id);
-        if (proposal) proposal.status = action.payload.status as Proposal["status"];
+        applyProposal(state, action.payload);
       })
       .addCase(updateProposalOutcomeRemote.fulfilled, (state, action) => {
-        const proposal = state.proposals.find((item) => item.id === action.payload.id);
-        if (!proposal) return;
-        proposal.outcome = action.payload.outcome as Proposal["outcome"];
-        proposal.status =
-          action.payload.outcome === "Won"
-            ? "Accepted"
-            : action.payload.outcome === "Lost"
-              ? "Rejected"
-              : proposal.status;
+        applyProposal(state, action.payload);
       })
       .addCase(reviseProposalRemote.fulfilled, (state, action) => {
-        const proposal = state.proposals.find((item) => item.id === action.payload.id);
-        if (!proposal) return;
-        proposal.title = action.payload.title;
-        proposal.summary = action.payload.summary;
-        if (action.payload.value) proposal.value = action.payload.value;
-        proposal.updatedAt = "Now";
+        applyProposal(state, action.payload);
       })
 
       // === Knowledge Base ===

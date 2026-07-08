@@ -98,7 +98,8 @@ export const inviteMemberRemote = createAsyncThunk(
   "app/inviteMemberRemote",
   async (payload: { email: string; accessToken: string }, { rejectWithValue }) => {
     try {
-      return await api.inviteMember(payload.email, payload.accessToken);
+      const res = await api.inviteMember(payload.email, payload.accessToken);
+      return res.data ?? res;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
@@ -343,8 +344,8 @@ export const updateProposalStatusRemote = createAsyncThunk(
   async (payload: { id: string; status: string }, { rejectWithValue }) => {
     try {
       const token = getToken();
-      await api.updateProposal(payload.id, { status: payload.status }, token!);
-      return { id: payload.id, status: payload.status };
+      const res = await api.updateProposal(payload.id, { status: payload.status }, token!);
+      return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
@@ -356,8 +357,8 @@ export const updateProposalOutcomeRemote = createAsyncThunk(
   async (payload: { id: string; outcome: string }, { rejectWithValue }) => {
     try {
       const token = getToken();
-      await api.updateProposal(payload.id, { outcome: payload.outcome }, token!);
-      return { id: payload.id, outcome: payload.outcome };
+      const res = await api.updateProposal(payload.id, { outcome: payload.outcome }, token!);
+      return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
@@ -383,7 +384,16 @@ export const reviseProposalRemote = createAsyncThunk(
         },
         token!,
       );
-      return payload;
+      const res = await api.updateProposal(
+        payload.id,
+        {
+          title: payload.title,
+          summary: payload.summary,
+          value: val,
+        },
+        token!,
+      );
+      return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
