@@ -325,6 +325,18 @@ export const api = {
       accessToken,
     );
   },
+
+  // === Integrations ===
+  getGmailAuthUrl(accessToken: string) {
+    return request<{ data: { url: string } }>("/integrations/gmail/auth-url", {}, accessToken);
+  },
+  getGmailStatus(accessToken: string) {
+    return request<{ data: { connected: boolean; email?: string } }>(
+      "/integrations/gmail/status",
+      {},
+      accessToken,
+    );
+  },
   sendChat(message: string, accessToken: string) {
     return request<{ data: { reply: string } }>(
       "/chat/",

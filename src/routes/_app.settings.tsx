@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import { demoLogout, setIntegration, updateProfile } from "../store/appSlice";
 import { logoutAccount } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { api } from "../lib/api";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings · SalesSync AI" }] }),
@@ -17,6 +18,34 @@ function Settings() {
   const integrations = useAppSelector((state) => state.app.integrations);
   const [draft, setDraft] = useState(profile);
   const [saved, setSaved] = useState(false);
+
+  const [gmailConnected, setGmailConnected] = useState(false);
+  const [gmailEmail, setGmailEmail] = useState<string | null>(null);
+  const [gmailLoading, setGmailLoading] = useState(true);
+
+  const token = auth.accessToken ?? localStorage.getItem("access_token");
+
+  useEffect(() => {
+    if (!token) return;
+    api
+      .getGmailStatus(token)
+      .then((res) => {
+        setGmailConnected(res.data.connected);
+        setGmailEmail(res.data.email ?? null);
+      })
+      .catch(() => {})
+      .finally(() => setGmailLoading(false));
+  }, [token]);
+
+  const connectGmail = async () => {
+    if (!token) return;
+    try {
+      const res = await api.getGmailAuthUrl(token);
+      window.location.href = res.data.url;
+    } catch {
+      // handled
+    }
+  };
 
   function saveProfile(event: FormEvent) {
     event.preventDefault();
@@ -66,11 +95,10 @@ function Settings() {
             <Integration
               icon="mail"
               name="Gmail"
-              description="Send personalized outreach and track replies."
-              connected={integrations.gmail}
-              onToggle={() =>
-                dispatch(setIntegration({ integration: "gmail", connected: !integrations.gmail }))
-              }
+              description={gmailEmail ? `Connected as ${gmailEmail}` : "Send emails from your Gmail account."}
+              connected={gmailConnected}
+              loading={gmailLoading}
+              onToggle={connectGmail}
             />
             <Integration
               icon="calendar_month"
@@ -123,12 +151,14 @@ function Integration({
   name,
   description,
   connected,
+  loading,
   onToggle,
 }: {
   icon: string;
   name: string;
   description: string;
   connected: boolean;
+  loading?: boolean;
   onToggle: () => void;
 }) {
   return (
@@ -143,11 +173,16 @@ function Integration({
       <button
         type="button"
         onClick={onToggle}
+        disabled={loading}
         className={`rounded-lg px-4 py-2 text-sm font-semibold ${
-          connected ? "border border-green-200 bg-green-50 text-green-700" : "bg-primary text-white"
+          loading
+            ? "border border-outline-variant bg-surface text-on-surface-variant"
+            : connected
+              ? "border border-green-200 bg-green-50 text-green-700"
+              : "bg-primary text-white"
         }`}
       >
-        {connected ? "Connected" : "Connect"}
+        {loading ? "Checking…" : connected ? "Connected" : "Connect"}
       </button>
     </div>
   );
