@@ -61,6 +61,19 @@ export function Sidebar({ onClose }: SidebarProps) {
         ))}
       </nav>
 
+      <div className="relative mb-1 px-2.5">
+        <Link
+          className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12px] font-medium text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white"
+          to="/billing"
+          activeProps={{
+            className:
+              "flex cursor-pointer items-center gap-2.5 rounded-xl bg-white/[0.08] px-3 py-2.5 text-[12px] font-semibold text-white",
+          }}
+        >
+          <span className="material-symbols-outlined text-[19px]">credit_card</span>
+          <span>Billing</span>
+        </Link>
+      </div>
       <div className="relative mb-3 px-2.5">
         <Link
           className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12px] font-medium text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white"

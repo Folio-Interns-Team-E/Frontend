@@ -326,6 +326,21 @@ export const api = {
     );
   },
 
+  // === Billing ===
+  getBillingStatus(accessToken: string) {
+    return request<{ data: BillingStatus }>("/billing/status", {}, accessToken);
+  },
+  createCheckoutSession(tier: "growth" | "enterprise", accessToken: string) {
+    return request<{ data: { checkout_url: string } }>(
+      `/billing/checkout/${tier}`,
+      { method: "POST" },
+      accessToken,
+    );
+  },
+  cancelSubscription(accessToken: string) {
+    return request<{ data: { message: string } }>("/billing/cancel", { method: "POST" }, accessToken);
+  },
+
   // === Integrations ===
   getGmailAuthUrl(accessToken: string) {
     return request<{ data: { url: string } }>("/integrations/gmail/auth-url", {}, accessToken);
@@ -410,6 +425,13 @@ export type ProposalTemplateApi = {
 export type ProposalTemplateUploadPayload = {
   template_name: string;
   file: File;
+};
+
+export type BillingStatus = {
+  tier: string;
+  status: string;
+  ends_at: string | null;
+  cancel_at_period_end: boolean;
 };
 
 export type KnowledgeAssetApi = {

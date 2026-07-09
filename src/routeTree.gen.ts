@@ -27,6 +27,7 @@ import { Route as AppMeetingsRouteImport } from './routes/_app.meetings'
 import { Route as AppLeadGenerationRouteImport } from './routes/_app.lead-generation'
 import { Route as AppKnowledgeBaseRouteImport } from './routes/_app.knowledge-base'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppBillingRouteImport } from './routes/_app.billing'
 
 const MarketingRoute = MarketingRouteImport.update({
   id: '/_marketing',
@@ -115,9 +116,15 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBillingRoute = AppBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
+  '/billing': typeof AppBillingRoute
   '/dashboard': typeof AppDashboardRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
   '/lead-generation': typeof AppLeadGenerationRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
+  '/billing': typeof AppBillingRoute
   '/dashboard': typeof AppDashboardRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
   '/lead-generation': typeof AppLeadGenerationRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
   '/_marketing': typeof MarketingRouteWithChildren
+  '/_app/billing': typeof AppBillingRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/knowledge-base': typeof AppKnowledgeBaseRoute
   '/_app/lead-generation': typeof AppLeadGenerationRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/billing'
     | '/dashboard'
     | '/knowledge-base'
     | '/lead-generation'
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/billing'
     | '/dashboard'
     | '/knowledge-base'
     | '/lead-generation'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_auth'
     | '/_marketing'
+    | '/_app/billing'
     | '/_app/dashboard'
     | '/_app/knowledge-base'
     | '/_app/lead-generation'
@@ -362,10 +374,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/billing': {
+      id: '/_app/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AppBillingRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppBillingRoute: typeof AppBillingRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppKnowledgeBaseRoute: typeof AppKnowledgeBaseRoute
   AppLeadGenerationRoute: typeof AppLeadGenerationRoute
@@ -380,6 +400,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppBillingRoute: AppBillingRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppKnowledgeBaseRoute: AppKnowledgeBaseRoute,
   AppLeadGenerationRoute: AppLeadGenerationRoute,
