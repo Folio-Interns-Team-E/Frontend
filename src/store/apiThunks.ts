@@ -343,8 +343,8 @@ export const updateProposalStatusRemote = createAsyncThunk(
   async (payload: { id: string; status: string }, { rejectWithValue }) => {
     try {
       const token = getToken();
-      await api.updateProposal(payload.id, { status: payload.status }, token!);
-      return { id: payload.id, status: payload.status };
+      const res = await api.updateProposal(payload.id, { status: payload.status }, token!);
+      return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
@@ -356,8 +356,8 @@ export const updateProposalOutcomeRemote = createAsyncThunk(
   async (payload: { id: string; outcome: string }, { rejectWithValue }) => {
     try {
       const token = getToken();
-      await api.updateProposal(payload.id, { outcome: payload.outcome }, token!);
-      return { id: payload.id, outcome: payload.outcome };
+      const res = await api.updateProposal(payload.id, { outcome: payload.outcome }, token!);
+      return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
@@ -383,7 +383,8 @@ export const reviseProposalRemote = createAsyncThunk(
         },
         token!,
       );
-      return payload;
+      const res = await api.getProposals(token!);
+      return res.data.find((proposal) => proposal.id === payload.id) ?? null;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }

@@ -8,7 +8,12 @@ import {
 } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { Skeleton } from "../components/ui/skeleton";
-import { fetchProposals, uploadProposalTemplate } from "../store/apiThunks";
+import {
+  fetchProposals,
+  updateProposalOutcomeRemote,
+  updateProposalStatusRemote,
+  uploadProposalTemplate,
+} from "../store/apiThunks";
 import type { ProposalTemplateApi } from "../lib/api";
 
 export const Route = createFileRoute("/_app/proposals")({
@@ -331,6 +336,7 @@ function Badge({
 
 function OutcomePanel({ proposal, compact = false }: { proposal: Proposal; compact?: boolean }) {
   const dispatch = useAppDispatch();
+  const accessToken = useAppSelector((state) => state.app.auth.accessToken);
   const outcome = getOutcome(proposal);
 
   return (
@@ -346,7 +352,13 @@ function OutcomePanel({ proposal, compact = false }: { proposal: Proposal; compa
         {(["Open", "Won", "Lost"] as const).map((option) => (
           <button
             key={option}
-            onClick={() => dispatch(updateProposalOutcome({ id: proposal.id, outcome: option }))}
+            onClick={() => {
+              if (accessToken) {
+                dispatch(updateProposalOutcomeRemote({ id: proposal.id, outcome: option }));
+              } else {
+                dispatch(updateProposalOutcome({ id: proposal.id, outcome: option }));
+              }
+            }}
             className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
               outcome === option
                 ? option === "Won"
@@ -373,6 +385,7 @@ function ProposalActions({
   compact?: boolean;
 }) {
   const dispatch = useAppDispatch();
+  const accessToken = useAppSelector((state) => state.app.auth.accessToken);
 
   return (
     <div className={`mt-5 flex flex-wrap justify-end gap-2 ${compact ? "" : "border-t pt-5"}`}>
@@ -388,7 +401,13 @@ function ProposalActions({
         </a>
       )}
       <button
-        onClick={() => dispatch(updateProposalStatus({ id: proposal.id, status: "Sent" }))}
+        onClick={() => {
+          if (accessToken) {
+            dispatch(updateProposalStatusRemote({ id: proposal.id, status: "Sent" }));
+          } else {
+            dispatch(updateProposalStatus({ id: proposal.id, status: "Sent" }));
+          }
+        }}
         className="rounded-lg border border-primary/20 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
       >
         {proposal.status === "Sent" ? "Sent" : "Send"}

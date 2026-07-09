@@ -45,6 +45,11 @@ function migrateState(savedState: unknown) {
       profile: { ...appInitialState.profile, ...savedApp.profile },
       integrations: { ...appInitialState.integrations, ...savedApp.integrations },
       team: { ...appInitialState.team, ...savedApp.team, status: "idle" as const },
+      leadsStatus: "idle" as const,
+      meetingsStatus: "idle" as const,
+      proposalsStatus: "idle" as const,
+      knowledgeAssetsStatus: "idle" as const,
+      outreachLeadsStatus: "idle" as const,
       proposalTemplate: {
         ...appInitialState.proposalTemplate,
         ...savedApp.proposalTemplate,

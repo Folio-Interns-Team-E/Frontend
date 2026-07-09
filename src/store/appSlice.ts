@@ -615,6 +615,45 @@ const appSlice = createSlice({
       state.team.status = "succeeded";
       state.auth.teamChoiceCompleted = true;
     };
+    const toProposal = (p: {
+      id: string;
+      status: string;
+      outcome: string;
+      file_type?: string;
+      file_size?: number;
+      version: number;
+      ai_metadata?: Record<string, unknown>;
+      presigned_url?: string;
+      updated_at: string;
+    }): Proposal => {
+      const meta = p.ai_metadata || {};
+      return {
+        id: p.id,
+        status: p.status as Proposal["status"],
+        outcome: p.outcome as Proposal["outcome"],
+        updatedAt: p.updated_at,
+        presignedUrl: p.presigned_url,
+        fileType: p.file_type,
+        fileSize: p.file_size,
+        version: p.version,
+        title: (meta.document_title as string) || "Proposal",
+        summary: (meta.executive_summary as string) || "",
+      };
+    };
+    const applyProposal = (
+      state: AppState,
+      proposal: Parameters<typeof toProposal>[0] | null,
+    ) => {
+      if (!proposal) return;
+      const formatted = toProposal(proposal);
+      const index = state.proposals.findIndex((item) => item.id === formatted.id);
+      if (index >= 0) {
+        state.proposals[index] = formatted;
+      } else {
+        state.proposals.unshift(formatted);
+      }
+      state.proposalsStatus = "succeeded";
+    };
 
     builder
       .addCase(registerAccount.pending, authPending)
@@ -845,44 +884,17 @@ const appSlice = createSlice({
         state.proposalsStatus = "failed";
       })
       .addCase(fetchProposals.fulfilled, (state, action) => {
-        state.proposals = action.payload.map((p) => {
-          const meta = p.ai_metadata || {};
-          return {
-            id: p.id,
-            status: p.status as Proposal["status"],
-            outcome: p.outcome as Proposal["outcome"],
-            updatedAt: p.updated_at,
-            presignedUrl: p.presigned_url,
-            fileType: p.file_type,
-            fileSize: p.file_size,
-            version: p.version,
-            title: (meta.document_title as string) || "Proposal",
-            summary: (meta.executive_summary as string) || "",
-          };
-        });
+        state.proposals = action.payload.map(toProposal);
         state.proposalsStatus = "succeeded";
       })
       .addCase(updateProposalStatusRemote.fulfilled, (state, action) => {
-        const proposal = state.proposals.find((item) => item.id === action.payload.id);
-        if (proposal) proposal.status = action.payload.status as Proposal["status"];
+        applyProposal(state, action.payload);
       })
       .addCase(updateProposalOutcomeRemote.fulfilled, (state, action) => {
-        const proposal = state.proposals.find((item) => item.id === action.payload.id);
-        if (!proposal) return;
-        proposal.outcome = action.payload.outcome as Proposal["outcome"];
-        proposal.status =
-          action.payload.outcome === "Won"
-            ? "Accepted"
-            : action.payload.outcome === "Lost"
-              ? "Rejected"
-              : proposal.status;
+        applyProposal(state, action.payload);
       })
       .addCase(reviseProposalRemote.fulfilled, (state, action) => {
-        const proposal = state.proposals.find((item) => item.id === action.payload.id);
-        if (!proposal) return;
-        proposal.title = action.payload.title;
-        proposal.summary = action.payload.summary;
-        proposal.updatedAt = "Now";
+        applyProposal(state, action.payload);
       })
 
       // === Knowledge Base ===
