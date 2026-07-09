@@ -23,6 +23,7 @@ import {
   updateProposalOutcomeRemote,
   reviseProposalRemote,
   fetchKnowledgeAssets,
+  uploadKnowledgeAsset,
   sendChatMessage,
   fetchOutreachLeads,
   fetchLeadEmails,
@@ -64,25 +65,15 @@ export type Meeting = {
 
 export type Proposal = {
   id: string;
-  company: string;
-  title: string;
   status: "Draft" | "Sent" | "Under Review" | "Accepted" | "Rejected";
   outcome: "Open" | "Won" | "Lost";
-  value: string;
   updatedAt: string;
-  summary: string;
-  sources: string[];
-  revisions: ProposalRevision[];
-};
-
-export type ProposalRevision = {
-  id: string;
+  presignedUrl?: string;
+  fileType?: string;
+  fileSize?: number;
+  version: number;
   title: string;
   summary: string;
-  value: string;
-  editedAt: string;
-  editedBy: string;
-  note: string;
 };
 
 export type ProposalTemplate = {
@@ -170,10 +161,12 @@ type AppState = {
   knowledgeAssets: {
     id: string;
     title: string;
-    type: "Transcript" | "Proposal" | "Case Study";
-    company: string;
-    date: string;
-    status: "Indexed" | "Processing";
+    description?: string;
+    tags: string[];
+    fileType?: string;
+    fileSize?: number;
+    presignedUrl?: string;
+    createdAt: string;
   }[];
   knowledgeAssetsStatus: "idle" | "loading" | "succeeded" | "failed";
   outreachLeads: Lead[];
@@ -515,9 +508,7 @@ const appSlice = createSlice({
       state.notifications.unshift({
         id: `notification-${Date.now()}`,
         title: `Proposal marked ${action.payload.outcome.toLowerCase()}`,
-        body: `${proposal.company} is now tracked as ${
-          action.payload.outcome === "Open" ? "still open" : action.payload.outcome
-        }.`,
+        body: `"${proposal.title}" outcome set to ${action.payload.outcome}.`,
         time: "Now",
         unread: true,
       });
@@ -528,34 +519,20 @@ const appSlice = createSlice({
         id: string;
         title: string;
         summary: string;
-        value: string;
         note: string;
       }>,
     ) {
       const proposal = state.proposals.find((item) => item.id === action.payload.id);
       if (!proposal) return;
 
-      proposal.revisions = proposal.revisions ?? [];
-      proposal.revisions.unshift({
-        id: `revision-${Date.now()}`,
-        title: action.payload.title,
-        summary: action.payload.summary,
-        value: action.payload.value,
-        editedAt: "Now",
-        editedBy: state.profile.name,
-        note: action.payload.note || "Manual edit",
-      });
       proposal.title = action.payload.title;
       proposal.summary = action.payload.summary;
-      proposal.value = action.payload.value;
       proposal.updatedAt = "Now";
       proposal.status = proposal.status === "Sent" ? "Under Review" : proposal.status;
       state.notifications.unshift({
         id: `notification-${Date.now()}`,
-        title: "Proposal revision saved",
-        body: `${proposal.company} now has ${proposal.revisions.length} revision${
-          proposal.revisions.length === 1 ? "" : "s"
-        }.`,
+        title: "Proposal updated",
+        body: `"${proposal.title}" has been updated.`,
         time: "Now",
         unread: true,
       });
@@ -868,18 +845,21 @@ const appSlice = createSlice({
         state.proposalsStatus = "failed";
       })
       .addCase(fetchProposals.fulfilled, (state, action) => {
-        state.proposals = action.payload.map((p) => ({
-          id: p.id,
-          company: p.company,
-          title: p.title,
-          status: p.status as Proposal["status"],
-          outcome: p.outcome as Proposal["outcome"],
-          value: p.value ? `$${p.value.toLocaleString()}` : "$0",
-          updatedAt: p.updated_at,
-          summary: p.summary || "",
-          sources: [],
-          revisions: [],
-        }));
+        state.proposals = action.payload.map((p) => {
+          const meta = p.ai_metadata || {};
+          return {
+            id: p.id,
+            status: p.status as Proposal["status"],
+            outcome: p.outcome as Proposal["outcome"],
+            updatedAt: p.updated_at,
+            presignedUrl: p.presigned_url,
+            fileType: p.file_type,
+            fileSize: p.file_size,
+            version: p.version,
+            title: (meta.document_title as string) || "Proposal",
+            summary: (meta.executive_summary as string) || "",
+          };
+        });
         state.proposalsStatus = "succeeded";
       })
       .addCase(updateProposalStatusRemote.fulfilled, (state, action) => {
@@ -902,7 +882,6 @@ const appSlice = createSlice({
         if (!proposal) return;
         proposal.title = action.payload.title;
         proposal.summary = action.payload.summary;
-        if (action.payload.value) proposal.value = action.payload.value;
         proposal.updatedAt = "Now";
       })
 
@@ -917,12 +896,26 @@ const appSlice = createSlice({
         state.knowledgeAssets = action.payload.map((a) => ({
           id: a.id,
           title: a.title,
-          type: a.type as "Transcript" | "Proposal" | "Case Study",
-          company: a.company || "",
-          date: a.created_at,
-          status: a.status as "Indexed" | "Processing",
+          description: a.description,
+          tags: a.tags || [],
+          fileType: a.file_type,
+          fileSize: a.file_size,
+          presignedUrl: a.presigned_url,
+          createdAt: a.created_at,
         }));
         state.knowledgeAssetsStatus = "succeeded";
+      })
+      .addCase(uploadKnowledgeAsset.fulfilled, (state, action) => {
+        state.knowledgeAssets.unshift({
+          id: action.payload.id,
+          title: action.payload.title,
+          description: action.payload.description,
+          tags: action.payload.tags || [],
+          fileType: action.payload.file_type,
+          fileSize: action.payload.file_size,
+          presignedUrl: action.payload.presigned_url,
+          createdAt: action.payload.created_at,
+        });
       })
 
       // === Chat ===

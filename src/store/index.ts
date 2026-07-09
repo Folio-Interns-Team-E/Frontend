@@ -55,7 +55,6 @@ function migrateState(savedState: unknown) {
       proposals: savedProposals.map((proposal) => ({
         ...proposal,
         outcome: proposal.outcome ?? "Open",
-        revisions: Array.isArray(proposal.revisions) ? proposal.revisions : [],
       })),
     },
   };

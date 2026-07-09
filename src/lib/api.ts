@@ -29,7 +29,8 @@ async function request<T>(
   accessToken?: string | null,
 ): Promise<T> {
   const headers = new Headers(options.headers);
-  if (options.body) headers.set("Content-Type", "application/json");
+  if (options.body && !(options.body instanceof FormData))
+    headers.set("Content-Type", "application/json");
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
 
   let response: Response;
@@ -294,17 +295,13 @@ export const api = {
   getProposalTemplate(accessToken: string) {
     return request<{ data: ProposalTemplateApi }>("/proposals/template", {}, accessToken);
   },
-  upsertProposalTemplate(
-    payload: {
-      template_name?: string;
-      company_name?: string;
-      logo_url?: string;
-    },
-    accessToken: string,
-  ) {
+  uploadProposalTemplate(payload: { file: File; template_name: string }, accessToken: string) {
+    const formData = new FormData();
+    formData.append("file", payload.file);
+    formData.append("template_name", payload.template_name);
     return request<{ data: ProposalTemplateApi }>(
-      "/proposals/template",
-      { method: "PUT", body: JSON.stringify(payload) },
+      "/proposals/template/upload",
+      { method: "POST", body: formData },
       accessToken,
     );
   },
@@ -313,18 +310,18 @@ export const api = {
   getKnowledgeAssets(accessToken: string) {
     return request<{ data: KnowledgeAssetApi[] }>("/knowledge-base/", {}, accessToken);
   },
-  createKnowledgeAsset(
-    payload: {
-      title: string;
-      type?: string;
-      company?: string;
-      description?: string;
-    },
+  uploadKnowledgeAsset(
+    payload: { file: File; title: string; description?: string; tags?: string },
     accessToken: string,
   ) {
+    const formData = new FormData();
+    formData.append("file", payload.file);
+    formData.append("title", payload.title);
+    if (payload.description) formData.append("description", payload.description);
+    if (payload.tags) formData.append("tags", payload.tags);
     return request<{ data: KnowledgeAssetApi }>(
-      "/knowledge-base/",
-      { method: "POST", body: JSON.stringify(payload) },
+      "/knowledge-base/upload",
+      { method: "POST", body: formData },
       accessToken,
     );
   },
@@ -374,29 +371,45 @@ export type MeetingApi = {
 
 export type ProposalApi = {
   id: string;
-  company: string;
-  title: string;
-  summary?: string;
-  value?: number;
   status: string;
   outcome: string;
+  file_url: string;
+  file_type?: string;
+  file_size?: number;
+  version: number;
+  ai_metadata: Record<string, unknown>;
+  presigned_url?: string;
   created_at: string;
   updated_at: string;
 };
 
 export type ProposalTemplateApi = {
   id: string;
+  team_id: string;
   template_name: string;
-  company_name?: string;
-  logo_url?: string;
-  sections?: unknown[];
+  file_url: string;
+  file_type?: string;
+  file_size?: number;
+  presigned_url?: string;
+  created_at: string;
+  updated_at?: string;
+};
+
+export type ProposalTemplateUploadPayload = {
+  template_name: string;
+  file: File;
 };
 
 export type KnowledgeAssetApi = {
   id: string;
+  team_id: string;
   title: string;
-  type: string;
-  company?: string;
-  status: string;
+  description?: string;
+  tags: string[];
+  file_url: string;
+  file_type?: string;
+  file_size?: number;
+  presigned_url?: string;
   created_at: string;
+  updated_at?: string;
 };

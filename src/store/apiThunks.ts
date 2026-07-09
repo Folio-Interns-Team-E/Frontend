@@ -391,6 +391,35 @@ export const reviseProposalRemote = createAsyncThunk(
 );
 
 // === Knowledge Base Thunks ===
+export const uploadKnowledgeAsset = createAsyncThunk(
+  "app/uploadKnowledgeAsset",
+  async (
+    payload: { file: File; title: string; description?: string; tags?: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const token = getToken();
+      const res = await api.uploadKnowledgeAsset(payload, token!);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const uploadProposalTemplate = createAsyncThunk(
+  "app/uploadProposalTemplate",
+  async (payload: { file: File; template_name: string }, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.uploadProposalTemplate(payload, token!);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
 export const fetchKnowledgeAssets = createAsyncThunk(
   "app/fetchKnowledgeAssets",
   async (_, { rejectWithValue }) => {

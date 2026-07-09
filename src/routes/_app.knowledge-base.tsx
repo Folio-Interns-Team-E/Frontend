@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import { useAppSelector } from "../store/hooks";
-import { Skeleton, SkeletonList } from "../components/ui/skeleton";
-import { fetchKnowledgeAssets } from "../store/apiThunks";
-import { useAppDispatch } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { SkeletonList } from "../components/ui/skeleton";
+import { fetchKnowledgeAssets, uploadKnowledgeAsset } from "../store/apiThunks";
 
 export const Route = createFileRoute("/_app/knowledge-base")({
   head: () => ({
@@ -24,9 +23,43 @@ function KnowledgeBase() {
   const assets = useAppSelector((state) => state.app.knowledgeAssets);
   const assetsStatus = useAppSelector((state) => state.app.knowledgeAssetsStatus);
 
+  const [showUpload, setShowUpload] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [search, setSearch] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (assetsStatus === "idle") dispatch(fetchKnowledgeAssets());
   }, [assetsStatus, dispatch]);
+
+  const filtered = assets.filter((a) =>
+    a.title.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const handleUpload = async () => {
+    if (!file || !title.trim()) return;
+    setUploading(true);
+    try {
+      await dispatch(
+        uploadKnowledgeAsset({
+          file,
+          title: title.trim(),
+          description: description.trim() || undefined,
+        }),
+      ).unwrap();
+      setShowUpload(false);
+      setTitle("");
+      setDescription("");
+      setFile(null);
+    } catch {
+      // error handled by thunk
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <>
@@ -40,12 +73,14 @@ function KnowledgeBase() {
             </div>
             <h2 className="text-xl font-bold">Every deal makes the next one smarter.</h2>
             <p className="mt-1 max-w-2xl text-sm text-on-surface-variant">
-              Transcripts, proposals, and case studies are indexed here. Before drafting a proposal,
-              SalesSync AI retrieves the three most relevant sources and shows exactly what grounded
-              the output.
+              Upload PDF documents — transcripts, case studies, whitepapers — to ground
+              proposal generation and agent discovery.
             </p>
           </div>
-          <button className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 font-semibold text-white">
+          <button
+            onClick={() => setShowUpload(true)}
+            className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 font-semibold text-white hover:opacity-90"
+          >
             <span className="material-symbols-outlined text-[19px]">upload_file</span>
             Add source
           </button>
@@ -55,7 +90,7 @@ function KnowledgeBase() {
           {[
             ["Indexed sources", assets.length.toString(), "database"],
             ["Proposal retrieval", "Top 3", "manage_search"],
-            ["Grounding coverage", "100%", "verified"],
+            ["Grounding coverage", assets.length > 0 ? "100%" : "—", "verified"],
           ].map(([label, value, icon]) => (
             <div key={label} className="rounded-xl border border-outline-variant bg-white p-5">
               <span className="material-symbols-outlined text-primary">{icon}</span>
@@ -78,6 +113,8 @@ function KnowledgeBase() {
                 search
               </span>
               <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 className="rounded-lg border border-outline-variant py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
                 placeholder="Search sources"
               />
@@ -85,35 +122,114 @@ function KnowledgeBase() {
           </div>
           {assetsStatus === "loading" ? (
             <SkeletonList count={4} />
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-16 text-on-surface-variant">
+              <span className="material-symbols-outlined text-[40px]">folder_off</span>
+              <p className="text-sm font-semibold">No sources yet</p>
+              <p className="text-xs">Upload a PDF document to get started.</p>
+            </div>
           ) : (
             <div className="divide-y divide-outline-variant">
-              {assets.map((asset) => (
+              {filtered.map((asset) => (
                 <div key={asset.id} className="flex items-center gap-4 p-5">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container text-primary">
                     <span className="material-symbols-outlined">
-                      {asset.type === "Transcript"
-                        ? "record_voice_over"
-                        : asset.type === "Proposal"
-                          ? "description"
-                          : "menu_book"}
+                      {asset.fileType === "pdf" ? "picture_as_pdf" : "description"}
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold">{asset.title}</p>
                     <p className="text-xs text-on-surface-variant">
-                      {asset.type} · {asset.company} · {asset.date}
+                      {asset.fileType?.toUpperCase()}
+                      {asset.fileSize ? ` · ${(asset.fileSize / 1024).toFixed(0)} KB` : ""}
+                      {asset.tags.length > 0 ? ` · ${asset.tags.join(", ")}` : ""}
                     </p>
                   </div>
-                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700">
-                    {asset.status}
-                  </span>
-                  <button className="material-symbols-outlined text-outline">more_horiz</button>
+                  {asset.presignedUrl && (
+                    <a
+                      href={asset.presignedUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-semibold text-on-surface hover:bg-surface"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">visibility</span>
+                      View
+                    </a>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </section>
       </div>
+
+      {showUpload && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => !uploading && setShowUpload(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-5 text-lg font-bold">Upload document</h3>
+
+            <label className="mb-1 block text-xs font-semibold text-on-surface-variant">
+              File (PDF only)
+            </label>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".pdf,application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="mb-4 w-full rounded-lg border border-outline-variant p-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
+            />
+
+            <label className="mb-1 block text-xs font-semibold text-on-surface-variant">Title</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mb-4 w-full rounded-lg border border-outline-variant px-3 py-2 text-sm outline-none focus:border-primary"
+              placeholder="e.g. Q3 Market Analysis"
+            />
+
+            <label className="mb-1 block text-xs font-semibold text-on-surface-variant">
+              Description (optional)
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="mb-5 w-full rounded-lg border border-outline-variant px-3 py-2 text-sm outline-none focus:border-primary"
+              placeholder="Brief description of the document"
+            />
+
+            <div className="flex justify-end gap-3">
+              <button
+                disabled={uploading}
+                onClick={() => setShowUpload(false)}
+                className="rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={uploading || !file || !title.trim()}
+                onClick={handleUpload}
+                className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {uploading ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Uploading…
+                  </>
+                ) : (
+                  "Upload"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
