@@ -74,7 +74,7 @@ The frontend is a React 19 application built with Vite, TanStack Start/Router, R
 Main frontend areas:
 
 - `src/routes`: File-based routes. Marketing routes, auth routes, and app routes are grouped with TanStack route conventions.
-- `src/components`: Shared layout and feature components such as `Sidebar`, `TopBar`, `LandingHeader`, `AuthLayout`, and `AIChatPanel`.
+- `src/components`: Shared layout and feature components such as `Sidebar`, `TopBar`, `AuthLayout`, and `AIChatPanel`.
 - `src/components/ui`: Reusable UI primitives.
 - `src/lib/api.ts`: Central API client. It reads `VITE_API_URL`, defaults to `/api`, and attaches bearer tokens when provided.
 - `src/store`: Redux store setup, hooks, app slice, and async thunks.
