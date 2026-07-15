@@ -159,10 +159,12 @@ function Outreach() {
     () => allLeads.filter((l) => OUTREACH_STATUSES.includes(l.status)),
     [allLeads],
   );
+  const sentCount = allLeads.filter((lead) => lead.status === "Sent").length;
+  const repliedCount = allLeads.filter((lead) => lead.status === "Replied").length;
 
   useEffect(() => {
-    if (leadsStatus === "idle") dispatch(fetchLeads());
-  }, [leadsStatus, dispatch]);
+    dispatch(fetchLeads());
+  }, [dispatch]);
 
   const [selectedId, setSelectedId] = useState("");
   const selectedLead = outreachLeads.find((lead) => lead.id === selectedId) ?? outreachLeads[0];
@@ -276,9 +278,9 @@ function Outreach() {
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-4 shrink-0">
           {[
-            { label: "EMAILS SENT", value: "1,284", delta: "+12%", color: "text-primary" },
-            { label: "OPENED RATE", value: "42.5%", delta: "+5%", color: "text-tertiary" },
-            { label: "REPLIED", value: "8.2%", delta: "+2.4%", color: "text-primary" },
+            { label: "EMAILS SENT", value: sentCount.toString(), detail: "From lead status" },
+            { label: "OPEN RATE", value: "--", detail: "Not tracked yet" },
+            { label: "REPLIED", value: repliedCount.toString(), detail: "From lead status" },
           ].map((s) => (
             <div
               key={s.label}
@@ -289,7 +291,7 @@ function Outreach() {
               </span>
               <div className="flex items-end gap-2 mt-1">
                 <span className="font-display-lg text-display-lg text-on-surface">{s.value}</span>
-                <span className={`${s.color} font-semibold text-body-sm mb-1`}>{s.delta}</span>
+                <span className="mb-1 text-xs text-on-surface-variant">{s.detail}</span>
               </div>
             </div>
           ))}

@@ -327,18 +327,29 @@ export const api = {
   },
 
   // === Billing ===
-  getBillingStatus(accessToken: string) {
-    return request<{ data: BillingStatus }>("/billing/status", {}, accessToken);
+  async getBillingStatus(accessToken: string) {
+    const response = await request<BillingStatus | { data: BillingStatus }>(
+      "/billing/status",
+      {},
+      accessToken,
+    );
+    return { data: "data" in response ? response.data : response };
   },
-  createCheckoutSession(tier: "growth" | "enterprise", accessToken: string) {
-    return request<{ data: { checkout_url: string } }>(
+  async createCheckoutSession(tier: "growth" | "enterprise", accessToken: string) {
+    const response = await request<{ checkout_url: string } | { data: { checkout_url: string } }>(
       `/billing/checkout/${tier}`,
       { method: "POST" },
       accessToken,
     );
+    return { data: "data" in response ? response.data : response };
   },
-  cancelSubscription(accessToken: string) {
-    return request<{ data: { message: string } }>("/billing/cancel", { method: "POST" }, accessToken);
+  async cancelSubscription(accessToken: string) {
+    const response = await request<{ message: string } | { data: { message: string } }>(
+      "/billing/cancel",
+      { method: "POST" },
+      accessToken,
+    );
+    return { data: "data" in response ? response.data : response };
   },
 
   // === Integrations ===
@@ -390,10 +401,11 @@ export type MeetingApi = {
   date: string;
   time: string;
   duration?: string;
-  agenda: string[];
-  transcript: string[];
+  agenda: string[] | string | null;
+  transcript?: string[];
   status: string;
   notes?: string;
+  created_at: string;
 };
 
 export type ProposalApi = {

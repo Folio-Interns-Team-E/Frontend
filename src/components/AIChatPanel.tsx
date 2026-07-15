@@ -69,7 +69,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
               >
                 {item.author === "user" ? "You" : "AI Agent"}
               </p>
-              <p className="font-body-sm text-body-sm">{item.body}</p>
+              <p className="whitespace-pre-line font-body-sm text-body-sm">{item.body}</p>
             </div>
             <span className="text-[10px] text-outline mt-1 px-1">{item.time}</span>
           </div>

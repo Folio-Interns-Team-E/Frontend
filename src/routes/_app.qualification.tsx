@@ -29,8 +29,8 @@ function Qualification() {
   const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
 
   useEffect(() => {
-    if (leadsStatus === "idle") dispatch(fetchLeads());
-  }, [leadsStatus, dispatch]);
+    dispatch(fetchLeads());
+  }, [dispatch]);
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
   const [sortMode, setSortMode] = useState<SortMode>("score-desc");
   const cards = useMemo(() => {

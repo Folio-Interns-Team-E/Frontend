@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import { completeOnboarding } from "../store/appSlice";
 import { submitOnboardingRemote } from "../store/apiThunks";
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/_app/dashboard")({
   component: Index,
 });
 
+// Legacy mock data is retained only for the design reference; the screen renders liveColumns.
 const columns = [
   {
     title: "Scraped",
@@ -106,6 +107,15 @@ const activity = [
   },
 ];
 
+function formatRelativeTime(value: string) {
+  const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60_000));
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 function Index() {
   const dispatch = useAppDispatch();
   const onboarding = useAppSelector((state) => state.app.onboarding);
@@ -118,6 +128,24 @@ function Index() {
   const proposals = useAppSelector((state) => state.app.proposals);
   const proposalsStatus = useAppSelector((state) => state.app.proposalsStatus);
   const profile = useAppSelector((state) => state.app.profile);
+  const liveColumns = useMemo(
+    () => [
+      { title: "Prospects", accent: "bg-slate-400", items: leads.filter((lead) => ["New", "Analyzed"].includes(lead.status)) },
+      { title: "Qualified", accent: "bg-amber-500", items: leads.filter((lead) => lead.status === "Qualified") },
+      { title: "Outreach", accent: "bg-cyan-500", items: leads.filter((lead) => ["Drafted", "Sent", "Replied"].includes(lead.status)) },
+      { title: "Meetings", accent: "bg-violet-500", items: meetings.map((meeting) => ({ id: meeting.id, company: meeting.company || "Meeting", name: meeting.client || meeting.date, title: `${meeting.date} at ${meeting.time}`, score: undefined })) },
+      { title: "Proposals", accent: "bg-blue-500", items: proposals.map((proposal) => ({ id: proposal.id, company: proposal.title, name: proposal.outcome, title: proposal.status, score: undefined })) },
+    ],
+    [leads, meetings, proposals],
+  );
+  const liveActivity = useMemo(
+    () => [
+      ...leads.map((lead) => ({ id: `lead-${lead.id}`, dot: "bg-primary", text: `${lead.name} at ${lead.company || "an unknown company"} was added as a ${lead.status.toLowerCase()} lead.`, time: lead.createdAt })),
+      ...meetings.map((meeting) => ({ id: `meeting-${meeting.id}`, dot: "bg-amber-500", text: `Meeting with ${meeting.client || meeting.company || "a lead"} is ${meeting.status.toLowerCase()}.`, time: meeting.createdAt })),
+      ...proposals.map((proposal) => ({ id: `proposal-${proposal.id}`, dot: "bg-emerald-500", text: `Proposal ${proposal.title} is ${proposal.status.toLowerCase()}.`, time: proposal.updatedAt })),
+    ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 6),
+    [leads, meetings, proposals],
+  );
   const isLoading =
     leadsStatus === "loading" || meetingsStatus === "loading" || proposalsStatus === "loading";
   const liveKpis = [
@@ -125,28 +153,28 @@ function Index() {
       icon: "groups",
       label: "Total leads",
       value: leads.length.toString(),
-      delta: "+12.5%",
+      detail: "Current pipeline",
       iconClass: "bg-cyan-50 text-cyan-700",
     },
     {
       icon: "mail",
       label: "Emails sent",
       value: leads.filter((lead) => ["Sent", "Replied"].includes(lead.status)).length.toString(),
-      delta: "+4.2%",
+      detail: "Sent or replied",
       iconClass: "bg-violet-50 text-violet-700",
     },
     {
       icon: "event_available",
       label: "Meetings",
       value: meetings.length.toString(),
-      delta: "+8%",
+      detail: "Scheduled records",
       iconClass: "bg-amber-50 text-amber-700",
     },
     {
       icon: "description",
       label: "Proposals",
       value: proposals.length.toString(),
-      delta: "+18%",
+      detail: "Current records",
       iconClass: "bg-emerald-50 text-emerald-700",
     },
   ];
@@ -253,9 +281,8 @@ function Index() {
                     </span>
                   </span>
 
-                  <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">
-                    <span className="material-symbols-outlined text-[12px]">north_east</span>
-                    {k.delta}
+                  <span className="rounded-full bg-surface-container px-2 py-1 text-[10px] font-bold text-on-surface-variant">
+                    {k.detail}
                   </span>
                 </div>
                 <p className="text-[26px] font-black tracking-tight text-on-surface">{k.value}</p>
@@ -288,7 +315,7 @@ function Index() {
           </div>
           <div className="custom-scrollbar overflow-x-auto bg-slate-50/50 p-4">
             <div className="flex gap-3">
-              {columns.map((col) => (
+              {liveColumns.map((col) => (
                 <div
                   key={col.title}
                   className="w-[205px] flex-shrink-0 rounded-xl border border-outline-variant/45 bg-white/50 p-2"
@@ -300,7 +327,7 @@ function Index() {
                         {col.title}
                       </span>
                       <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500">
-                        {col.count}
+                        {col.items.length}
                       </span>
                     </div>
                     <span className="material-symbols-outlined text-[15px] text-outline">
@@ -310,24 +337,26 @@ function Index() {
                   <div className="space-y-2">
                     {col.items.map((item) => (
                       <div
-                        key={item.co}
+                        key={item.id}
                         className="cursor-pointer rounded-xl border border-outline-variant/50 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
                       >
                         <div className="mb-2 flex items-start justify-between gap-2">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-black text-slate-600">
-                            {item.co
+                            {item.company
                               .split(" ")
                               .map((word) => word[0])
                               .join("")
                               .slice(0, 2)}
                           </div>
-                          <span className="rounded-md bg-primary/8 px-1.5 py-0.5 text-[9px] font-bold text-primary">
-                            {item.score}% fit
-                          </span>
+                          {item.score !== undefined && (
+                            <span className="rounded-md bg-primary/8 px-1.5 py-0.5 text-[9px] font-bold text-primary">
+                              {item.score}% fit
+                            </span>
+                          )}
                         </div>
-                        <p className="text-[12px] font-bold text-on-surface">{item.co}</p>
+                        <p className="text-[12px] font-bold text-on-surface">{item.company}</p>
                         <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
-                          {item.who}
+                          {item.name} {item.title ? `- ${item.title}` : ""}
                         </p>
                       </div>
                     ))}
@@ -354,9 +383,9 @@ function Index() {
               <button className="text-xs font-bold text-primary hover:underline">View all</button>
             </div>
             <div className="divide-y divide-outline-variant/40">
-              {activity.map((item, index) => (
+              {liveActivity.length ? liveActivity.map((item) => (
                 <div
-                  key={index}
+                  key={item.id}
                   className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-primary/[0.025]"
                 >
                   <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50">
@@ -366,10 +395,10 @@ function Index() {
                     <p className="text-[12px] leading-relaxed text-on-surface">{item.text}</p>
                   </div>
                   <span className="whitespace-nowrap text-[10px] font-medium text-slate-400">
-                    {item.time}
+                    {formatRelativeTime(item.time)}
                   </span>
                 </div>
-              ))}
+              )) : <p className="px-5 py-8 text-center text-sm text-on-surface-variant">No pipeline activity yet.</p>}
             </div>
           </div>
 

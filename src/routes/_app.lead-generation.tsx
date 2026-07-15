@@ -35,8 +35,8 @@ function LeadGeneration() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (leadsStatus === "idle") dispatch(fetchLeads());
-  }, [leadsStatus, dispatch]);
+    dispatch(fetchLeads());
+  }, [dispatch]);
   const [fitFilter, setFitFilter] = useState("all");
 
   const filteredLeads = leads.filter((lead) => {

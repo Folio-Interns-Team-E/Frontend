@@ -37,8 +37,8 @@ function Proposals() {
   const [template, setTemplate] = useState<ProposalTemplateApi | null>(null);
 
   useEffect(() => {
-    if (proposalsStatus === "idle") dispatch(fetchProposals());
-  }, [proposalsStatus, dispatch]);
+    dispatch(fetchProposals());
+  }, [dispatch]);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");

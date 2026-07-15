@@ -21,12 +21,16 @@ import {
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: ({ context, location }) => {
+    // Browser storage is unavailable during SSR. Deferring the check keeps a
+    // persisted session from being redirected before the client hydrates it.
+    if (typeof window === "undefined") return;
+
     // Access Redux state directly from the router context
     const state = context.store.getState();
     const auth = state.app.auth;
 
     // Rule 1: Redirect to login if unauthenticated
-    if (!auth.loggedIn) {
+    if (!auth.loggedIn && !localStorage.getItem("access_token")) {
       throw redirect({
         to: "/login",
         search: { redirect: location.href },
@@ -48,6 +52,11 @@ function AppLayout() {
   const accessToken =
     auth.accessToken ??
     (typeof window !== "undefined" ? localStorage.getItem("access_token") : null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || auth.loggedIn || accessToken) return;
+    void navigate({ to: "/login", search: { redirect: location.href }, replace: true });
+  }, [accessToken, auth.loggedIn, location.href, navigate]);
 
   useEffect(() => {
     const token = accessToken && accessToken !== "undefined" ? accessToken : null;
@@ -96,6 +105,8 @@ function AppLayout() {
       </div>
     );
   }
+
+  if (!auth.loggedIn && !accessToken) return null;
 
   if (
     auth.userTeamsStatus === "succeeded" &&

@@ -49,10 +49,12 @@ export type Lead = {
   score: number;
   status: LeadStatus;
   reasoning: string;
+  createdAt: string;
 };
 
 export type Meeting = {
   id: string;
+  leadId: string;
   client: string;
   company: string;
   date: string;
@@ -61,6 +63,8 @@ export type Meeting = {
   agenda: string[];
   status: "Upcoming" | "Live" | "Completed";
   transcript: string[];
+  notes?: string;
+  createdAt: string;
 };
 
 export type Proposal = {
@@ -781,6 +785,7 @@ const appSlice = createSlice({
           score: lead.score ?? 50,
           status: lead.status as LeadStatus,
           reasoning: lead.reasoning || "",
+          createdAt: lead.created_at,
         }));
         state.leadsStatus = "succeeded";
       })
@@ -820,6 +825,7 @@ const appSlice = createSlice({
           score: lead.score ?? 50,
           status: lead.status as LeadStatus,
           reasoning: lead.reasoning || "",
+          createdAt: lead.created_at,
         }));
         state.outreachLeadsStatus = "succeeded";
       })
@@ -864,14 +870,21 @@ const appSlice = createSlice({
       .addCase(fetchMeetings.fulfilled, (state, action) => {
         state.meetings = action.payload.map((m) => ({
           id: m.id,
+          leadId: m.lead_id,
           client: m.client || "",
           company: m.company || "",
           date: m.date,
           time: m.time,
           duration: m.duration || "30 min",
-          agenda: m.agenda,
+          agenda: Array.isArray(m.agenda)
+            ? m.agenda
+            : m.agenda
+              ? [m.agenda]
+              : [],
           status: m.status as "Upcoming" | "Live" | "Completed",
-          transcript: m.transcript,
+          transcript: m.transcript ?? [],
+          notes: m.notes,
+          createdAt: m.created_at,
         }));
         state.meetingsStatus = "succeeded";
       })
@@ -1044,6 +1057,7 @@ function buildLeads(icp: string): Lead[] {
         score >= 80
           ? `${company} strongly matches your ICP description. ${title} is close to the revenue workflow.`
           : `${company} has partial fit, but the role or segment is weaker against your ICP.`,
+      createdAt: new Date().toISOString(),
     };
   });
 }
