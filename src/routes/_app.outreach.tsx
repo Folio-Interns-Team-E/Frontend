@@ -29,6 +29,8 @@ interface ComposerContentProps {
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
+  tone: "Professional" | "Friendly" | "Direct";
+  onToneChange: (tone: "Professional" | "Friendly" | "Direct") => void;
 }
 
 const ComposerContent = ({
@@ -41,6 +43,8 @@ const ComposerContent = ({
   canRedo,
   onUndo,
   onRedo,
+  tone,
+  onToneChange,
 }: ComposerContentProps) => (
   <>
     <div className="flex items-center gap-4 border-b border-outline-variant py-2 shrink-0">
@@ -102,19 +106,28 @@ const ComposerContent = ({
         ADJUST TONE
       </span>
       <div className="flex gap-2">
-        <button className="px-3 py-1.5 rounded-full border border-outline-variant text-body-sm font-medium hover:border-primary transition-colors">
+        <button
+          onClick={() => onToneChange("Professional")}
+          className={`px-3 py-1.5 rounded-full border text-body-sm font-medium transition-colors ${
+            tone === "Professional" ? "border-primary bg-primary/10 text-primary" : "border-outline-variant hover:border-primary"
+          }`}
+        >
           Professional
         </button>
-        <button className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary text-primary text-body-sm font-semibold flex items-center gap-1">
-          <span
-            className="material-symbols-outlined text-[16px]"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            auto_awesome
-          </span>
+        <button
+          onClick={() => onToneChange("Friendly")}
+          className={`px-3 py-1.5 rounded-full border text-body-sm font-semibold transition-colors ${
+            tone === "Friendly" ? "border-primary bg-primary/10 text-primary" : "border-outline-variant hover:border-primary"
+          }`}
+        >
           Friendly
         </button>
-        <button className="px-3 py-1.5 rounded-full border border-outline-variant text-body-sm font-medium hover:border-primary transition-colors">
+        <button
+          onClick={() => onToneChange("Direct")}
+          className={`px-3 py-1.5 rounded-full border text-body-sm font-medium transition-colors ${
+            tone === "Direct" ? "border-primary bg-primary/10 text-primary" : "border-outline-variant hover:border-primary"
+          }`}
+        >
           Direct
         </button>
       </div>
@@ -126,9 +139,10 @@ interface ComposerActionsProps {
   onSend: () => void;
   disabled: boolean;
   isSent: boolean;
+  sentTo: string;
 }
 
-const ComposerActions = ({ onSend, disabled, isSent }: ComposerActionsProps) => (
+const ComposerActions = ({ onSend, disabled, isSent, sentTo }: ComposerActionsProps) => (
   <div className="p-4 border-t border-outline-variant bg-surface-container-low/30 flex justify-between items-center shrink-0 rounded-b-xl">
     <button className="px-4 py-2 border border-primary text-primary font-semibold rounded-lg flex items-center gap-2 hover:bg-primary/5 active:scale-95 transition-all">
       <span className="material-symbols-outlined text-[20px]">refresh</span>
@@ -140,13 +154,13 @@ const ComposerActions = ({ onSend, disabled, isSent }: ComposerActionsProps) => 
       className="px-8 py-2 bg-primary text-on-primary font-semibold rounded-lg shadow-sm hover:opacity-90 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
     >
       <span className="material-symbols-outlined text-[20px]">send</span>
-      {isSent ? "Sent" : "Send Now"}
+      {isSent ? `Sent to ${sentTo || "recipient"}` : "Send Now"}
     </button>
   </div>
 );
 
 // --- MAIN OUTREACH AREA ---
-const OUTREACH_STATUSES = ["Qualified", "Discarded", "Drafted", "Sent", "Replied", "Converted"];
+const OUTREACH_STATUSES = ["Qualified", "Drafted", "Sent", "Replied", "Converted"];
 
 function Outreach() {
   const dispatch = useAppDispatch();
@@ -176,6 +190,7 @@ function Outreach() {
   }, [outreachLeads, selectedId]);
 
   const [subject, setSubject] = useState("");
+  const [tone, setTone] = useState<"Professional" | "Friendly" | "Direct">("Professional");
   const [isExpanded, setIsExpanded] = useState(false);
 
   // --- UNDO / REDO STATE MANAGEMENT ---
@@ -258,9 +273,25 @@ function Outreach() {
 
   const handleSend = () => {
     if (selectedLead && subject && body) {
-      dispatch(sendEmailRemote({ leadId: selectedLead.id, subject, body }));
+      dispatch(sendEmailRemote({ leadId: selectedLead.id, subject, body, tone }));
       setIsExpanded(false);
     }
+  };
+
+  const handleToneChange = (nextTone: "Professional" | "Friendly" | "Direct") => {
+    setTone(nextTone);
+    if (!body.trim()) return;
+
+    const greeting = selectedLead?.name ? `Hi ${selectedLead.name.split(" ")[0]},` : "Hi,";
+    const message = body.replace(/^(Hi|Hello|Dear)[^\n]*,?\s*/i, "").trim();
+    const signOff = "\n\nBest,\nSalesSync AI";
+    const adjusted =
+      nextTone === "Professional"
+        ? `Hello ${selectedLead?.name ?? "there"},\n\n${message.replace(/!/g, ".")}${signOff}`
+        : nextTone === "Friendly"
+          ? `${greeting}\n\nHope you're having a great week.\n\n${message}${signOff}`
+          : `${greeting}\n\n${message.split("\n").filter(Boolean).slice(0, 2).join("\n")}${signOff}`;
+    updateBody(adjusted);
   };
 
   return (
@@ -396,6 +427,8 @@ function Outreach() {
                 canRedo={future.length > 0}
                 onUndo={handleUndo}
                 onRedo={handleRedo}
+                tone={tone}
+                onToneChange={handleToneChange}
               />
             </div>
 
@@ -403,6 +436,7 @@ function Outreach() {
               onSend={handleSend}
               disabled={!selectedLead}
               isSent={selectedLead?.status === "Sent"}
+              sentTo={selectedLead?.email ?? ""}
             />
           </div>
         </div>
@@ -446,6 +480,8 @@ function Outreach() {
                 canRedo={future.length > 0}
                 onUndo={handleUndo}
                 onRedo={handleRedo}
+                tone={tone}
+                onToneChange={handleToneChange}
               />
             </div>
 
@@ -453,6 +489,7 @@ function Outreach() {
               onSend={handleSend}
               disabled={!selectedLead}
               isSent={selectedLead?.status === "Sent"}
+              sentTo={selectedLead?.email ?? ""}
             />
           </div>
         </div>

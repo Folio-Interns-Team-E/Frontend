@@ -336,7 +336,7 @@ function Badge({
 
 function OutcomePanel({ proposal, compact = false }: { proposal: Proposal; compact?: boolean }) {
   const dispatch = useAppDispatch();
-  const accessToken = useAppSelector((state) => state.app.auth.accessToken);
+  const accessToken = useAppSelector((state) => state.app.auth.accessToken) ?? localStorage.getItem("access_token");
   const outcome = getOutcome(proposal);
 
   return (
@@ -385,7 +385,7 @@ function ProposalActions({
   compact?: boolean;
 }) {
   const dispatch = useAppDispatch();
-  const accessToken = useAppSelector((state) => state.app.auth.accessToken);
+  const accessToken = useAppSelector((state) => state.app.auth.accessToken) ?? localStorage.getItem("access_token");
 
   return (
     <div className={`mt-5 flex flex-wrap justify-end gap-2 ${compact ? "" : "border-t pt-5"}`}>

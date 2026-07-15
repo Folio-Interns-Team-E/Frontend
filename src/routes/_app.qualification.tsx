@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import { draftEmail } from "../store/appSlice";
 import { discardLeadRemote, qualifyLeadRemote } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { SkeletonCardGrid } from "../components/ui/skeleton";
@@ -35,7 +34,7 @@ function Qualification() {
   const [sortMode, setSortMode] = useState<SortMode>("score-desc");
   const cards = useMemo(() => {
     const visible = leads.filter((lead) => {
-      if (lead.status !== "Analyzed") return false;
+      if (lead.status === "Discarded") return false;
       if (filterMode === "high") return lead.score >= 85;
       if (filterMode === "qualified")
         return lead.status === "Qualified" || lead.status === "Drafted";
@@ -162,10 +161,7 @@ function Qualification() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => {
-                      dispatch(qualifyLeadRemote(c.id));
-                      dispatch(draftEmail(c.id));
-                    }}
+                    onClick={() => void dispatch(qualifyLeadRemote(c.id))}
                     className="flex-1 py-2 bg-primary text-white rounded-lg font-label-caps text-[12px] hover:opacity-90 active:scale-[0.98] transition-all"
                   >
                     {c.status === "Qualified" || c.status === "Drafted" ? "Qualified" : "Qualify"}

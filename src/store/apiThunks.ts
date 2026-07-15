@@ -198,6 +198,31 @@ export const fetchLeads = createAsyncThunk(
   },
 );
 
+export const createLeadRemote = createAsyncThunk(
+  "app/createLeadRemote",
+  async (
+    payload: {
+      name: string;
+      company?: string;
+      title?: string;
+      email?: string;
+      source?: string;
+      status?: string;
+      score?: number;
+      reasoning?: string;
+    },
+    { rejectWithValue },
+  ) => {
+    try {
+      const token = getToken();
+      const res = await api.createLead(payload, token!);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
 export const qualifyLeadRemote = createAsyncThunk(
   "app/qualifyLeadRemote",
   async (leadId: string, { rejectWithValue }) => {
@@ -343,7 +368,7 @@ export const updateProposalStatusRemote = createAsyncThunk(
   async (payload: { id: string; status: string }, { rejectWithValue }) => {
     try {
       const token = getToken();
-      const res = await api.updateProposal(payload.id, { status: payload.status }, token!);
+      const res = await api.updateProposalStatus(payload.id, payload.status, token!);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -356,7 +381,7 @@ export const updateProposalOutcomeRemote = createAsyncThunk(
   async (payload: { id: string; outcome: string }, { rejectWithValue }) => {
     try {
       const token = getToken();
-      const res = await api.updateProposal(payload.id, { outcome: payload.outcome }, token!);
+      const res = await api.updateProposalOutcome(payload.id, payload.outcome, token!);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));

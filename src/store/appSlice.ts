@@ -795,10 +795,21 @@ const appSlice = createSlice({
         const oLead = state.outreachLeads.find((item) => item.id === action.payload.id);
         if (oLead) oLead.status = "Qualified";
       })
+      .addCase(qualifyLeadRemote.pending, (state, action) => {
+        const lead = state.leads.find((item) => item.id === action.meta.arg);
+        if (lead) lead.status = "Qualified";
+        const outreachLead = state.outreachLeads.find((item) => item.id === action.meta.arg);
+        if (outreachLead) outreachLead.status = "Qualified";
+      })
       .addCase(discardLeadRemote.fulfilled, (state, action) => {
         const lead = state.leads.find((item) => item.id === action.payload.id);
         if (lead) lead.status = "Discarded";
         state.outreachLeads = state.outreachLeads.filter((item) => item.id !== action.payload.id);
+      })
+      .addCase(discardLeadRemote.pending, (state, action) => {
+        const lead = state.leads.find((item) => item.id === action.meta.arg);
+        if (lead) lead.status = "Discarded";
+        state.outreachLeads = state.outreachLeads.filter((item) => item.id !== action.meta.arg);
       })
 
       // === Outreach ===
@@ -843,6 +854,12 @@ const appSlice = createSlice({
       })
 
       // === Emails ===
+      .addCase(sendEmailRemote.pending, (state, action) => {
+        const lead = state.leads.find((item) => item.id === action.meta.arg.leadId);
+        if (lead) lead.status = "Sent";
+        const outreachLead = state.outreachLeads.find((item) => item.id === action.meta.arg.leadId);
+        if (outreachLead) outreachLead.status = "Sent";
+      })
       .addCase(sendEmailRemote.fulfilled, (state, action) => {
         const lead = state.leads.find((item) => item.id === action.payload.leadId);
         if (lead) lead.status = "Sent";
@@ -852,6 +869,12 @@ const appSlice = createSlice({
           subject: action.payload.subject,
           body: action.payload.body,
         };
+      })
+      .addCase(draftEmailRemote.pending, (state, action) => {
+        const lead = state.leads.find((item) => item.id === action.meta.arg.leadId);
+        if (lead) lead.status = "Drafted";
+        const outreachLead = state.outreachLeads.find((item) => item.id === action.meta.arg.leadId);
+        if (outreachLead) outreachLead.status = "Drafted";
       })
       .addCase(draftEmailRemote.fulfilled, (state, action) => {
         const lead = state.leads.find((item) => item.id === action.payload.leadId);
@@ -903,8 +926,23 @@ const appSlice = createSlice({
       .addCase(updateProposalStatusRemote.fulfilled, (state, action) => {
         applyProposal(state, action.payload);
       })
+      .addCase(updateProposalStatusRemote.pending, (state, action) => {
+        const proposal = state.proposals.find((item) => item.id === action.meta.arg.id);
+        if (proposal) proposal.status = action.meta.arg.status as Proposal["status"];
+      })
       .addCase(updateProposalOutcomeRemote.fulfilled, (state, action) => {
         applyProposal(state, action.payload);
+      })
+      .addCase(updateProposalOutcomeRemote.pending, (state, action) => {
+        const proposal = state.proposals.find((item) => item.id === action.meta.arg.id);
+        if (!proposal) return;
+        proposal.outcome = action.meta.arg.outcome as Proposal["outcome"];
+        proposal.status =
+          action.meta.arg.outcome === "Won"
+            ? "Accepted"
+            : action.meta.arg.outcome === "Lost"
+              ? "Rejected"
+              : proposal.status;
       })
       .addCase(reviseProposalRemote.fulfilled, (state, action) => {
         applyProposal(state, action.payload);
@@ -1025,7 +1063,7 @@ export const {
 
 export default appSlice.reducer;
 
-function buildLeads(icp: string): Lead[] {
+export function buildLeads(icp: string): Lead[] {
   const hasMatch = icp.length > 10;
   const baseScore = hasMatch ? 78 : 60;
 

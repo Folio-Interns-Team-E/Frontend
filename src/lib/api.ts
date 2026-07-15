@@ -162,7 +162,16 @@ export const api = {
     return request<{ data: LeadApi }>(`/leads/${leadId}`, {}, accessToken);
   },
   createLead(
-    payload: { name: string; company?: string; title?: string; email?: string; source?: string },
+    payload: {
+      name: string;
+      company?: string;
+      title?: string;
+      email?: string;
+      source?: string;
+      status?: string;
+      score?: number;
+      reasoning?: string;
+    },
     accessToken: string,
   ) {
     return request<{ data: LeadApi }>(
@@ -334,6 +343,20 @@ export const api = {
       accessToken,
     );
     return { data: "data" in response ? response.data : response };
+  },
+  updateProposalStatus(proposalId: string, status: string, accessToken: string) {
+    return request<{ data: ProposalApi }>(
+      `/proposals/${proposalId}/status`,
+      { method: "PATCH", body: JSON.stringify({ status }) },
+      accessToken,
+    );
+  },
+  updateProposalOutcome(proposalId: string, outcome: string, accessToken: string) {
+    return request<{ data: ProposalApi }>(
+      `/proposals/${proposalId}/outcome`,
+      { method: "PATCH", body: JSON.stringify({ outcome }) },
+      accessToken,
+    );
   },
   async createCheckoutSession(tier: "growth" | "enterprise", accessToken: string) {
     const response = await request<{ checkout_url: string } | { data: { checkout_url: string } }>(

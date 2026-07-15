@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import {
-  draftEmail,
-  generateLeadsFromIcp,
-  sendEmail,
+  buildLeads,
 } from "../store/appSlice";
 import {
+  createLeadRemote,
   discardLeadRemote,
+  draftEmailRemote,
   qualifyLeadRemote,
 } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -32,12 +32,52 @@ function LeadGeneration() {
   const dispatch = useAppDispatch();
   const leads = useAppSelector((state) => state.app.leads);
   const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
+  const icp = useAppSelector((state) => state.app.onboarding.icp);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     dispatch(fetchLeads());
   }, [dispatch]);
   const [fitFilter, setFitFilter] = useState("all");
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const generateLeads = async () => {
+    if (isGenerating) return;
+    setIsGenerating(true);
+    const existingEmails = new Set(leads.map((lead) => lead.email.toLowerCase()));
+    const newLeads = buildLeads(icp).filter((lead) => !existingEmails.has(lead.email.toLowerCase()));
+    try {
+      await Promise.all(
+        newLeads.map((lead) =>
+          dispatch(
+            createLeadRemote({
+              name: lead.name,
+              company: lead.company,
+              title: lead.title,
+              email: lead.email,
+              source: lead.source,
+              status: lead.status,
+              score: lead.score,
+              reasoning: lead.reasoning,
+            }),
+          ).unwrap(),
+        ),
+      );
+      dispatch(fetchLeads());
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const draftLead = (lead: (typeof leads)[number]) => {
+    void dispatch(
+      draftEmailRemote({
+        leadId: lead.id,
+        subject: `Intro - ${lead.company || "SalesSync"}`,
+        body: `Hi ${lead.name},\n\nI would like to discuss how SalesSync can support ${lead.company || "your team"}.`,
+      }),
+    );
+  };
 
   const filteredLeads = leads.filter((lead) => {
     const query = search.toLowerCase();
@@ -81,9 +121,13 @@ function LeadGeneration() {
               <option value="low">Low fit below 65</option>
             </select>
           </div>
-          <button onClick={() => dispatch(generateLeadsFromIcp())} className="primary-action">
+          <button
+            onClick={() => void generateLeads()}
+            disabled={isGenerating}
+            className="primary-action disabled:cursor-not-allowed disabled:opacity-60"
+          >
             <span className="material-symbols-outlined text-[18px]">bolt</span>
-            Generate from ICP
+            {isGenerating ? "Generating..." : "Generate from ICP"}
           </button>
         </div>
 
@@ -186,12 +230,10 @@ function LeadGeneration() {
                             Qualify
                           </button>
                           <button
-                            onClick={() =>
-                              dispatch(r.status === "Drafted" ? sendEmail(r.id) : draftEmail(r.id))
-                            }
+                            onClick={() => draftLead(r)}
                             className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary hover:bg-primary/10"
                           >
-                            {r.status === "Drafted" ? "Send" : "Draft"}
+                            Draft
                           </button>
                           <button
                             onClick={() => dispatch(discardLeadRemote(r.id))}
