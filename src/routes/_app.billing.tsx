@@ -120,7 +120,7 @@ function Billing() {
         )}
 
         {/* Current Plan */}
-        <section className="rounded-xl border border-outline-variant bg-white p-6">
+        <section className="section-panel p-5 sm:p-6">
           <div className="mb-5">
             <h2 className="text-lg font-bold">Current Plan</h2>
             <p className="text-sm text-on-surface-variant">
@@ -132,7 +132,7 @@ function Billing() {
               <span className="text-sm text-on-surface-variant">Loading subscription...</span>
             </div>
           ) : billing ? (
-            <div className="flex flex-wrap items-center gap-6">
+            <div className="flex flex-wrap items-center gap-5 sm:gap-6">
               <div>
                 <p className="text-xs font-semibold text-on-surface-variant mb-1">Plan</p>
                 <span
@@ -164,11 +164,11 @@ function Billing() {
                 </div>
               )}
               {billing.tier !== "free" && (
-                <div className="ml-auto">
+                <div className="w-full sm:ml-auto sm:w-auto">
                   <button
                     onClick={handleCancel}
                     disabled={cancelling || billing.cancel_at_period_end}
-                    className="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="secondary-action w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 sm:w-auto"
                   >
                     {billing.cancel_at_period_end
                       ? "Cancellation scheduled"
@@ -197,8 +197,8 @@ function Billing() {
               return (
                 <div
                   key={plan.tier}
-                  className={`app-card relative overflow-hidden p-6 transition-all ${
-                    isCurrent ? "ring-2 ring-primary" : "hover:shadow-lg"
+                  className={`app-card app-card-hover relative overflow-hidden p-6 ${
+                    isCurrent ? "ring-2 ring-primary/60" : ""
                   }`}
                 >
                   {isCurrent && (
@@ -227,7 +227,7 @@ function Billing() {
                     className={`mt-6 w-full rounded-lg py-2.5 text-sm font-bold transition ${
                       isCurrent
                         ? "cursor-not-allowed bg-slate-100 text-slate-400"
-                        : "bg-primary text-white hover:brightness-110"
+                        : "bg-[#0d2d39] text-white hover:bg-primary"
                     }`}
                   >
                     {isCurrent

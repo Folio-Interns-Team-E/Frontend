@@ -429,6 +429,7 @@ export type EmailApi = {
 
 export type MeetingApi = {
   id: string;
+  lead_id?: string;
   client?: string;
   company?: string;
   date: string;

@@ -57,7 +57,7 @@ function Settings() {
     <>
       <TopBar title="Settings" />
       <div className="page-shell max-w-5xl space-y-5">
-        <section className="rounded-xl border border-outline-variant bg-white p-6">
+        <section className="section-panel p-5 sm:p-6">
           <div className="mb-5">
             <h2 className="text-lg font-bold">Profile</h2>
             <p className="text-sm text-on-surface-variant">
@@ -69,22 +69,20 @@ function Settings() {
               <label key={key} className="text-sm font-semibold capitalize">
                 {key}
                 <input
-                  className="mt-2 w-full rounded-lg border border-outline-variant px-4 py-2.5 font-normal outline-none focus:border-primary"
+                  className="control mt-2 w-full px-4 py-2.5 font-normal outline-none"
                   value={draft[key]}
                   onChange={(event) => setDraft({ ...draft, [key]: event.target.value })}
                 />
               </label>
             ))}
             <div className="flex items-center gap-3 md:col-span-2">
-              <button className="rounded-lg bg-primary px-5 py-2.5 font-semibold text-white">
-                Save profile
-              </button>
+              <button className="primary-action">Save profile</button>
               {saved && <span className="text-sm font-semibold text-green-700">Changes saved</span>}
             </div>
           </form>
         </section>
 
-        <section className="rounded-xl border border-outline-variant bg-white p-6">
+        <section className="section-panel p-5 sm:p-6">
           <div className="mb-5">
             <h2 className="text-lg font-bold">Integrations</h2>
             <p className="text-sm text-on-surface-variant">
@@ -95,7 +93,9 @@ function Settings() {
             <Integration
               icon="mail"
               name="Gmail"
-              description={gmailEmail ? `Connected as ${gmailEmail}` : "Send emails from your Gmail account."}
+              description={
+                gmailEmail ? `Connected as ${gmailEmail}` : "Send emails from your Gmail account."
+              }
               connected={gmailConnected}
               loading={gmailLoading}
               onToggle={connectGmail}
@@ -123,7 +123,7 @@ function Settings() {
           </div>
         </section>
 
-        <section className="flex items-center justify-between rounded-xl border border-outline-variant bg-white p-6">
+        <section className="section-panel flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
           <div>
             <h2 className="font-bold">Account session</h2>
             <p className="text-sm text-on-surface-variant">
@@ -136,7 +136,7 @@ function Settings() {
               if (auth.accessToken) void dispatch(logoutAccount(auth.accessToken));
               dispatch(demoLogout());
             }}
-            className="rounded-lg border border-error px-4 py-2 text-sm font-semibold text-error"
+            className="secondary-action border-error/40 text-error hover:border-error hover:bg-error/5 hover:text-error"
           >
             Log out
           </Link>
@@ -162,11 +162,11 @@ function Integration({
   onToggle: () => void;
 }) {
   return (
-    <div className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+    <div className="flex flex-col items-start gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:gap-4">
       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container text-primary">
         <span className="material-symbols-outlined">{icon}</span>
       </div>
-      <div className="flex-1">
+      <div className="flex-1 sm:pr-4">
         <p className="font-semibold">{name}</p>
         <p className="text-sm text-on-surface-variant">{description}</p>
       </div>
@@ -174,7 +174,7 @@ function Integration({
         type="button"
         onClick={onToggle}
         disabled={loading}
-        className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+        className={`min-w-28 rounded-lg px-4 py-2 text-sm font-semibold transition ${
           loading
             ? "border border-outline-variant bg-surface text-on-surface-variant"
             : connected

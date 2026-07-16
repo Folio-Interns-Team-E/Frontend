@@ -81,8 +81,8 @@ function TeamManagement() {
     <>
       <TopBar title="Team management" />
       <div className="page-shell space-y-5">
-        <section className="relative overflow-hidden rounded-[1.35rem] bg-[#102b38] p-6 text-white shadow-xl">
-          <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-primary/30 blur-3xl" />
+        <section className="subtle-grid relative overflow-hidden rounded-2xl bg-[#102b38] p-5 text-white shadow-xl sm:p-6">
+          <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-primary/18 to-transparent" />
           <div className="relative flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
               <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#72e1e3]">
@@ -108,7 +108,7 @@ function TeamManagement() {
               </p>
               <button
                 onClick={copyInviteCode}
-                className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 font-mono text-sm font-bold"
+                className="flex max-w-full items-center gap-3 overflow-hidden rounded-lg border border-white/12 bg-white/8 px-4 py-2.5 font-mono text-sm font-bold transition hover:bg-white/12"
               >
                 {team.inviteCode}
                 <span className="material-symbols-outlined text-[17px]">
@@ -120,7 +120,7 @@ function TeamManagement() {
         </section>
 
         {canManageMembers && (
-          <section className="app-card p-5">
+          <section className="section-panel p-5">
             <div className="mb-5">
               <h2 className="font-extrabold">Invite a new member</h2>
               <p className="mt-1 text-xs text-on-surface-variant">
@@ -135,11 +135,11 @@ function TeamManagement() {
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="teammate@company.com"
                 required
-                className="h-11 flex-1 rounded-xl border border-outline-variant bg-white px-4 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
+                className="control h-11 flex-1 px-4 text-sm outline-none"
               />
               <button
                 disabled={team.status === "loading"}
-                className="h-11 rounded-xl bg-primary px-5 text-sm font-bold text-white shadow-md shadow-primary/20 disabled:opacity-60"
+                className="primary-action h-11 disabled:opacity-60"
               >
                 {team.status === "loading" ? "Adding..." : "Add registered user"}
               </button>
@@ -157,7 +157,7 @@ function TeamManagement() {
           </section>
         )}
 
-        <section className="app-card overflow-hidden">
+        <section className="section-panel">
           <div className="border-b border-outline-variant/50 px-6 py-5">
             <h2 className="font-extrabold">Team members</h2>
             <p className="mt-1 text-xs text-on-surface-variant">
@@ -218,7 +218,7 @@ function TeamManagement() {
                         }
                       });
                     }}
-                    className="h-9 flex-1 rounded-lg border border-outline-variant bg-white px-3 text-xs font-semibold capitalize disabled:bg-slate-50"
+                    className="control h-9 min-h-9 flex-1 px-3 text-xs font-semibold capitalize disabled:bg-slate-50"
                   >
                     <option value="admin">Admin</option>
                     <option value="manager">Manager</option>

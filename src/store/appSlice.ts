@@ -880,7 +880,7 @@ const appSlice = createSlice({
       .addCase(fetchMeetings.fulfilled, (state, action) => {
         state.meetings = action.payload.map((m) => ({
           id: m.id,
-          leadId: m.lead_id,
+          leadId: m.lead_id ?? "",
           client: m.client || "",
           company: m.company || "",
           date: m.date,

@@ -52,16 +52,17 @@ function Qualification() {
     <>
       <TopBar title="Qualification" />
       <div className="page-shell">
-        <div className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+        <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
-            <h3 className="font-headline-md text-headline-md text-on-surface">
+            <p className="section-heading mb-1">Lead intelligence</p>
+            <h3 className="text-xl font-extrabold tracking-[-0.025em] text-on-surface sm:text-2xl">
               Qualified Batch #422
             </h3>
             <p className="text-body-sm text-on-surface-variant">
               Leads scored based on ICP match and intent signals.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="custom-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:flex-wrap lg:overflow-visible">
             {[
               ["all", "All"],
               ["high", "High score"],
@@ -71,7 +72,7 @@ function Qualification() {
               <button
                 key={value}
                 onClick={() => setFilterMode(value as FilterMode)}
-                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-body-sm transition-colors ${
+                className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-body-sm transition-colors ${
                   filterMode === value
                     ? "border-primary/30 bg-primary/10 font-bold text-primary"
                     : "border-outline-variant bg-white hover:bg-surface-container"
@@ -87,7 +88,7 @@ function Qualification() {
               onClick={() =>
                 setSortMode((mode) => (mode === "score-desc" ? "score-asc" : "score-desc"))
               }
-              className="flex items-center gap-2 rounded-lg border border-outline-variant bg-white px-4 py-2 text-body-sm transition-colors hover:bg-surface-container"
+              className="secondary-action shrink-0"
             >
               <span className="material-symbols-outlined text-[18px]">sort</span>
               {sortMode === "score-desc" ? "Score high-low" : "Score low-high"}
@@ -98,9 +99,9 @@ function Qualification() {
         {leadsStatus === "loading" ? (
           <SkeletonCardGrid count={3} />
         ) : (
-          <div className="mb-24 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="mb-20 grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
             {cards.length === 0 && (
-              <div className="app-card col-span-full p-8 text-center">
+              <div className="empty-state section-panel col-span-full">
                 <span className="material-symbols-outlined text-4xl text-slate-300">
                   filter_alt_off
                 </span>
@@ -111,13 +112,10 @@ function Qualification() {
               </div>
             )}
             {cards.map((c) => (
-              <div
-                key={c.id}
-                className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 hover:shadow-md transition-shadow group"
-              >
+              <div key={c.id} className="app-card app-card-hover group p-5">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center overflow-hidden font-bold text-primary">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/9 font-bold text-primary ring-1 ring-inset ring-primary/10">
                       {c.initials}
                     </div>
                     <div>
@@ -136,11 +134,16 @@ function Qualification() {
                     <span className="text-[11px] font-label-caps text-on-surface-variant uppercase">
                       Fit Score
                     </span>
-                    <span className="text-[11px] font-bold text-primary">{c.score == null ? "N/A" : `${c.score}%`}</span>
+                    <span className="rounded-md bg-primary/8 px-2 py-0.5 text-[11px] font-bold text-primary">
+                      {c.score == null ? "N/A" : `${c.score}%`}
+                    </span>
                   </div>
                   {c.score != null && (
-                    <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-primary h-full" style={{ width: `${c.score}%` }} />
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
+                      <div
+                        className="h-full rounded-full bg-primary transition-[width] duration-500"
+                        style={{ width: `${c.score}%` }}
+                      />
                     </div>
                   )}
                 </div>
@@ -158,7 +161,7 @@ function Qualification() {
                     </span>
                   ))}
                 </div>
-                <div className="bg-primary/5 border border-primary/10 p-3 rounded-lg mb-5">
+                <div className="mb-5 min-h-20 rounded-lg border border-primary/10 bg-primary/[0.045] p-3">
                   <p className="text-[12px] text-on-primary-fixed-variant italic">
                     “{c.reasoning}”
                   </p>
@@ -166,13 +169,13 @@ function Qualification() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => void dispatch(qualifyLeadRemote(c.id))}
-                    className="flex-1 py-2 bg-primary text-white rounded-lg font-label-caps text-[12px] hover:opacity-90 active:scale-[0.98] transition-all"
+                    className="primary-action flex-1 py-2"
                   >
                     {c.status === "Qualified" || c.status === "Drafted" ? "Qualified" : "Qualify"}
                   </button>
                   <button
                     onClick={() => dispatch(discardLeadRemote(c.id))}
-                    className="px-4 py-2 border border-outline-variant text-on-surface-variant rounded-lg font-label-caps text-[12px] hover:bg-error/5 hover:text-error hover:border-error transition-colors"
+                    className="secondary-action px-4 py-2 hover:border-error/40 hover:bg-error/5 hover:text-error"
                   >
                     Discard
                   </button>

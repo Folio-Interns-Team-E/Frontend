@@ -130,20 +130,72 @@ function Index() {
   const profile = useAppSelector((state) => state.app.profile);
   const liveColumns = useMemo(
     () => [
-      { title: "Prospects", accent: "bg-slate-400", items: leads.filter((lead) => ["New", "Analyzed"].includes(lead.status)).slice(0, 5) },
-      { title: "Qualified", accent: "bg-amber-500", items: leads.filter((lead) => lead.status === "Qualified").slice(0, 5) },
-      { title: "Outreach", accent: "bg-cyan-500", items: leads.filter((lead) => ["Drafted", "Sent", "Replied"].includes(lead.status)).slice(0, 5) },
-      { title: "Meetings", accent: "bg-violet-500", items: meetings.slice(0, 5).map((meeting) => ({ id: meeting.id, company: meeting.company || "Meeting", name: meeting.client || meeting.date, title: `${meeting.date} at ${meeting.time}`, score: undefined })) },
-      { title: "Proposals", accent: "bg-blue-500", items: proposals.slice(0, 5).map((proposal) => ({ id: proposal.id, company: proposal.title, name: proposal.outcome, title: proposal.status, score: undefined })) },
+      {
+        title: "Prospects",
+        accent: "bg-slate-400",
+        items: leads.filter((lead) => ["New", "Analyzed"].includes(lead.status)).slice(0, 5),
+      },
+      {
+        title: "Qualified",
+        accent: "bg-amber-500",
+        items: leads.filter((lead) => lead.status === "Qualified").slice(0, 5),
+      },
+      {
+        title: "Outreach",
+        accent: "bg-cyan-500",
+        items: leads
+          .filter((lead) => ["Drafted", "Sent", "Replied"].includes(lead.status))
+          .slice(0, 5),
+      },
+      {
+        title: "Meetings",
+        accent: "bg-violet-500",
+        items: meetings.slice(0, 5).map((meeting) => ({
+          id: meeting.id,
+          company: meeting.company || "Meeting",
+          name: meeting.client || meeting.date,
+          title: `${meeting.date} at ${meeting.time}`,
+          score: undefined,
+        })),
+      },
+      {
+        title: "Proposals",
+        accent: "bg-blue-500",
+        items: proposals.slice(0, 5).map((proposal) => ({
+          id: proposal.id,
+          company: proposal.title,
+          name: proposal.outcome,
+          title: proposal.status,
+          score: undefined,
+        })),
+      },
     ],
     [leads, meetings, proposals],
   );
   const liveActivity = useMemo(
-    () => [
-      ...leads.map((lead) => ({ id: `lead-${lead.id}`, dot: "bg-primary", text: `${lead.name} at ${lead.company || "an unknown company"} was added as a ${lead.status.toLowerCase()} lead.`, time: lead.createdAt })),
-      ...meetings.map((meeting) => ({ id: `meeting-${meeting.id}`, dot: "bg-amber-500", text: `Meeting with ${meeting.client || meeting.company || "a lead"} is ${meeting.status.toLowerCase()}.`, time: meeting.createdAt })),
-      ...proposals.map((proposal) => ({ id: `proposal-${proposal.id}`, dot: "bg-emerald-500", text: `Proposal ${proposal.title} is ${proposal.status.toLowerCase()}.`, time: proposal.updatedAt })),
-    ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 6),
+    () =>
+      [
+        ...leads.map((lead) => ({
+          id: `lead-${lead.id}`,
+          dot: "bg-primary",
+          text: `${lead.name} at ${lead.company || "an unknown company"} was added as a ${lead.status.toLowerCase()} lead.`,
+          time: lead.createdAt,
+        })),
+        ...meetings.map((meeting) => ({
+          id: `meeting-${meeting.id}`,
+          dot: "bg-amber-500",
+          text: `Meeting with ${meeting.client || meeting.company || "a lead"} is ${meeting.status.toLowerCase()}.`,
+          time: meeting.createdAt,
+        })),
+        ...proposals.map((proposal) => ({
+          id: `proposal-${proposal.id}`,
+          dot: "bg-emerald-500",
+          text: `Proposal ${proposal.title} is ${proposal.status.toLowerCase()}.`,
+          time: proposal.updatedAt,
+        })),
+      ]
+        .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+        .slice(0, 6),
     [leads, meetings, proposals],
   );
   const isLoading =
@@ -178,42 +230,42 @@ function Index() {
       iconClass: "bg-emerald-50 text-emerald-700",
     },
   ];
+  const maxKpiValue = Math.max(...liveKpis.map((item) => Number(item.value) || 0), 1);
 
   return (
     <>
       <TopBar title="Dashboard" />
-      <div className="page-shell space-y-6">
-        <section className="relative overflow-hidden rounded-[1.35rem] bg-[#0d2935] px-6 py-5 text-white shadow-xl shadow-slate-900/10">
-          <div className="absolute -right-10 -top-20 h-64 w-64 rounded-full bg-primary/35 blur-3xl" />
-          <div className="absolute bottom-[-80px] right-40 h-44 w-44 rounded-full bg-cyan-400/15 blur-3xl" />
-          <div className="relative flex flex-col justify-between gap-6 xl:flex-row xl:items-center">
+      <div className="page-shell space-y-5 sm:space-y-6">
+        <section className="subtle-grid relative overflow-hidden rounded-2xl border border-white/8 bg-[#0d2935] px-5 py-5 text-white shadow-xl shadow-slate-900/10 sm:px-7 sm:py-6">
+          <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-primary/18 to-transparent" />
+          <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div>
               <div className="mb-2 flex items-center gap-2">
                 <img
                   src="/logo-white.png"
                   alt="SalesSync AI"
-                  className="h-10 w-auto rounded-xl object-contain"
+                  className="h-9 w-auto object-contain"
                 />
 
                 <span className="text-[10px] mt-1 font-bold uppercase tracking-[0.2em] text-[#83e9eb]">
                   AI sales command center
                 </span>
               </div>
-              <h1 className="text-[24px] font-black tracking-tight">
+              <h1 className="max-w-2xl text-[22px] font-black tracking-[-0.035em] sm:text-[27px]">
                 Hi{profile.name ? ` ${profile.name.split(" ")[0]}` : ""}. Your pipeline is moving.
               </h1>
             </div>
             <div className="flex shrink-0 flex-wrap gap-3">
               <Link
                 to="/lead-generation"
-                className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-xs font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15"
+                className="inline-flex items-center gap-2 rounded-lg bg-white/8 px-4 py-2.5 text-xs font-semibold text-white ring-1 ring-inset ring-white/14 transition hover:bg-white/13"
               >
                 <span className="material-symbols-outlined text-[18px]">person_search</span>
                 Find leads
               </Link>
               <Link
                 to="/proposals"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#25b9c0] to-primary px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-primary/25 transition hover:brightness-110"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-primary/20 transition hover:bg-[#16a3a9]"
               >
                 <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
                 Draft proposal
@@ -222,7 +274,7 @@ function Index() {
           </div>
         </section>
 
-        <section className="app-card p-4">
+        <section className="section-panel p-4 sm:p-5">
           <div className="mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary">tune</span>
             <p className="text-sm font-bold text-on-surface">Ideal Customer Profile</p>
@@ -244,21 +296,18 @@ function Index() {
             <textarea
               value={icpInput}
               onChange={(event) => setIcpInput(event.target.value)}
-              className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+              className="control w-full px-4 py-3 text-sm outline-none"
               rows={3}
               placeholder="e.g. B2B SaaS, 50-500 employees, Head of Sales or CRO running outbound..."
             />
             <div className="mt-3 flex justify-end gap-2">
-              <Link
-                to="/onboarding"
-                className="rounded-lg border border-outline-variant px-4 py-2 text-xs font-semibold text-on-surface-variant hover:bg-surface-container"
-              >
+              <Link to="/onboarding" className="secondary-action">
                 Full editor
               </Link>
               <button
                 type="submit"
                 disabled={!icpInput.trim()}
-                className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                className="primary-action disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {icpSaved ? "Saved!" : "Save ICP"}
               </button>
@@ -269,10 +318,10 @@ function Index() {
         {isLoading ? (
           <SkeletonKPIGrid />
         ) : (
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
+          <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
             {liveKpis.map((k) => (
-              <div key={k.label} className="app-card app-card-hover relative overflow-hidden p-4">
-                <div className="mb-5 flex items-start justify-between">
+              <div key={k.label} className="metric-card p-4 sm:p-5">
+                <div className="mb-4 flex items-start justify-between gap-2">
                   <span className="flex h-10 w-10 items-center justify-center ">
                     <span
                       className={`material-symbols-outlined text-[20px] p-2 rounded-xl leading-none ${k.iconClass}`}
@@ -281,20 +330,31 @@ function Index() {
                     </span>
                   </span>
 
-                  <span className="rounded-full bg-surface-container px-2 py-1 text-[10px] font-bold text-on-surface-variant">
+                  <span className="hidden rounded-full bg-surface-container/70 px-2 py-1 text-[9px] font-bold text-on-surface-variant sm:inline-flex">
                     {k.detail}
                   </span>
                 </div>
-                <p className="text-[26px] font-black tracking-tight text-on-surface">{k.value}</p>
-                <h3 className="mt-1 text-xs font-semibold text-on-surface-variant">{k.label}</h3>
-                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-primary/60 via-primary/15 to-transparent" />
+                <p className="text-[25px] font-black tracking-[-0.04em] text-on-surface sm:text-[29px]">
+                  {k.value}
+                </p>
+                <h3 className="mt-0.5 text-[11px] font-semibold text-on-surface-variant sm:text-xs">
+                  {k.label}
+                </h3>
+                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-container-low">
+                  <div
+                    className="h-full min-w-1 rounded-full bg-primary/70 transition-[width] duration-500"
+                    style={{
+                      width: `${Math.max(5, ((Number(k.value) || 0) / maxKpiValue) * 100)}%`,
+                    }}
+                  />
+                </div>
               </div>
             ))}
           </section>
         )}
 
-        <section className="app-card overflow-hidden">
-          <div className="flex items-center justify-between border-b border-outline-variant/50 px-5 py-4">
+        <section className="section-panel">
+          <div className="section-header flex-row items-center">
             <div>
               <h2 className="text-[17px] font-extrabold tracking-tight text-on-surface">
                 Sales pipeline
@@ -303,22 +363,22 @@ function Index() {
                 Opportunities moving through your AI-assisted funnel
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <button className="icon-button border border-outline-variant/60 bg-white">
                 <span className="material-symbols-outlined text-[18px]">filter_list</span>
               </button>
-              <button className="flex items-center gap-2 rounded-xl bg-[#102b38] px-4 py-2.5 text-xs font-semibold text-white shadow-md">
+              <button className="primary-action px-3 sm:px-4">
                 <span className="material-symbols-outlined text-[17px]">add</span>
-                Add lead
+                <span className="hidden sm:inline">Add lead</span>
               </button>
             </div>
           </div>
-          <div className="custom-scrollbar overflow-x-auto bg-slate-50/50 p-4">
-            <div className="flex gap-3">
+          <div className="custom-scrollbar overflow-x-auto bg-surface-container-low/20 p-3 sm:p-4">
+            <div className="flex min-w-max gap-3 xl:min-w-0">
               {liveColumns.map((col) => (
                 <div
                   key={col.title}
-                  className="w-[205px] flex-shrink-0 rounded-xl border border-outline-variant/45 bg-white/50 p-2"
+                  className="kanban-column w-[220px] flex-shrink-0 p-2.5 xl:min-w-[190px] xl:flex-1"
                 >
                   <div className="mb-2 flex items-center justify-between px-1 py-1">
                     <div className="flex items-center gap-2">
@@ -336,10 +396,7 @@ function Index() {
                   </div>
                   <div className="space-y-2">
                     {col.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="cursor-pointer rounded-xl border border-outline-variant/50 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
-                      >
+                      <div key={item.id} className="kanban-card cursor-pointer p-3">
                         <div className="mb-2 flex items-start justify-between gap-2">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-black text-slate-600">
                             {item.company
@@ -360,6 +417,16 @@ function Index() {
                         </p>
                       </div>
                     ))}
+                    {col.items.length === 0 && (
+                      <div className="flex min-h-24 flex-col items-center justify-center rounded-lg border border-dashed border-outline-variant/60 bg-white/50 px-3 text-center">
+                        <span className="material-symbols-outlined text-[20px] text-outline">
+                          inbox
+                        </span>
+                        <p className="mt-1 text-[10px] font-semibold text-slate-400">
+                          No opportunities
+                        </p>
+                      </div>
+                    )}
                     <button className="flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-[10px] font-semibold text-slate-400 transition hover:bg-white hover:text-primary">
                       <span className="material-symbols-outlined text-[14px]">add</span>
                       Add opportunity
@@ -383,22 +450,28 @@ function Index() {
               <button className="text-xs font-bold text-primary hover:underline">View all</button>
             </div>
             <div className="divide-y divide-outline-variant/40">
-              {liveActivity.length ? liveActivity.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-primary/[0.025]"
-                >
-                  <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50">
-                    <div className={`h-2.5 w-2.5 rounded-full ${item.dot}`} />
+              {liveActivity.length ? (
+                liveActivity.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-primary/[0.025]"
+                  >
+                    <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50">
+                      <div className={`h-2.5 w-2.5 rounded-full ${item.dot}`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[12px] leading-relaxed text-on-surface">{item.text}</p>
+                    </div>
+                    <span className="whitespace-nowrap text-[10px] font-medium text-slate-400">
+                      {formatRelativeTime(item.time)}
+                    </span>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-[12px] leading-relaxed text-on-surface">{item.text}</p>
-                  </div>
-                  <span className="whitespace-nowrap text-[10px] font-medium text-slate-400">
-                    {formatRelativeTime(item.time)}
-                  </span>
-                </div>
-              )) : <p className="px-5 py-8 text-center text-sm text-on-surface-variant">No pipeline activity yet.</p>}
+                ))
+              ) : (
+                <p className="px-5 py-8 text-center text-sm text-on-surface-variant">
+                  No pipeline activity yet.
+                </p>
+              )}
             </div>
           </div>
 

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { markNotificationsRead } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
-import { closeSidebar, openSidebar, toggleSidebar } from "../store/appSlice";
+import { toggleSidebar } from "../store/appSlice";
 
 export function TopBar({ title }: { title: string }) {
   const dispatch = useAppDispatch();
@@ -12,20 +12,8 @@ export function TopBar({ title }: { title: string }) {
   const notifications = useAppSelector((state) => state.app.notifications);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [workspaceSearch, setWorkspaceSearch] = useState("");
   const unreadCount = notifications.filter((notification) => notification.unread).length;
   const sidebarOpen = useAppSelector((state) => state.app.sidebarOpen);
-  const suggestions = [
-    "Dashboard",
-    "Lead Generation",
-    "Qualification",
-    "Outreach",
-    "Meetings",
-    "Proposals",
-    "Knowledge Base",
-    "Team",
-    "Settings",
-  ].filter((item) => item.toLowerCase().includes(workspaceSearch.toLowerCase()));
 
   const notificationsRef = useRef<HTMLDivElement>(null);
   const notificationsButtonRef = useRef<HTMLButtonElement>(null);
@@ -62,11 +50,11 @@ export function TopBar({ title }: { title: string }) {
   }, [notificationsOpen, helpOpen]);
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 w-full items-center justify-between border-b border-white/70 bg-white px-5 backdrop-blur-2xl">
-      <div className="flex flex-row items-center justify-center ">
+    <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-outline-variant/35 bg-white/95 px-4 shadow-[0_1px_8px_rgba(15,23,42,0.025)] backdrop-blur-xl sm:px-6">
+      <div className="flex min-w-0 items-center gap-1">
         <button
           onClick={() => dispatch(toggleSidebar())}
-          className="flex items-center justify-center rounded-lg p-2 mb-1 text-slate-400 transition  hover:bg-white/10 hover:text-black"
+          className="icon-button shrink-0"
           aria-label="Toggle sidebar"
         >
           {sidebarOpen ? (
@@ -76,10 +64,17 @@ export function TopBar({ title }: { title: string }) {
           )}
         </button>
 
-        <h2 className="text-[19px] font-black tracking-tight text-primary">{title}</h2>
+        <div className="min-w-0 border-l border-outline-variant/45 pl-3">
+          <p className="hidden text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:block">
+            Workspace
+          </p>
+          <h2 className="truncate text-[17px] font-extrabold tracking-[-0.02em] text-on-surface sm:text-[18px]">
+            {title}
+          </h2>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <button
           ref={notificationsButtonRef}
           onClick={() => {
@@ -100,7 +95,7 @@ export function TopBar({ title }: { title: string }) {
         {notificationsOpen && (
           <div
             ref={notificationsRef}
-            className="absolute right-20 top-[58px] w-[340px] overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-2xl shadow-slate-900/15"
+            className="absolute right-3 top-[58px] w-[calc(100vw-1.5rem)] max-w-[360px] overflow-hidden rounded-xl border border-outline-variant/55 bg-white shadow-2xl shadow-slate-900/15 sm:right-20"
           >
             <div className="border-b border-outline-variant/50 px-5 py-4">
               <p className="text-sm font-extrabold">Notifications</p>
@@ -143,7 +138,7 @@ export function TopBar({ title }: { title: string }) {
         )}
         <button
           ref={helpButtonRef}
-          className="icon-button"
+          className="icon-button hidden sm:inline-flex"
           onClick={() => {
             setHelpOpen((open) => !open);
             setNotificationsOpen(false);
@@ -155,7 +150,7 @@ export function TopBar({ title }: { title: string }) {
         {helpOpen && (
           <div
             ref={helpRef}
-            className="absolute right-16 top-[58px] z-30 w-[300px] rounded-2xl border border-outline-variant/60 bg-white p-5 shadow-2xl shadow-slate-900/15"
+            className="absolute right-4 top-[58px] z-30 w-[300px] rounded-xl border border-outline-variant/60 bg-white p-5 shadow-2xl shadow-slate-900/15"
           >
             <div className="mb-3 flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px] text-primary">info</span>
@@ -174,6 +169,23 @@ export function TopBar({ title }: { title: string }) {
             </button>
           </div>
         )}
+        <Link
+          to="/settings"
+          className="ml-1 hidden items-center gap-2 border-l border-outline-variant/45 pl-3 sm:flex"
+          aria-label="Open profile settings"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0d2d39] text-[10px] font-extrabold text-white">
+            {(profile.name || "User")
+              .split(" ")
+              .map((part) => part[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase()}
+          </span>
+          <span className="hidden max-w-28 truncate text-xs font-bold text-on-surface lg:block">
+            {profile.name || "Account"}
+          </span>
+        </Link>
       </div>
     </header>
   );

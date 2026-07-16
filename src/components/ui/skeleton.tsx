@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("animate-pulse rounded-md bg-primary/10", className)} {...props} />;
+  return <div className={cn("skeleton-shimmer rounded-md", className)} {...props} />;
 }
 
 function SkeletonTable({ rows = 5, cols = 5 }: { rows?: number; cols?: number }) {
@@ -31,7 +31,7 @@ function SkeletonCardGrid({ count = 3 }: { count?: number }) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-outline-variant bg-white p-5">
+        <div key={i} className="section-panel p-5">
           <div className="mb-4 flex items-start justify-between">
             <div className="flex items-center gap-3">
               <Skeleton className="h-10 w-10 rounded-lg" />
@@ -79,9 +79,9 @@ function SkeletonList({ count = 5 }: { count?: number }) {
 
 function SkeletonKPIGrid() {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="app-card p-4">
+        <div key={i} className="metric-card p-4 sm:p-5">
           <div className="mb-5 flex items-start justify-between">
             <Skeleton className="h-10 w-10 rounded-xl" />
             <Skeleton className="h-5 w-16 rounded-full" />

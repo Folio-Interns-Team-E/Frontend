@@ -128,8 +128,8 @@ function TeamSetup() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#f4f7fb] px-5 py-8">
-      <div className="absolute left-[-100px] top-[-120px] h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
+    <main className="relative min-h-screen overflow-hidden bg-[#f4f7fb] px-4 py-6 sm:px-5 sm:py-8">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent" />
       <div className="relative mx-auto max-w-5xl">
         <header className="mb-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -143,7 +143,7 @@ function TeamSetup() {
               </p>
             </div>
           </div>
-          <div className="text-right">
+          <div className="hidden text-right sm:block">
             <p className="text-xs font-semibold">{profile.name}</p>
             <p className="text-[10px] text-slate-400">{profile.email}</p>
           </div>
@@ -153,7 +153,7 @@ function TeamSetup() {
           <span className="rounded-full bg-primary/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">
             One quick choice
           </span>
-          <h1 className="mt-5 text-4xl font-black tracking-[-0.04em] text-on-surface">
+          <h1 className="mt-5 text-3xl font-black tracking-[-0.04em] text-on-surface sm:text-4xl">
             How will you work in SalesSync AI?
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-on-surface-variant">
@@ -213,7 +213,7 @@ function TeamSetup() {
                     onChange={(event) => setInviteCode(event.target.value)}
                     placeholder="Example: NORTH-7X9K"
                     required
-                    className="h-11 flex-1 rounded-xl border border-outline-variant bg-white px-4 font-mono text-sm uppercase outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
+                    className="control h-11 flex-1 px-4 font-mono text-sm uppercase outline-none"
                   />
                   <button
                     disabled={team.status === "loading" || !auth.accessToken}
@@ -244,7 +244,7 @@ function TeamSetup() {
                     onChange={(event) => setTeamName(event.target.value)}
                     placeholder="Example: Acme Revenue Team"
                     required
-                    className="h-11 flex-1 rounded-xl border border-outline-variant bg-white px-4 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
+                    className="control h-11 flex-1 px-4 text-sm outline-none"
                   />
                   <button
                     disabled={team.status === "loading" || !auth.accessToken}

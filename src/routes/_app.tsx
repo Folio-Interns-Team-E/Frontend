@@ -47,11 +47,20 @@ function AppLayout() {
   const sidebarOpen = useAppSelector((state) => state.app.sidebarOpen);
   const auth = useAppSelector((state) => state.app.auth);
   const teamId = useAppSelector((state) => state.app.team.id);
-  const [aiPanelOpen, setAiPanelOpen] = useState(true);
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
 
   const accessToken =
     auth.accessToken ??
     (typeof window !== "undefined" ? localStorage.getItem("access_token") : null);
+
+  useEffect(() => {
+    if (window.matchMedia("(min-width: 1280px)").matches) {
+      setAiPanelOpen(true);
+    }
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      dispatch(closeSidebar());
+    }
+  }, [dispatch]);
 
   useEffect(() => {
     if (typeof window === "undefined" || auth.loggedIn || accessToken) return;
@@ -126,12 +135,22 @@ function AppLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-transparent text-on-surface">
-      {sidebarOpen && <Sidebar onClose={() => dispatch(closeSidebar())} />}
+      {sidebarOpen && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-[#0b1724]/45 backdrop-blur-[2px] md:hidden"
+            onClick={() => dispatch(closeSidebar())}
+            aria-label="Close navigation"
+          />
+          <Sidebar onClose={() => dispatch(closeSidebar())} />
+        </>
+      )}
 
       <main
-        className={`flex-1 overflow-y-auto bg-transparent transition-all duration-200 ${
-          sidebarOpen ? "ml-[var(--spacing-sidebar_width)]" : "ml-0"
-        } ${aiPanelOpen ? "mr-[var(--spacing-ai_panel_width)]" : "mr-0"}`}
+        className={`min-w-0 flex-1 overflow-y-auto bg-transparent transition-[margin] duration-200 ${
+          sidebarOpen ? "md:ml-[var(--spacing-sidebar_width)]" : "ml-0"
+        } ${aiPanelOpen ? "xl:mr-[var(--spacing-ai_panel_width)]" : "mr-0"}`}
       >
         <Outlet />
       </main>
@@ -141,9 +160,10 @@ function AppLayout() {
       ) : (
         <button
           onClick={() => setAiPanelOpen(true)}
-          className="fixed bottom-5 right-5 z-30 flex items-center gap-2 rounded-full bg-gradient-to-br from-primary to-[#16a3a9] p-2 text-xs font-black text-white shadow-2xl shadow-primary/25 transition hover:-translate-y-1"
+          className="fixed bottom-5 right-5 z-30 flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-[#0d2d39] text-xs font-black text-white shadow-xl shadow-slate-900/20 transition hover:-translate-y-1 hover:bg-primary"
+          aria-label="Open sales copilot"
         >
-          <img src="/robot.png" alt="AI Robot" className="h-6 w-6 pb-[2px] object-contain" />
+          <img src="/robot.png" alt="" className="h-7 w-7 object-contain" />
         </button>
       )}
     </div>

@@ -35,9 +35,7 @@ function KnowledgeBase() {
     if (assetsStatus === "idle") dispatch(fetchKnowledgeAssets());
   }, [assetsStatus, dispatch]);
 
-  const filtered = assets.filter((a) =>
-    a.title.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = assets.filter((a) => a.title.toLowerCase().includes(search.toLowerCase()));
 
   const handleUpload = async () => {
     if (!file || !title.trim()) return;
@@ -65,7 +63,7 @@ function KnowledgeBase() {
     <>
       <TopBar title="Knowledge Base" />
       <div className="page-shell space-y-5">
-        <section className="flex flex-col justify-between gap-5 rounded-xl border border-primary/20 bg-primary/5 p-6 md:flex-row md:items-center">
+        <section className="flex flex-col justify-between gap-5 rounded-xl border border-primary/18 bg-primary/[0.055] p-5 sm:p-6 md:flex-row md:items-center">
           <div>
             <div className="mb-2 flex items-center gap-2 text-primary">
               <span className="material-symbols-outlined">hub</span>
@@ -73,14 +71,11 @@ function KnowledgeBase() {
             </div>
             <h2 className="text-xl font-bold">Every deal makes the next one smarter.</h2>
             <p className="mt-1 max-w-2xl text-sm text-on-surface-variant">
-              Upload PDF documents — transcripts, case studies, whitepapers — to ground
-              proposal generation and agent discovery.
+              Upload PDF documents — transcripts, case studies, whitepapers — to ground proposal
+              generation and agent discovery.
             </p>
           </div>
-          <button
-            onClick={() => setShowUpload(true)}
-            className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 font-semibold text-white hover:opacity-90"
-          >
+          <button onClick={() => setShowUpload(true)} className="primary-action shrink-0">
             <span className="material-symbols-outlined text-[19px]">upload_file</span>
             Add source
           </button>
@@ -92,7 +87,7 @@ function KnowledgeBase() {
             ["Proposal retrieval", "Top 3", "manage_search"],
             ["Grounding coverage", assets.length > 0 ? "100%" : "—", "verified"],
           ].map(([label, value, icon]) => (
-            <div key={label} className="rounded-xl border border-outline-variant bg-white p-5">
+            <div key={label} className="metric-card p-5">
               <span className="material-symbols-outlined text-primary">{icon}</span>
               <p className="mt-3 text-2xl font-black">{value}</p>
               <p className="text-sm text-on-surface-variant">{label}</p>
@@ -100,22 +95,22 @@ function KnowledgeBase() {
           ))}
         </section>
 
-        <section className="overflow-hidden rounded-xl border border-outline-variant bg-white">
-          <div className="flex items-center justify-between border-b border-outline-variant p-5">
+        <section className="section-panel">
+          <div className="section-header">
             <div>
               <h2 className="font-bold">Source library</h2>
               <p className="text-sm text-on-surface-variant">
                 Content available to the discovery and proposal agents.
               </p>
             </div>
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <span className="material-symbols-outlined absolute left-3 top-2.5 text-[18px] text-outline">
                 search
               </span>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="rounded-lg border border-outline-variant py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+                className="control w-full py-2 pl-9 pr-3 text-sm outline-none sm:w-auto"
                 placeholder="Search sources"
               />
             </div>
@@ -123,7 +118,7 @@ function KnowledgeBase() {
           {assetsStatus === "loading" ? (
             <SkeletonList count={4} />
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-16 text-on-surface-variant">
+            <div className="empty-state">
               <span className="material-symbols-outlined text-[40px]">folder_off</span>
               <p className="text-sm font-semibold">No sources yet</p>
               <p className="text-xs">Upload a PDF document to get started.</p>
@@ -131,7 +126,10 @@ function KnowledgeBase() {
           ) : (
             <div className="divide-y divide-outline-variant">
               {filtered.map((asset) => (
-                <div key={asset.id} className="flex items-center gap-4 p-5">
+                <div
+                  key={asset.id}
+                  className="flex items-center gap-3 p-4 transition hover:bg-primary/[0.025] sm:gap-4 sm:p-5"
+                >
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container text-primary">
                     <span className="material-symbols-outlined">
                       {asset.fileType === "pdf" ? "picture_as_pdf" : "description"}
@@ -153,7 +151,7 @@ function KnowledgeBase() {
                       className="inline-flex items-center gap-1 rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-semibold text-on-surface hover:bg-surface"
                     >
                       <span className="material-symbols-outlined text-[16px]">visibility</span>
-                      View
+                      <span className="hidden sm:inline">View</span>
                     </a>
                   )}
                 </div>
@@ -164,14 +162,8 @@ function KnowledgeBase() {
       </div>
 
       {showUpload && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => !uploading && setShowUpload(false)}
-        >
-          <div
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-backdrop" onClick={() => !uploading && setShowUpload(false)}>
+          <div className="modal-surface max-w-md p-5 sm:p-6" onClick={(e) => e.stopPropagation()}>
             <h3 className="mb-5 text-lg font-bold">Upload document</h3>
 
             <label className="mb-1 block text-xs font-semibold text-on-surface-variant">
@@ -182,14 +174,16 @@ function KnowledgeBase() {
               type="file"
               accept=".pdf,application/pdf"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="mb-4 w-full rounded-lg border border-outline-variant p-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
+              className="control mb-4 w-full p-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
             />
 
-            <label className="mb-1 block text-xs font-semibold text-on-surface-variant">Title</label>
+            <label className="mb-1 block text-xs font-semibold text-on-surface-variant">
+              Title
+            </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mb-4 w-full rounded-lg border border-outline-variant px-3 py-2 text-sm outline-none focus:border-primary"
+              className="control mb-4 w-full px-3 py-2 text-sm outline-none"
               placeholder="e.g. Q3 Market Analysis"
             />
 
@@ -200,7 +194,7 @@ function KnowledgeBase() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="mb-5 w-full rounded-lg border border-outline-variant px-3 py-2 text-sm outline-none focus:border-primary"
+              className="control mb-5 w-full px-3 py-2 text-sm outline-none"
               placeholder="Brief description of the document"
             />
 
@@ -208,14 +202,14 @@ function KnowledgeBase() {
               <button
                 disabled={uploading}
                 onClick={() => setShowUpload(false)}
-                className="rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface"
+                className="secondary-action"
               >
                 Cancel
               </button>
               <button
                 disabled={uploading || !file || !title.trim()}
                 onClick={handleUpload}
-                className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                className="primary-action disabled:opacity-50"
               >
                 {uploading ? (
                   <>

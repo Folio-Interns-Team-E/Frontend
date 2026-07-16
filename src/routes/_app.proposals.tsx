@@ -1,11 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import {
-  type Proposal,
-  updateProposalOutcome,
-  updateProposalStatus,
-} from "../store/appSlice";
+import { type Proposal, updateProposalOutcome, updateProposalStatus } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { Skeleton } from "../components/ui/skeleton";
 import {
@@ -93,7 +89,7 @@ function Proposals() {
     <>
       <TopBar title="Proposals" />
       <div className="page-shell">
-        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
           <div className="relative max-w-md flex-1">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
               search
@@ -101,60 +97,48 @@ function Proposals() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              className="w-full rounded-lg border border-outline-variant bg-white py-2 pl-10 pr-4 text-body-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="control w-full py-2 pl-10 pr-4 text-body-base outline-none"
               placeholder="Search proposals..."
               type="text"
             />
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
-            <Metric
-              label="Open"
-              value={proposals.filter((p) => getOutcome(p) === "Open").length}
-            />
-            <Metric
-              label="Won"
-              value={proposals.filter((p) => getOutcome(p) === "Won").length}
-            />
-            <Metric
-              label="Lost"
-              value={proposals.filter((p) => getOutcome(p) === "Lost").length}
-            />
+            <Metric label="Open" value={proposals.filter((p) => getOutcome(p) === "Open").length} />
+            <Metric label="Won" value={proposals.filter((p) => getOutcome(p) === "Won").length} />
+            <Metric label="Lost" value={proposals.filter((p) => getOutcome(p) === "Lost").length} />
           </div>
         </div>
 
-        <section className="rounded-xl border border-outline-variant bg-white p-5">
-          <div className="flex items-center justify-between">
+        <section className="section-panel p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-bold">Proposal template</h2>
               <p className="text-sm text-on-surface-variant">
                 Upload a branded .docx template used as the base for generated proposals.
               </p>
             </div>
-            {template && template.presignedUrl && (
-              <a
-                href={template.presignedUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-semibold text-on-surface hover:bg-surface"
-              >
-                <span className="material-symbols-outlined text-[16px]">visibility</span>
-                View template
-              </a>
-            )}
-            <button
-              onClick={() => setShowTemplateUpload(true)}
-              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-            >
-              <span className="material-symbols-outlined text-[18px]">upload_file</span>
-              {template ? "Replace" : "Upload"}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {template && template.presigned_url && (
+                <a
+                  href={template.presigned_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="secondary-action"
+                >
+                  <span className="material-symbols-outlined text-[16px]">visibility</span>
+                  View template
+                </a>
+              )}
+              <button onClick={() => setShowTemplateUpload(true)} className="primary-action">
+                <span className="material-symbols-outlined text-[18px]">upload_file</span>
+                {template ? "Replace" : "Upload"}
+              </button>
+            </div>
           </div>
           {template && (
             <div className="mt-3 text-xs text-on-surface-variant">
               <span className="font-semibold">{template.template_name}</span>
-              {template.file_size
-                ? ` · ${(template.file_size / 1024).toFixed(0)} KB`
-                : ""}
+              {template.file_size ? ` · ${(template.file_size / 1024).toFixed(0)} KB` : ""}
               {template.file_type ? ` · ${template.file_type.toUpperCase()}` : ""}
             </div>
           )}
@@ -182,9 +166,7 @@ function Proposals() {
                   <div className="overflow-hidden rounded-2xl border border-outline-variant/70 bg-white p-5">
                     <p className="text-sm text-on-surface-variant">
                       Version <strong>{featured.version}</strong>
-                      {featured.fileSize
-                        ? ` · ${(featured.fileSize / 1024).toFixed(0)} KB`
-                        : ""}
+                      {featured.fileSize ? ` · ${(featured.fileSize / 1024).toFixed(0)} KB` : ""}
                     </p>
                   </div>
                   <OutcomePanel proposal={featured} />
@@ -211,13 +193,10 @@ function Proposals() {
 
       {showTemplateUpload && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          className="modal-backdrop"
           onClick={() => !templateUploading && setShowTemplateUpload(false)}
         >
-          <div
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="modal-surface max-w-md p-5 sm:p-6" onClick={(e) => e.stopPropagation()}>
             <h3 className="mb-5 text-lg font-bold">
               {template ? "Replace template" : "Upload template"}
             </h3>
@@ -230,7 +209,7 @@ function Proposals() {
               type="file"
               accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               onChange={(e) => setTemplateFile(e.target.files?.[0] ?? null)}
-              className="mb-4 w-full rounded-lg border border-outline-variant p-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
+              className="control mb-4 w-full p-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
             />
 
             <label className="mb-1 block text-xs font-semibold text-on-surface-variant">
@@ -239,7 +218,7 @@ function Proposals() {
             <input
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
-              className="mb-5 w-full rounded-lg border border-outline-variant px-3 py-2 text-sm outline-none focus:border-primary"
+              className="control mb-5 w-full px-3 py-2 text-sm outline-none"
               placeholder="e.g. Branded Proposal 2026"
             />
 
@@ -247,14 +226,14 @@ function Proposals() {
               <button
                 disabled={templateUploading}
                 onClick={() => setShowTemplateUpload(false)}
-                className="rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface"
+                className="secondary-action"
               >
                 Cancel
               </button>
               <button
                 disabled={templateUploading || !templateFile || !templateName.trim()}
                 onClick={handleTemplateUpload}
-                className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                className="primary-action disabled:opacity-50"
               >
                 {templateUploading ? (
                   <>
@@ -279,7 +258,7 @@ function getOutcome(proposal: Proposal) {
 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-outline-variant bg-white px-4 py-2 shadow-sm">
+    <div className="metric-card px-4 py-2">
       <p className="text-lg font-black text-on-surface">{value}</p>
       <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
         {label}
@@ -336,7 +315,8 @@ function Badge({
 
 function OutcomePanel({ proposal, compact = false }: { proposal: Proposal; compact?: boolean }) {
   const dispatch = useAppDispatch();
-  const accessToken = useAppSelector((state) => state.app.auth.accessToken) ?? localStorage.getItem("access_token");
+  const accessToken =
+    useAppSelector((state) => state.app.auth.accessToken) ?? localStorage.getItem("access_token");
   const outcome = getOutcome(proposal);
 
   return (
@@ -377,15 +357,10 @@ function OutcomePanel({ proposal, compact = false }: { proposal: Proposal; compa
   );
 }
 
-function ProposalActions({
-  proposal,
-  compact = false,
-}: {
-  proposal: Proposal;
-  compact?: boolean;
-}) {
+function ProposalActions({ proposal, compact = false }: { proposal: Proposal; compact?: boolean }) {
   const dispatch = useAppDispatch();
-  const accessToken = useAppSelector((state) => state.app.auth.accessToken) ?? localStorage.getItem("access_token");
+  const accessToken =
+    useAppSelector((state) => state.app.auth.accessToken) ?? localStorage.getItem("access_token");
 
   return (
     <div className={`mt-5 flex flex-wrap justify-end gap-2 ${compact ? "" : "border-t pt-5"}`}>

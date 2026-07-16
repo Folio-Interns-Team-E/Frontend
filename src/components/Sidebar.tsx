@@ -16,44 +16,44 @@ type SidebarProps = {
 };
 
 export function Sidebar({ onClose }: SidebarProps) {
+  const handleNavigate = () => {
+    if (window.matchMedia("(max-width: 767px)").matches) onClose();
+  };
+
   return (
-    <aside className="fixed left-0 top-0 z-30 flex h-full w-full md:w-[var(--spacing-sidebar_width)] flex-col  border-r border-white/10 bg-[#0b1724] overflow-y-auto overflow-x-hidden scrollbar-none text-white shadow-2xl shadow-slate-950/20">
-      <div className="absolute -left-16 -top-12 h-44 w-44 rounded-full bg-primary/25 blur-3xl" />
-      <div className="absolute bottom-20 right-[-90px] h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl" />
-      <div className="relative mb-5 px-4 pt-5">
+    <aside className="fixed left-0 top-0 z-50 flex h-full w-[280px] flex-col overflow-y-auto overflow-x-hidden border-r border-white/8 bg-[#0b1724] text-white shadow-2xl shadow-slate-950/25 md:z-30 md:w-[var(--spacing-sidebar_width)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
+      <div className="relative mb-4 px-4 pt-5">
         <div className="flex items-center gap-3">
           <button
             onClick={onClose}
-            className=" md:hidden rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white md:hidden"
             aria-label="Close sidebar"
           >
             <span className="material-symbols-outlined">menu_open</span>
           </button>
           <Link to="/dashboard">
-            <img
-              src="/logo-white.png"
-              alt="SalesSync AI"
-              className="h-15 w-auto rounded-xl object-contain"
-            />
+            <img src="/logo-white.png" alt="SalesSync AI" className="h-12 w-auto object-contain" />
           </Link>
         </div>
       </div>
-      <div className="relative px-4 pb-2 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">
+      <div className="relative px-4 pb-2 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
         Workspace
       </div>
-      <nav className="relative flex-1 space-y-1 px-2.5">
+      <nav className="relative flex-1 space-y-1 px-2.5 pb-4">
         {navItems.map((item) => (
           <Link
             key={item.to}
             to={item.to}
+            onClick={handleNavigate}
             activeOptions={{ exact: item.to === "/dashboard" }}
-            className="group flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12px] font-medium text-slate-400 transition-all hover:bg-white/[0.06] hover:text-white"
+            className="group relative flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-[12px] font-medium text-slate-400 transition-all hover:bg-white/[0.055] hover:text-white"
             activeProps={{
               className:
-                "group flex cursor-pointer items-center gap-2.5 rounded-xl bg-gradient-to-r from-primary/32 to-white/[0.045] px-3 py-2.5 text-[12px] font-semibold text-white shadow-inner shadow-white/5 ring-1 ring-primary/25",
+                "group relative flex cursor-pointer items-center gap-3 rounded-lg bg-primary/14 px-3 py-2.5 text-[12px] font-semibold text-white ring-1 ring-inset ring-primary/24 before:absolute before:bottom-2 before:left-0 before:top-2 before:w-0.5 before:rounded-full before:bg-[#5ee5e7]",
             }}
           >
-            <span className="material-symbols-outlined text-[19px] text-slate-400 transition-colors group-hover:text-[#5ee5e7]">
+            <span className="material-symbols-outlined text-[19px] text-slate-400 transition-colors group-hover:text-[#78dde0] group-aria-[current=page]:text-[#78dde0]">
               {item.icon}
             </span>
             <span>{item.label}</span>
@@ -61,10 +61,11 @@ export function Sidebar({ onClose }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="relative mb-1 px-2.5">
+      <div className="relative border-t border-white/8 px-2.5 pt-3">
         <Link
-          className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12px] font-medium text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white"
+          className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-[12px] font-medium text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white"
           to="/billing"
+          onClick={handleNavigate}
           activeProps={{
             className:
               "flex cursor-pointer items-center gap-2.5 rounded-xl bg-white/[0.08] px-3 py-2.5 text-[12px] font-semibold text-white",
@@ -76,8 +77,9 @@ export function Sidebar({ onClose }: SidebarProps) {
       </div>
       <div className="relative mb-3 px-2.5">
         <Link
-          className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12px] font-medium text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white"
+          className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-[12px] font-medium text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white"
           to="/settings"
+          onClick={handleNavigate}
           activeProps={{
             className:
               "flex cursor-pointer items-center gap-2.5 rounded-xl bg-white/[0.08] px-3 py-2.5 text-[12px] font-semibold text-white",
