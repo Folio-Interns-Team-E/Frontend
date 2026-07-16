@@ -45,6 +45,7 @@ function migrateState(savedState: unknown) {
       profile: { ...appInitialState.profile, ...savedApp.profile },
       integrations: { ...appInitialState.integrations, ...savedApp.integrations },
       team: { ...appInitialState.team, ...savedApp.team, status: "idle" as const },
+      assistantMessages: [],
       leadsStatus: "idle" as const,
       meetingsStatus: "idle" as const,
       proposalsStatus: "idle" as const,
@@ -76,7 +77,9 @@ export const createAppStore = () => {
   if (typeof window !== "undefined") {
     store.subscribe(() => {
       try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(store.getState()));
+        const state = store.getState();
+        const { assistantMessages: _assistantMessages, ...persistedApp } = state.app;
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, app: persistedApp }));
       } catch {
         // Ignore storage failures; the app still works for the active session.
       }

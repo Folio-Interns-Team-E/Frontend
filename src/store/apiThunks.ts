@@ -327,8 +327,22 @@ export const sendChatMessage = createAsyncThunk(
   async (message: string, { rejectWithValue }) => {
     try {
       const token = getToken();
-      const res = await api.sendChat(message, token!);
-      return { userMessage: message, reply: res.data.reply };
+      await api.sendChat(message, token!);
+      const res = await api.getChatMessages(token!);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const fetchChatMessages = createAsyncThunk(
+  "app/fetchChatMessages",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = getToken();
+      const res = await api.getChatMessages(token!);
+      return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }

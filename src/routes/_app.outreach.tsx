@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_app/outreach")({
       { title: "Outreach · SalesSync AI" },
       {
         name: "description",
-        content: "AI-drafted email outreach with tone adjustment and per-lead context.",
+        content: "AI-drafted email outreach with per-lead context.",
       },
     ],
   }),
@@ -29,8 +29,6 @@ interface ComposerContentProps {
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
-  tone: "Professional" | "Friendly" | "Direct";
-  onToneChange: (tone: "Professional" | "Friendly" | "Direct") => void;
 }
 
 const ComposerContent = ({
@@ -43,8 +41,6 @@ const ComposerContent = ({
   canRedo,
   onUndo,
   onRedo,
-  tone,
-  onToneChange,
 }: ComposerContentProps) => (
   <>
     <div className="flex items-center gap-4 border-b border-outline-variant py-2 shrink-0">
@@ -101,37 +97,6 @@ const ComposerContent = ({
       />
     </div>
 
-    <div className="flex flex-col gap-3 pt-4 border-t border-outline-variant/30 shrink-0">
-      <span className="font-label-caps text-[10px] text-on-surface-variant tracking-wider">
-        ADJUST TONE
-      </span>
-      <div className="flex gap-2">
-        <button
-          onClick={() => onToneChange("Professional")}
-          className={`px-3 py-1.5 rounded-full border text-body-sm font-medium transition-colors ${
-            tone === "Professional" ? "border-primary bg-primary/10 text-primary" : "border-outline-variant hover:border-primary"
-          }`}
-        >
-          Professional
-        </button>
-        <button
-          onClick={() => onToneChange("Friendly")}
-          className={`px-3 py-1.5 rounded-full border text-body-sm font-semibold transition-colors ${
-            tone === "Friendly" ? "border-primary bg-primary/10 text-primary" : "border-outline-variant hover:border-primary"
-          }`}
-        >
-          Friendly
-        </button>
-        <button
-          onClick={() => onToneChange("Direct")}
-          className={`px-3 py-1.5 rounded-full border text-body-sm font-medium transition-colors ${
-            tone === "Direct" ? "border-primary bg-primary/10 text-primary" : "border-outline-variant hover:border-primary"
-          }`}
-        >
-          Direct
-        </button>
-      </div>
-    </div>
   </>
 );
 
@@ -144,10 +109,6 @@ interface ComposerActionsProps {
 
 const ComposerActions = ({ onSend, disabled, isSent, sentTo }: ComposerActionsProps) => (
   <div className="p-4 border-t border-outline-variant bg-surface-container-low/30 flex justify-between items-center shrink-0 rounded-b-xl">
-    <button className="px-4 py-2 border border-primary text-primary font-semibold rounded-lg flex items-center gap-2 hover:bg-primary/5 active:scale-95 transition-all">
-      <span className="material-symbols-outlined text-[20px]">refresh</span>
-      Regenerate
-    </button>
     <button
       onClick={onSend}
       disabled={disabled}
@@ -190,7 +151,6 @@ function Outreach() {
   }, [outreachLeads, selectedId]);
 
   const [subject, setSubject] = useState("");
-  const [tone, setTone] = useState<"Professional" | "Friendly" | "Direct">("Professional");
   const [isExpanded, setIsExpanded] = useState(false);
 
   // --- UNDO / REDO STATE MANAGEMENT ---
@@ -273,26 +233,11 @@ function Outreach() {
 
   const handleSend = () => {
     if (selectedLead && subject && body) {
-      dispatch(sendEmailRemote({ leadId: selectedLead.id, subject, body, tone }));
+      dispatch(sendEmailRemote({ leadId: selectedLead.id, subject, body }));
       setIsExpanded(false);
     }
   };
 
-  const handleToneChange = (nextTone: "Professional" | "Friendly" | "Direct") => {
-    setTone(nextTone);
-    if (!body.trim()) return;
-
-    const greeting = selectedLead?.name ? `Hi ${selectedLead.name.split(" ")[0]},` : "Hi,";
-    const message = body.replace(/^(Hi|Hello|Dear)[^\n]*,?\s*/i, "").trim();
-    const signOff = "\n\nBest,\nSalesSync AI";
-    const adjusted =
-      nextTone === "Professional"
-        ? `Hello ${selectedLead?.name ?? "there"},\n\n${message.replace(/!/g, ".")}${signOff}`
-        : nextTone === "Friendly"
-          ? `${greeting}\n\nHope you're having a great week.\n\n${message}${signOff}`
-          : `${greeting}\n\n${message.split("\n").filter(Boolean).slice(0, 2).join("\n")}${signOff}`;
-    updateBody(adjusted);
-  };
 
   return (
     <>
@@ -427,8 +372,6 @@ function Outreach() {
                 canRedo={future.length > 0}
                 onUndo={handleUndo}
                 onRedo={handleRedo}
-                tone={tone}
-                onToneChange={handleToneChange}
               />
             </div>
 
@@ -480,8 +423,6 @@ function Outreach() {
                 canRedo={future.length > 0}
                 onUndo={handleUndo}
                 onRedo={handleRedo}
-                tone={tone}
-                onToneChange={handleToneChange}
               />
             </div>
 

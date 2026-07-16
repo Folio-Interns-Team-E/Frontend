@@ -25,6 +25,7 @@ import {
   fetchKnowledgeAssets,
   uploadKnowledgeAsset,
   sendChatMessage,
+  fetchChatMessages,
   fetchOutreachLeads,
   fetchLeadEmails,
 } from "./apiThunks";
@@ -46,7 +47,7 @@ export type Lead = {
   title: string;
   email: string;
   source: string;
-  score: number;
+  score: number | null;
   status: LeadStatus;
   reasoning: string;
   createdAt: string;
@@ -323,11 +324,11 @@ const appSlice = createSlice({
       });
     },
     generateLeadsFromIcp(state) {
-      state.leads = buildLeads(state.onboarding.icp).sort((a, b) => b.score - a.score);
+      state.leads = buildLeads(state.onboarding.icp).sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
       state.notifications.unshift({
         id: `notification-${Date.now()}`,
         title: "ICP-matched leads generated",
-        body: `${state.leads.filter((lead) => lead.score >= 80).length} high-fit leads are ready for review.`,
+        body: `${state.leads.filter((lead) => (lead.score ?? -1) >= 80).length} high-fit leads are ready for review.`,
         time: "Now",
         unread: true,
       });
@@ -475,20 +476,6 @@ const appSlice = createSlice({
         state.team.message = "Accepted invitation from notifications.";
         notification.unread = false;
       }
-    },
-    addAssistantMessage(state, action: PayloadAction<string>) {
-      state.assistantMessages.push({
-        id: `user-${Date.now()}`,
-        author: "user",
-        body: action.payload,
-        time: "Now",
-      });
-      state.assistantMessages.push({
-        id: `assistant-${Date.now()}`,
-        author: "assistant",
-        body: "I’ve captured that request. In the production build, the active sales agent will use the current lead, meeting, and knowledge-base context to respond.",
-        time: "Now",
-      });
     },
     updateProposalStatus(state, action: PayloadAction<{ id: string; status: Proposal["status"] }>) {
       const proposal = state.proposals.find((item) => item.id === action.payload.id);
@@ -782,7 +769,7 @@ const appSlice = createSlice({
           title: lead.title || "",
           email: lead.email || "",
           source: lead.source || "",
-          score: lead.score ?? 50,
+          score: lead.score ?? null,
           status: lead.status as LeadStatus,
           reasoning: lead.reasoning || "",
           createdAt: lead.created_at,
@@ -833,7 +820,7 @@ const appSlice = createSlice({
           title: lead.title || "",
           email: lead.email || "",
           source: lead.source || "",
-          score: lead.score ?? 50,
+          score: lead.score ?? null,
           status: lead.status as LeadStatus,
           reasoning: lead.reasoning || "",
           createdAt: lead.created_at,
@@ -982,6 +969,16 @@ const appSlice = createSlice({
       })
 
       // === Chat ===
+      .addCase(fetchChatMessages.fulfilled, (state, action) => {
+        state.assistantMessages = [...action.payload]
+          .reverse()
+          .map((message) => ({
+            id: message.id,
+            author: message.sent_by === "user" ? "user" : "assistant",
+            body: message.content,
+            time: new Date(message.created_at).toLocaleString(),
+          }));
+      })
       .addCase(sendChatMessage.pending, (state, action) => {
         state.assistantMessages.push({
           id: `user-${Date.now()}`,
@@ -997,18 +994,14 @@ const appSlice = createSlice({
         });
       })
       .addCase(sendChatMessage.fulfilled, (state, action) => {
-        const msgs = state.assistantMessages;
-        for (let i = msgs.length - 1; i >= 0; i--) {
-          if (msgs[i].author === "assistant" && msgs[i].body === "Thinking...") {
-            msgs[i] = {
-              id: `assistant-${Date.now()}`,
-              author: "assistant",
-              body: action.payload.reply,
-              time: "Now",
-            };
-            break;
-          }
-        }
+        state.assistantMessages = [...action.payload]
+          .reverse()
+          .map((message) => ({
+            id: message.id,
+            author: message.sent_by === "user" ? "user" : "assistant",
+            body: message.content,
+            time: new Date(message.created_at).toLocaleString(),
+          }));
       })
       .addCase(sendChatMessage.rejected, (state) => {
         const msgs = state.assistantMessages;
@@ -1028,7 +1021,6 @@ const appSlice = createSlice({
 });
 
 export const {
-  addAssistantMessage,
   acceptNotificationInvite,
   clearApiFeedback,
   closeSidebar,

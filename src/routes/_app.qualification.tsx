@@ -35,14 +35,16 @@ function Qualification() {
   const cards = useMemo(() => {
     const visible = leads.filter((lead) => {
       if (lead.status === "Discarded") return false;
-      if (filterMode === "high") return lead.score >= 85;
+      if (filterMode === "high") return (lead.score ?? -1) >= 85;
       if (filterMode === "qualified")
         return lead.status === "Qualified" || lead.status === "Drafted";
-      if (filterMode === "review") return lead.score < 85;
+      if (filterMode === "review") return lead.score == null || lead.score < 85;
       return true;
     });
     return [...visible].sort((a, b) =>
-      sortMode === "score-desc" ? b.score - a.score : a.score - b.score,
+      sortMode === "score-desc"
+        ? (b.score ?? -1) - (a.score ?? -1)
+        : (a.score ?? Number.MAX_SAFE_INTEGER) - (b.score ?? Number.MAX_SAFE_INTEGER),
     );
   }, [filterMode, leads, sortMode]);
 
@@ -134,14 +136,16 @@ function Qualification() {
                     <span className="text-[11px] font-label-caps text-on-surface-variant uppercase">
                       Fit Score
                     </span>
-                    <span className="text-[11px] font-bold text-primary">{c.score}%</span>
+                    <span className="text-[11px] font-bold text-primary">{c.score == null ? "N/A" : `${c.score}%`}</span>
                   </div>
-                  <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-primary h-full" style={{ width: `${c.score}%` }} />
-                  </div>
+                  {c.score != null && (
+                    <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-primary h-full" style={{ width: `${c.score}%` }} />
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2 mb-4">
-                  {[c.source, c.score >= 85 ? "High intent" : "Review"].map((t, i) => (
+                  {[c.source, (c.score ?? -1) >= 85 ? "High intent" : "Review"].map((t, i) => (
                     <span
                       key={t}
                       className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${

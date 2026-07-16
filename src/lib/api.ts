@@ -393,6 +393,9 @@ export const api = {
       accessToken,
     );
   },
+  getChatMessages(accessToken: string) {
+    return request<{ data: ChatMessageApi[] }>("/chat/", {}, accessToken);
+  },
 };
 
 export type LeadApi = {
@@ -402,9 +405,16 @@ export type LeadApi = {
   company?: string;
   title?: string;
   source?: string;
-  score?: number;
+  score?: number | null;
   status: string;
   reasoning?: string;
+  created_at: string;
+};
+
+export type ChatMessageApi = {
+  id: string;
+  sent_by: "user" | "ai";
+  content: string;
   created_at: string;
 };
 

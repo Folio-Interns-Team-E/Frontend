@@ -86,9 +86,9 @@ function LeadGeneration() {
     );
     const matchesFit =
       fitFilter === "all" ||
-      (fitFilter === "high" && lead.score >= 85) ||
-      (fitFilter === "medium" && lead.score >= 65 && lead.score < 85) ||
-      (fitFilter === "low" && lead.score < 65);
+      (fitFilter === "high" && (lead.score ?? -1) >= 85) ||
+      (fitFilter === "medium" && (lead.score ?? -1) >= 65 && (lead.score ?? -1) < 85) ||
+      (fitFilter === "low" && lead.score != null && lead.score < 65);
     return matchesSearch && matchesFit;
   });
 
@@ -196,7 +196,7 @@ function LeadGeneration() {
                             index === 0 ? "text-primary" : "text-on-surface-variant/80"
                           }`}
                         >
-                          {r.score === 0 ? "TBD" : r.score}
+                          {r.score ?? "N/A"}
                         </span>
                       </td>
                       <td className="px-6 py-4">

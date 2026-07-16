@@ -130,11 +130,11 @@ function Index() {
   const profile = useAppSelector((state) => state.app.profile);
   const liveColumns = useMemo(
     () => [
-      { title: "Prospects", accent: "bg-slate-400", items: leads.filter((lead) => ["New", "Analyzed"].includes(lead.status)) },
-      { title: "Qualified", accent: "bg-amber-500", items: leads.filter((lead) => lead.status === "Qualified") },
-      { title: "Outreach", accent: "bg-cyan-500", items: leads.filter((lead) => ["Drafted", "Sent", "Replied"].includes(lead.status)) },
-      { title: "Meetings", accent: "bg-violet-500", items: meetings.map((meeting) => ({ id: meeting.id, company: meeting.company || "Meeting", name: meeting.client || meeting.date, title: `${meeting.date} at ${meeting.time}`, score: undefined })) },
-      { title: "Proposals", accent: "bg-blue-500", items: proposals.map((proposal) => ({ id: proposal.id, company: proposal.title, name: proposal.outcome, title: proposal.status, score: undefined })) },
+      { title: "Prospects", accent: "bg-slate-400", items: leads.filter((lead) => ["New", "Analyzed"].includes(lead.status)).slice(0, 5) },
+      { title: "Qualified", accent: "bg-amber-500", items: leads.filter((lead) => lead.status === "Qualified").slice(0, 5) },
+      { title: "Outreach", accent: "bg-cyan-500", items: leads.filter((lead) => ["Drafted", "Sent", "Replied"].includes(lead.status)).slice(0, 5) },
+      { title: "Meetings", accent: "bg-violet-500", items: meetings.slice(0, 5).map((meeting) => ({ id: meeting.id, company: meeting.company || "Meeting", name: meeting.client || meeting.date, title: `${meeting.date} at ${meeting.time}`, score: undefined })) },
+      { title: "Proposals", accent: "bg-blue-500", items: proposals.slice(0, 5).map((proposal) => ({ id: proposal.id, company: proposal.title, name: proposal.outcome, title: proposal.status, score: undefined })) },
     ],
     [leads, meetings, proposals],
   );
@@ -348,7 +348,7 @@ function Index() {
                               .join("")
                               .slice(0, 2)}
                           </div>
-                          {item.score !== undefined && (
+                          {item.score != null && (
                             <span className="rounded-md bg-primary/8 px-1.5 py-0.5 text-[9px] font-bold text-primary">
                               {item.score}% fit
                             </span>

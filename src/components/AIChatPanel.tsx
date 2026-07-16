@@ -1,5 +1,5 @@
-import { FormEvent, useState } from "react";
-import { sendChatMessage } from "../store/apiThunks";
+import { FormEvent, useEffect, useState } from "react";
+import { fetchChatMessages, sendChatMessage } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
 export function AIChatPanel({ onClose }: { onClose: () => void }) {
@@ -7,6 +7,10 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
   const messages = useAppSelector((state) => state.app.assistantMessages);
   const [message, setMessage] = useState("");
   const prompts = ["Summarize ICP", "Find next action", "Draft follow-up"];
+
+  useEffect(() => {
+    dispatch(fetchChatMessages());
+  }, [dispatch]);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
