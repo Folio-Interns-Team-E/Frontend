@@ -23,7 +23,7 @@ function Register() {
     event.preventDefault();
     const result = await dispatch(registerAccount({ fullName: name, email, password }));
     if (registerAccount.fulfilled.match(result)) {
-      void navigate({ to: "/login" });
+      void navigate({ to: "/verify-otp", search: { email } });
       return;
     }
   }

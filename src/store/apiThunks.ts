@@ -16,7 +16,8 @@ export const registerAccount = createAsyncThunk(
         email: payload.email,
         password: payload.password,
       });
-      return res.data ?? res;
+      const data = res.data ?? res;
+      return { ...data, email: payload.email };
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
@@ -29,9 +30,12 @@ export const loginAccount = createAsyncThunk(
     try {
       const res = await api.login(payload);
 
-      console.log(res);
-
       const data = res.data ?? res;
+
+      if (data.needs_verification) {
+        return rejectWithValue({ needsVerification: true, email: payload.email });
+      }
+
       const access_token = data.access_token;
 
       if (access_token && access_token !== "undefined") {
@@ -467,6 +471,31 @@ export const fetchKnowledgeAssets = createAsyncThunk(
       const token = getToken();
       const res = await api.getKnowledgeAssets(token!);
       return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+// === OTP Thunks ===
+export const requestOtp = createAsyncThunk(
+  "app/requestOtp",
+  async (email: string, { rejectWithValue }) => {
+    try {
+      await api.requestOtp(email);
+      return email;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const verifyOtp = createAsyncThunk(
+  "app/verifyOtp",
+  async (payload: { email: string; otp: string }, { rejectWithValue }) => {
+    try {
+      await api.verifyOtp(payload.email, payload.otp);
+      return payload.email;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }

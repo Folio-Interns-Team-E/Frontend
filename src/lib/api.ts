@@ -6,6 +6,7 @@ export type AuthResponse = {
   user_id: string;
   full_name: string;
   email: string;
+  needs_verification?: boolean;
 };
 
 export type ApiMember = {
@@ -61,7 +62,7 @@ export type ApiUserTeam = {
 
 export const api = {
   register(payload: { full_name: string; email: string; password: string }) {
-    return request<{ data: AuthResponse }>("/auth/register", {
+    return request<{ data: AuthResponse & { needs_verification?: boolean } }>("/auth/register", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -395,6 +396,20 @@ export const api = {
   },
   getChatMessages(accessToken: string) {
     return request<{ data: ChatMessageApi[] }>("/chat/", {}, accessToken);
+  },
+
+  // === OTP Verification ===
+  requestOtp(email: string) {
+    return request<{ data: Record<string, never> }>(
+      "/auth/otp/request",
+      { method: "POST", body: JSON.stringify({ email }) },
+    );
+  },
+  verifyOtp(email: string, otp: string) {
+    return request<{ data: Record<string, never> }>(
+      "/auth/otp/verify",
+      { method: "POST", body: JSON.stringify({ email, otp }) },
+    );
   },
 };
 

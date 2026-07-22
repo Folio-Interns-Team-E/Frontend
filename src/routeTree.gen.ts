@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as MarketingIndexRouteImport } from './routes/_marketing.index'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing.pricing'
+import { Route as AuthVerifyOtpRouteImport } from './routes/_auth.verify-otp'
 import { Route as AuthRegisterRouteImport } from './routes/_auth.register'
 import { Route as AuthLoginRouteImport } from './routes/_auth.login'
 import { Route as AppTeamSetupRouteImport } from './routes/_app.team-setup'
@@ -50,6 +51,11 @@ const MarketingPricingRoute = MarketingPricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
   getParentRoute: () => MarketingRoute,
+} as any)
+const AuthVerifyOtpRoute = AuthVerifyOtpRouteImport.update({
+  id: '/verify-otp',
+  path: '/verify-otp',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/register',
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/team-setup': typeof AppTeamSetupRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
+  '/verify-otp': typeof AuthVerifyOtpRoute
   '/pricing': typeof MarketingPricingRoute
 }
 export interface FileRoutesByTo {
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/team-setup': typeof AppTeamSetupRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
+  '/verify-otp': typeof AuthVerifyOtpRoute
   '/pricing': typeof MarketingPricingRoute
 }
 export interface FileRoutesById {
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/_app/team-setup': typeof AppTeamSetupRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
+  '/_auth/verify-otp': typeof AuthVerifyOtpRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
   '/_marketing/': typeof MarketingIndexRoute
 }
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/team-setup'
     | '/login'
     | '/register'
+    | '/verify-otp'
     | '/pricing'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/team-setup'
     | '/login'
     | '/register'
+    | '/verify-otp'
     | '/pricing'
   id:
     | '__root__'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/_app/team-setup'
     | '/_auth/login'
     | '/_auth/register'
+    | '/_auth/verify-otp'
     | '/_marketing/pricing'
     | '/_marketing/'
   fileRoutesById: FileRoutesById
@@ -282,6 +294,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/pricing'
       preLoaderRoute: typeof MarketingPricingRouteImport
       parentRoute: typeof MarketingRoute
+    }
+    '/_auth/verify-otp': {
+      id: '/_auth/verify-otp'
+      path: '/verify-otp'
+      fullPath: '/verify-otp'
+      preLoaderRoute: typeof AuthVerifyOtpRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_auth/register': {
       id: '/_auth/register'
@@ -419,11 +438,13 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 interface AuthRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthVerifyOtpRoute: typeof AuthVerifyOtpRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  AuthVerifyOtpRoute: AuthVerifyOtpRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

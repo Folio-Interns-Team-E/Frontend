@@ -28,6 +28,8 @@ import {
   fetchChatMessages,
   fetchOutreachLeads,
   fetchLeadEmails,
+  requestOtp,
+  verifyOtp,
 } from "./apiThunks";
 
 export type LeadStatus =
@@ -125,6 +127,8 @@ type AppState = {
     userId: string | null;
     status: "idle" | "loading" | "succeeded" | "failed";
     error: string | null;
+    needsVerification: boolean;
+    verifyEmail: string | null;
     userTeams: { id: string; name: string; role: "admin" | "manager" | "rep" }[];
     userTeamsStatus: "idle" | "loading" | "succeeded" | "failed";
   };
@@ -189,6 +193,8 @@ export const initialState: AppState = {
     userId: null,
     status: "idle",
     error: null,
+    needsVerification: false,
+    verifyEmail: null,
     userTeams: [],
     userTeamsStatus: "idle",
   },
@@ -311,6 +317,10 @@ const appSlice = createSlice({
       state.auth.error = null;
       state.team.error = null;
       state.team.message = null;
+    },
+    clearNeedsVerification(state) {
+      state.auth.needsVerification = false;
+      state.auth.verifyEmail = null;
     },
     completeOnboarding(state, action: PayloadAction<{ icp: string }>) {
       state.onboarding.icp = action.payload.icp;
@@ -652,8 +662,8 @@ const appSlice = createSlice({
       .addCase(registerAccount.fulfilled, (state, action) => {
         state.auth.status = "succeeded";
         state.auth.registered = true;
-        state.auth.accessToken = action.payload.access_token;
-        state.auth.userId = action.payload.user_id;
+        state.auth.needsVerification = action.payload.needs_verification ?? false;
+        state.auth.verifyEmail = action.payload.email ?? null;
         state.profile.name = action.payload.full_name;
         state.profile.email = action.payload.email;
       })
@@ -672,7 +682,17 @@ const appSlice = createSlice({
         }));
       })
       .addCase(loginAccount.pending, authPending)
-      .addCase(loginAccount.rejected, authRejected)
+      .addCase(loginAccount.rejected, (state, action) => {
+        state.auth.status = "failed";
+        const payload = action.payload as any;
+        if (payload?.needsVerification) {
+          state.auth.needsVerification = true;
+          state.auth.verifyEmail = payload.email;
+          state.auth.error = null;
+        } else {
+          state.auth.error = typeof payload === "string" ? payload : "Authentication request failed";
+        }
+      })
       .addCase(loginAccount.fulfilled, (state, action) => {
         state.auth.status = "succeeded";
         state.auth.loggedIn = true;
@@ -1016,6 +1036,31 @@ const appSlice = createSlice({
             break;
           }
         }
+      })
+
+      // === OTP Verification ===
+      .addCase(requestOtp.pending, (state) => {
+        state.auth.status = "loading";
+        state.auth.error = null;
+      })
+      .addCase(requestOtp.rejected, (state, action) => {
+        state.auth.status = "failed";
+        state.auth.error = typeof action.payload === "string" ? action.payload : "Failed to send verification code";
+      })
+      .addCase(requestOtp.fulfilled, (state) => {
+        state.auth.status = "succeeded";
+      })
+      .addCase(verifyOtp.pending, (state) => {
+        state.auth.status = "loading";
+        state.auth.error = null;
+      })
+      .addCase(verifyOtp.rejected, (state, action) => {
+        state.auth.status = "failed";
+        state.auth.error = typeof action.payload === "string" ? action.payload : "Verification failed";
+      })
+      .addCase(verifyOtp.fulfilled, (state) => {
+        state.auth.status = "succeeded";
+        state.auth.needsVerification = false;
       });
   },
 });
@@ -1023,6 +1068,7 @@ const appSlice = createSlice({
 export const {
   acceptNotificationInvite,
   clearApiFeedback,
+  clearNeedsVerification,
   closeSidebar,
   completeOnboarding,
   createTeamLocal,

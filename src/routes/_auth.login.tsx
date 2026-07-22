@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { AuthDivider, AuthField, AuthLayout, GoogleButton } from "../components/AuthLayout";
 import { loginAccount } from "../store/apiThunks";
 import { createTeamLocal, demoLogin } from "../store/appSlice";
@@ -18,6 +18,13 @@ function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const auth = useAppSelector((state) => state.app.auth);
+
+  useEffect(() => {
+    if (auth.needsVerification && auth.verifyEmail) {
+      void navigate({ to: "/verify-otp", search: { email: auth.verifyEmail } });
+    }
+  }, [auth.needsVerification, auth.verifyEmail, navigate]);
+
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       const accessToken = tokenResponse.access_token;
