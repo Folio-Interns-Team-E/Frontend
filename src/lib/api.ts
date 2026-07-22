@@ -44,8 +44,10 @@ async function request<T>(
   }
 
   if (!response.ok) {
-    const data = (await response.json().catch(() => null)) as { detail?: string } | null;
-    throw new Error(data?.detail ?? `Request failed with status ${response.status}`);
+    const data = (await response.json().catch(() => null)) as
+      | { detail?: string; error?: string }
+      | null;
+    throw new Error(data?.error ?? data?.detail ?? `Request failed with status ${response.status}`);
   }
 
   if (response.status === 204) return undefined as T;

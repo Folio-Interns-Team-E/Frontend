@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useState } from "react";
 import { AuthDivider, AuthField, AuthLayout, GoogleButton } from "../components/AuthLayout";
 import { registerAccount } from "../store/apiThunks";
-import { demoRegister } from "../store/appSlice";
+import { clearApiFeedback, demoRegister } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_auth/register")({
@@ -18,6 +18,10 @@ function Register() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const auth = useAppSelector((state) => state.app.auth);
+
+  function clearError() {
+    if (auth.error) dispatch(clearApiFeedback());
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -55,7 +59,7 @@ function Register() {
           label="Full name"
           placeholder="Alex Morgan"
           value={name}
-          onChange={setName}
+          onChange={(v) => { clearError(); setName(v); }}
           autoComplete="name"
         />
         <AuthField
@@ -63,7 +67,7 @@ function Register() {
           type="email"
           placeholder="you@company.com"
           value={email}
-          onChange={setEmail}
+          onChange={(v) => { clearError(); setEmail(v); }}
           autoComplete="email"
         />
         <div>

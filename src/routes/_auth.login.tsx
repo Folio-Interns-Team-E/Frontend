@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useEffect, useState } from "react";
 import { AuthDivider, AuthField, AuthLayout, GoogleButton } from "../components/AuthLayout";
 import { loginAccount } from "../store/apiThunks";
-import { createTeamLocal, demoLogin } from "../store/appSlice";
+import { clearApiFeedback, createTeamLocal, demoLogin } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { useGoogleLogin } from "@react-oauth/google";
 
@@ -24,6 +24,10 @@ function Login() {
       void navigate({ to: "/verify-otp", search: { email: auth.verifyEmail } });
     }
   }, [auth.needsVerification, auth.verifyEmail, navigate]);
+
+  function clearError() {
+    if (auth.error) dispatch(clearApiFeedback());
+  }
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -69,7 +73,7 @@ function Login() {
       <form className="space-y-5" onSubmit={handleSubmit}>
         {auth.error && (
           <div className="rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-xs text-error">
-            {auth.error}.
+            {auth.error}
           </div>
         )}
         <AuthField
@@ -77,7 +81,7 @@ function Login() {
           type="email"
           placeholder="you@company.com"
           value={email}
-          onChange={setEmail}
+          onChange={(v) => { clearError(); setEmail(v); }}
           autoComplete="email"
         />
         <AuthField
@@ -85,7 +89,7 @@ function Login() {
           type={showPassword ? "text" : "password"}
           placeholder="Enter your password"
           value={password}
-          onChange={setPassword}
+          onChange={(v) => { clearError(); setPassword(v); }}
           autoComplete="current-password"
           action={
             <button
