@@ -524,6 +524,44 @@ export const fetchKnowledgeAssets = createAsyncThunk(
   },
 );
 
+export const updateKnowledgeAsset = createAsyncThunk(
+  "app/updateKnowledgeAsset",
+  async (
+    payload: { id: string; title?: string; description?: string; tags?: string[] },
+    { rejectWithValue, getState },
+  ) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.updateKnowledgeAsset(
+        payload.id,
+        { title: payload.title, description: payload.description, tags: payload.tags },
+        token!,
+        teamId,
+      );
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const deleteKnowledgeAsset = createAsyncThunk(
+  "app/deleteKnowledgeAsset",
+  async (assetId: string, { rejectWithValue, getState }) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      await api.deleteKnowledgeAsset(assetId, token!, teamId);
+      return assetId;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
 // === OTP Thunks ===
 export const requestOtp = createAsyncThunk(
   "app/requestOtp",

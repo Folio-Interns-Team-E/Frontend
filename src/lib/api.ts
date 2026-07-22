@@ -364,6 +364,27 @@ export const api = {
       teamId,
     );
   },
+  updateKnowledgeAsset(
+    assetId: string,
+    payload: { title?: string; description?: string; tags?: string[] },
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: KnowledgeAssetApi }>(
+      `/knowledge-base/${assetId}`,
+      { method: "PATCH", body: JSON.stringify(payload) },
+      accessToken,
+      teamId,
+    );
+  },
+  deleteKnowledgeAsset(assetId: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: unknown }>(
+      `/knowledge-base/${assetId}`,
+      { method: "DELETE" },
+      accessToken,
+      teamId,
+    );
+  },
 
   // === Billing ===
   async getBillingStatus(accessToken: string, teamId?: string | null) {

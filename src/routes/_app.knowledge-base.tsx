@@ -3,7 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { SkeletonList } from "../components/ui/skeleton";
-import { fetchKnowledgeAssets, uploadKnowledgeAsset } from "../store/apiThunks";
+import {
+  fetchKnowledgeAssets,
+  uploadKnowledgeAsset,
+  updateKnowledgeAsset,
+  deleteKnowledgeAsset,
+} from "../store/apiThunks";
 
 export const Route = createFileRoute("/_app/knowledge-base")({
   head: () => ({
@@ -31,6 +36,12 @@ function KnowledgeBase() {
   const [search, setSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   useEffect(() => {
     if (assetsStatus === "idle") dispatch(fetchKnowledgeAssets());
   }, [assetsStatus, dispatch]);
@@ -56,6 +67,43 @@ function KnowledgeBase() {
       // error handled by thunk
     } finally {
       setUploading(false);
+    }
+  };
+
+  const openEdit = (asset: (typeof assets)[number]) => {
+    setEditingId(asset.id);
+    setEditTitle(asset.title);
+    setEditDescription(asset.description ?? "");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editTitle.trim()) return;
+    setSavingEdit(true);
+    try {
+      await dispatch(
+        updateKnowledgeAsset({
+          id: editingId,
+          title: editTitle.trim(),
+          description: editDescription.trim() || undefined,
+        }),
+      ).unwrap();
+      setEditingId(null);
+    } catch {
+      // error handled by thunk
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Delete this source? This can't be undone.")) return;
+    setDeletingId(id);
+    try {
+      await dispatch(deleteKnowledgeAsset(id)).unwrap();
+    } catch {
+      // error handled by thunk
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -154,6 +202,25 @@ function KnowledgeBase() {
                       <span className="hidden sm:inline">View</span>
                     </a>
                   )}
+                  <button
+                    onClick={() => openEdit(asset)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-semibold text-on-surface hover:bg-surface"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">edit</span>
+                    <span className="hidden sm:inline">Edit</span>
+                  </button>
+                  <button
+                    onClick={() => void handleDelete(asset.id)}
+                    disabled={deletingId === asset.id}
+                    className="inline-flex items-center gap-1 rounded-lg border border-error/30 px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/5 disabled:opacity-50"
+                  >
+                    {deletingId === asset.id ? (
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-error border-t-transparent" />
+                    ) : (
+                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                    )}
+                    <span className="hidden sm:inline">Delete</span>
+                  </button>
                 </div>
               ))}
             </div>
@@ -218,6 +285,59 @@ function KnowledgeBase() {
                   </>
                 ) : (
                   "Upload"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingId && (
+        <div className="modal-backdrop" onClick={() => !savingEdit && setEditingId(null)}>
+          <div className="modal-surface max-w-md p-5 sm:p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mb-5 text-lg font-bold">Edit source</h3>
+
+            <label className="mb-1 block text-xs font-semibold text-on-surface-variant">
+              Title
+            </label>
+            <input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="control mb-4 w-full px-3 py-2 text-sm outline-none"
+              placeholder="e.g. Q3 Market Analysis"
+            />
+
+            <label className="mb-1 block text-xs font-semibold text-on-surface-variant">
+              Description (optional)
+            </label>
+            <textarea
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              rows={3}
+              className="control mb-5 w-full px-3 py-2 text-sm outline-none"
+              placeholder="Brief description of the document"
+            />
+
+            <div className="flex justify-end gap-3">
+              <button
+                disabled={savingEdit}
+                onClick={() => setEditingId(null)}
+                className="secondary-action"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={savingEdit || !editTitle.trim()}
+                onClick={handleSaveEdit}
+                className="primary-action disabled:opacity-50"
+              >
+                {savingEdit ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Saving…
+                  </>
+                ) : (
+                  "Save changes"
                 )}
               </button>
             </div>
