@@ -28,11 +28,13 @@ async function request<T>(
   path: string,
   options: RequestInit = {},
   accessToken?: string | null,
+  teamId?: string | null,
 ): Promise<T> {
   const headers = new Headers(options.headers);
   if (options.body && !(options.body instanceof FormData))
     headers.set("Content-Type", "application/json");
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+  if (teamId) headers.set("X-Team-Id", teamId);
 
   let response: Response;
   try {
@@ -95,11 +97,12 @@ export const api = {
   getTeam(teamId: string, accessToken: string) {
     return request<{ data: ApiTeam }>(`/teams/${teamId}`, {}, accessToken);
   },
-  inviteMember(email: string, accessToken: string) {
+  inviteMember(email: string, accessToken: string, teamId?: string | null) {
     return request<{ data: ApiTeam }>(
       "/teams/invite",
       { method: "POST", body: JSON.stringify({ email }) },
       accessToken,
+      teamId,
     );
   },
   updateMemberRole(
@@ -112,6 +115,7 @@ export const api = {
       `/teams/${teamId}/members/${userId}/role`,
       { method: "PUT", body: JSON.stringify({ role }) },
       accessToken,
+      teamId,
     );
   },
   removeMember(teamId: string, userId: string, accessToken: string) {
@@ -119,6 +123,7 @@ export const api = {
       `/teams/${teamId}/members/${userId}`,
       { method: "DELETE" },
       accessToken,
+      teamId,
     );
   },
   getInviteCode(teamId: string, accessToken: string) {
@@ -126,6 +131,7 @@ export const api = {
       `/teams/${teamId}/invite-code`,
       {},
       accessToken,
+      teamId,
     );
   },
   getMyTeams(accessToken: string) {
@@ -141,28 +147,31 @@ export const api = {
       goals: string;
     },
     accessToken: string,
+    teamId?: string | null,
   ) {
     return request<{ data: { icp: string; completed: boolean } }>(
       "/onboarding/icp",
       { method: "POST", body: JSON.stringify(payload) },
       accessToken,
+      teamId,
     );
   },
-  getOnboardingStatus(accessToken: string) {
+  getOnboardingStatus(accessToken: string, teamId?: string | null) {
     return request<{ data: { icp: string; completed: boolean } }>(
       "/onboarding/status",
       {},
       accessToken,
+      teamId,
     );
   },
 
   // === Leads ===
-  getLeads(status?: string, accessToken?: string | null) {
+  getLeads(status: string | undefined, accessToken: string | null, teamId?: string | null) {
     const query = status ? `?status=${status}` : "";
-    return request<{ data: LeadApi[] }>(`/leads/${query}`, {}, accessToken);
+    return request<{ data: LeadApi[] }>(`/leads/${query}`, {}, accessToken, teamId);
   },
-  getLead(leadId: string, accessToken: string) {
-    return request<{ data: LeadApi }>(`/leads/${leadId}`, {}, accessToken);
+  getLead(leadId: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: LeadApi }>(`/leads/${leadId}`, {}, accessToken, teamId);
   },
   createLead(
     payload: {
@@ -176,45 +185,50 @@ export const api = {
       reasoning?: string;
     },
     accessToken: string,
+    teamId?: string | null,
   ) {
     return request<{ data: LeadApi }>(
       "/leads/",
       { method: "POST", body: JSON.stringify(payload) },
       accessToken,
+      teamId,
     );
   },
-  qualifyLead(leadId: string, accessToken: string) {
-    return request<{ data: LeadApi }>(`/leads/${leadId}/qualify`, { method: "POST" }, accessToken);
+  qualifyLead(leadId: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: LeadApi }>(`/leads/${leadId}/qualify`, { method: "POST" }, accessToken, teamId);
   },
-  discardLead(leadId: string, accessToken: string) {
-    return request<{ data: LeadApi }>(`/leads/${leadId}/discard`, { method: "POST" }, accessToken);
+  discardLead(leadId: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: LeadApi }>(`/leads/${leadId}/discard`, { method: "POST" }, accessToken, teamId);
   },
 
   // === Emails ===
   sendEmail(
     payload: { lead_id: string; subject: string; body: string; tone?: string },
     accessToken: string,
+    teamId?: string | null,
   ) {
     return request<{ data: EmailApi }>(
       "/emails/",
       { method: "POST", body: JSON.stringify(payload) },
       accessToken,
+      teamId,
     );
   },
-  draftEmail(payload: { lead_id: string; subject: string; body: string }, accessToken: string) {
+  draftEmail(payload: { lead_id: string; subject: string; body: string }, accessToken: string, teamId?: string | null) {
     return request<{ data: EmailApi }>(
       "/emails/draft",
       { method: "POST", body: JSON.stringify(payload) },
       accessToken,
+      teamId,
     );
   },
-  getEmails(leadId: string, accessToken: string) {
-    return request<{ data: EmailApi[] }>(`/emails/?lead_id=${leadId}`, {}, accessToken);
+  getEmails(leadId: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: EmailApi[] }>(`/emails/?lead_id=${leadId}`, {}, accessToken, teamId);
   },
 
   // === Meetings ===
-  getMeetings(accessToken: string) {
-    return request<{ data: MeetingApi[] }>("/meetings/", {}, accessToken);
+  getMeetings(accessToken: string, teamId?: string | null) {
+    return request<{ data: MeetingApi[] }>("/meetings/", {}, accessToken, teamId);
   },
   createMeeting(
     payload: {
@@ -227,11 +241,13 @@ export const api = {
       agenda?: string[];
     },
     accessToken: string,
+    teamId?: string | null,
   ) {
     return request<{ data: MeetingApi }>(
       "/meetings/",
       { method: "POST", body: JSON.stringify(payload) },
       accessToken,
+      teamId,
     );
   },
   updateMeeting(
@@ -243,17 +259,19 @@ export const api = {
       agenda?: string[];
     },
     accessToken: string,
+    teamId?: string | null,
   ) {
     return request<{ data: MeetingApi }>(
       `/meetings/${meetingId}`,
       { method: "PATCH", body: JSON.stringify(payload) },
       accessToken,
+      teamId,
     );
   },
 
   // === Proposals ===
-  getProposals(accessToken: string) {
-    return request<{ data: ProposalApi[] }>("/proposals/", {}, accessToken);
+  getProposals(accessToken: string, teamId?: string | null) {
+    return request<{ data: ProposalApi[] }>("/proposals/", {}, accessToken, teamId);
   },
   createProposal(
     payload: {
@@ -264,11 +282,13 @@ export const api = {
       lead_id?: string;
     },
     accessToken: string,
+    teamId?: string | null,
   ) {
     return request<{ data: ProposalApi }>(
       "/proposals/",
       { method: "POST", body: JSON.stringify(payload) },
       accessToken,
+      teamId,
     );
   },
   updateProposal(
@@ -281,11 +301,13 @@ export const api = {
       outcome?: string;
     },
     accessToken: string,
+    teamId?: string | null,
   ) {
     return request<{ data: ProposalApi }>(
       `/proposals/${proposalId}`,
       { method: "PATCH", body: JSON.stringify(payload) },
       accessToken,
+      teamId,
     );
   },
   addProposalRevision(
@@ -297,17 +319,19 @@ export const api = {
       note?: string;
     },
     accessToken: string,
+    teamId?: string | null,
   ) {
     return request<{ data: unknown }>(
       `/proposals/${proposalId}/revisions`,
       { method: "POST", body: JSON.stringify(payload) },
       accessToken,
+      teamId,
     );
   },
-  getProposalTemplate(accessToken: string) {
-    return request<{ data: ProposalTemplateApi }>("/proposals/template", {}, accessToken);
+  getProposalTemplate(accessToken: string, teamId?: string | null) {
+    return request<{ data: ProposalTemplateApi }>("/proposals/template", {}, accessToken, teamId);
   },
-  uploadProposalTemplate(payload: { file: File; template_name: string }, accessToken: string) {
+  uploadProposalTemplate(payload: { file: File; template_name: string }, accessToken: string, teamId?: string | null) {
     const formData = new FormData();
     formData.append("file", payload.file);
     formData.append("template_name", payload.template_name);
@@ -315,16 +339,18 @@ export const api = {
       "/proposals/template/upload",
       { method: "POST", body: formData },
       accessToken,
+      teamId,
     );
   },
 
   // === Knowledge Base ===
-  getKnowledgeAssets(accessToken: string) {
-    return request<{ data: KnowledgeAssetApi[] }>("/knowledge-base/", {}, accessToken);
+  getKnowledgeAssets(accessToken: string, teamId?: string | null) {
+    return request<{ data: KnowledgeAssetApi[] }>("/knowledge-base/", {}, accessToken, teamId);
   },
   uploadKnowledgeAsset(
     payload: { file: File; title: string; description?: string; tags?: string },
     accessToken: string,
+    teamId?: string | null,
   ) {
     const formData = new FormData();
     formData.append("file", payload.file);
@@ -335,45 +361,51 @@ export const api = {
       "/knowledge-base/upload",
       { method: "POST", body: formData },
       accessToken,
+      teamId,
     );
   },
 
   // === Billing ===
-  async getBillingStatus(accessToken: string) {
+  async getBillingStatus(accessToken: string, teamId?: string | null) {
     const response = await request<BillingStatus | { data: BillingStatus }>(
       "/billing/status",
       {},
       accessToken,
+      teamId,
     );
     return { data: "data" in response ? response.data : response };
   },
-  updateProposalStatus(proposalId: string, status: string, accessToken: string) {
+  updateProposalStatus(proposalId: string, status: string, accessToken: string, teamId?: string | null) {
     return request<{ data: ProposalApi }>(
       `/proposals/${proposalId}/status`,
       { method: "PATCH", body: JSON.stringify({ status }) },
       accessToken,
+      teamId,
     );
   },
-  updateProposalOutcome(proposalId: string, outcome: string, accessToken: string) {
+  updateProposalOutcome(proposalId: string, outcome: string, accessToken: string, teamId?: string | null) {
     return request<{ data: ProposalApi }>(
       `/proposals/${proposalId}/outcome`,
       { method: "PATCH", body: JSON.stringify({ outcome }) },
       accessToken,
+      teamId,
     );
   },
-  async createCheckoutSession(tier: "growth" | "enterprise", accessToken: string) {
+  async createCheckoutSession(tier: "growth" | "enterprise", accessToken: string, teamId?: string | null) {
     const response = await request<{ checkout_url: string } | { data: { checkout_url: string } }>(
       `/billing/checkout/${tier}`,
       { method: "POST" },
       accessToken,
+      teamId,
     );
     return { data: "data" in response ? response.data : response };
   },
-  async cancelSubscription(accessToken: string) {
+  async cancelSubscription(accessToken: string, teamId?: string | null) {
     const response = await request<{ message: string } | { data: { message: string } }>(
       "/billing/cancel",
       { method: "POST" },
       accessToken,
+      teamId,
     );
     return { data: "data" in response ? response.data : response };
   },
@@ -389,15 +421,16 @@ export const api = {
       accessToken,
     );
   },
-  sendChat(message: string, accessToken: string) {
+  sendChat(message: string, accessToken: string, teamId?: string | null) {
     return request<{ data: { reply: string } }>(
       "/chat/",
       { method: "POST", body: JSON.stringify({ message }) },
       accessToken,
+      teamId,
     );
   },
-  getChatMessages(accessToken: string) {
-    return request<{ data: ChatMessageApi[] }>("/chat/", {}, accessToken);
+  getChatMessages(accessToken: string, teamId?: string | null) {
+    return request<{ data: ChatMessageApi[] }>("/chat/", {}, accessToken, teamId);
   },
 
   // === OTP Verification ===

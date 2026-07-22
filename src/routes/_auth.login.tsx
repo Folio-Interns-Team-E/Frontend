@@ -56,7 +56,7 @@ function Login() {
 
     const result = await dispatch(loginAccount({ email, password }));
     if (loginAccount.fulfilled.match(result)) {
-      void navigate({ to: "/team-setup" });
+      void navigate({ to: "/dashboard" });
       return;
     }
   }

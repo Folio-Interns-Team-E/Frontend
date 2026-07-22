@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { api } from "../lib/api";
 import type { TeamRole } from "./appSlice";
+import type { RootState } from "./index";
 
 const errorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Something went wrong";
@@ -100,9 +101,11 @@ export const fetchTeamRemote = createAsyncThunk(
 
 export const inviteMemberRemote = createAsyncThunk(
   "app/inviteMemberRemote",
-  async (payload: { email: string; accessToken: string }, { rejectWithValue }) => {
+  async (payload: { email: string; accessToken: string }, { rejectWithValue, getState }) => {
     try {
-      return await api.inviteMember(payload.email, payload.accessToken);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      return await api.inviteMember(payload.email, payload.accessToken, teamId);
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
@@ -156,10 +159,12 @@ export const removeMemberRemote = createAsyncThunk(
 // === Onboarding Thunks ===
 export const fetchOnboardingStatus = createAsyncThunk(
   "app/fetchOnboardingStatus",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.getOnboardingStatus(token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.getOnboardingStatus(token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -169,9 +174,11 @@ export const fetchOnboardingStatus = createAsyncThunk(
 
 export const submitOnboardingRemote = createAsyncThunk(
   "app/submitOnboardingRemote",
-  async (payload: { icp: string }, { rejectWithValue }) => {
+  async (payload: { icp: string }, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
       const res = await api.submitOnboarding(
         {
           productName: "",
@@ -180,6 +187,7 @@ export const submitOnboardingRemote = createAsyncThunk(
           goals: "",
         },
         token!,
+        teamId,
       );
       return res.data;
     } catch (error) {
@@ -191,10 +199,12 @@ export const submitOnboardingRemote = createAsyncThunk(
 // === Leads Thunks ===
 export const fetchLeads = createAsyncThunk(
   "app/fetchLeads",
-  async (status: string | undefined, { rejectWithValue }) => {
+  async (status: string | undefined, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.getLeads(status, token);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.getLeads(status, token, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -215,11 +225,13 @@ export const createLeadRemote = createAsyncThunk(
       score?: number;
       reasoning?: string;
     },
-    { rejectWithValue },
+    { rejectWithValue, getState },
   ) => {
     try {
       const token = getToken();
-      const res = await api.createLead(payload, token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.createLead(payload, token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -229,10 +241,12 @@ export const createLeadRemote = createAsyncThunk(
 
 export const qualifyLeadRemote = createAsyncThunk(
   "app/qualifyLeadRemote",
-  async (leadId: string, { rejectWithValue }) => {
+  async (leadId: string, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.qualifyLead(leadId, token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.qualifyLead(leadId, token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -242,10 +256,12 @@ export const qualifyLeadRemote = createAsyncThunk(
 
 export const discardLeadRemote = createAsyncThunk(
   "app/discardLeadRemote",
-  async (leadId: string, { rejectWithValue }) => {
+  async (leadId: string, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.discardLead(leadId, token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.discardLead(leadId, token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -258,10 +274,12 @@ export const sendEmailRemote = createAsyncThunk(
   "app/sendEmailRemote",
   async (
     payload: { leadId: string; subject: string; body: string; tone?: string },
-    { rejectWithValue },
+    { rejectWithValue, getState },
   ) => {
     try {
       const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
       const res = await api.sendEmail(
         {
           lead_id: payload.leadId,
@@ -270,6 +288,7 @@ export const sendEmailRemote = createAsyncThunk(
           tone: payload.tone,
         },
         token!,
+        teamId,
       );
       return { leadId: payload.leadId, ...res.data };
     } catch (error) {
@@ -280,9 +299,11 @@ export const sendEmailRemote = createAsyncThunk(
 
 export const draftEmailRemote = createAsyncThunk(
   "app/draftEmailRemote",
-  async (payload: { leadId: string; subject: string; body: string }, { rejectWithValue }) => {
+  async (payload: { leadId: string; subject: string; body: string }, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
       const res = await api.draftEmail(
         {
           lead_id: payload.leadId,
@@ -290,6 +311,7 @@ export const draftEmailRemote = createAsyncThunk(
           body: payload.body,
         },
         token!,
+        teamId,
       );
       return { leadId: payload.leadId, ...res.data };
     } catch (error) {
@@ -301,10 +323,12 @@ export const draftEmailRemote = createAsyncThunk(
 // === Outreach Thunks ===
 export const fetchOutreachLeads = createAsyncThunk(
   "app/fetchOutreachLeads",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.getLeads(undefined, token);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.getLeads(undefined, token, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -314,10 +338,12 @@ export const fetchOutreachLeads = createAsyncThunk(
 
 export const fetchLeadEmails = createAsyncThunk(
   "app/fetchLeadEmails",
-  async (leadId: string, { rejectWithValue }) => {
+  async (leadId: string, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.getEmails(leadId, token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.getEmails(leadId, token!, teamId);
       return { leadId, emails: res.data };
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -328,11 +354,13 @@ export const fetchLeadEmails = createAsyncThunk(
 // === Chat Thunks ===
 export const sendChatMessage = createAsyncThunk(
   "app/sendChatMessage",
-  async (message: string, { rejectWithValue }) => {
+  async (message: string, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      await api.sendChat(message, token!);
-      const res = await api.getChatMessages(token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      await api.sendChat(message, token!, teamId);
+      const res = await api.getChatMessages(token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -342,10 +370,12 @@ export const sendChatMessage = createAsyncThunk(
 
 export const fetchChatMessages = createAsyncThunk(
   "app/fetchChatMessages",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.getChatMessages(token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.getChatMessages(token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -356,10 +386,12 @@ export const fetchChatMessages = createAsyncThunk(
 // === Meetings Thunks ===
 export const fetchMeetings = createAsyncThunk(
   "app/fetchMeetings",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.getMeetings(token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.getMeetings(token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -370,10 +402,12 @@ export const fetchMeetings = createAsyncThunk(
 // === Proposals Thunks ===
 export const fetchProposals = createAsyncThunk(
   "app/fetchProposals",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.getProposals(token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.getProposals(token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -383,10 +417,12 @@ export const fetchProposals = createAsyncThunk(
 
 export const updateProposalStatusRemote = createAsyncThunk(
   "app/updateProposalStatusRemote",
-  async (payload: { id: string; status: string }, { rejectWithValue }) => {
+  async (payload: { id: string; status: string }, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.updateProposalStatus(payload.id, payload.status, token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.updateProposalStatus(payload.id, payload.status, token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -396,10 +432,12 @@ export const updateProposalStatusRemote = createAsyncThunk(
 
 export const updateProposalOutcomeRemote = createAsyncThunk(
   "app/updateProposalOutcomeRemote",
-  async (payload: { id: string; outcome: string }, { rejectWithValue }) => {
+  async (payload: { id: string; outcome: string }, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.updateProposalOutcome(payload.id, payload.outcome, token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.updateProposalOutcome(payload.id, payload.outcome, token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -411,10 +449,12 @@ export const reviseProposalRemote = createAsyncThunk(
   "app/reviseProposalRemote",
   async (
     payload: { id: string; title: string; summary: string; value?: string; note?: string },
-    { rejectWithValue },
+    { rejectWithValue, getState },
   ) => {
     try {
       const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
       const val = payload.value ? parseFloat(payload.value.replace(/[^0-9.]/g, "")) : undefined;
       await api.addProposalRevision(
         payload.id,
@@ -425,8 +465,9 @@ export const reviseProposalRemote = createAsyncThunk(
           note: payload.note,
         },
         token!,
+        teamId,
       );
-      const res = await api.getProposals(token!);
+      const res = await api.getProposals(token!, teamId);
       return res.data.find((proposal) => proposal.id === payload.id) ?? null;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -439,11 +480,13 @@ export const uploadKnowledgeAsset = createAsyncThunk(
   "app/uploadKnowledgeAsset",
   async (
     payload: { file: File; title: string; description?: string; tags?: string },
-    { rejectWithValue },
+    { rejectWithValue, getState },
   ) => {
     try {
       const token = getToken();
-      const res = await api.uploadKnowledgeAsset(payload, token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.uploadKnowledgeAsset(payload, token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -453,10 +496,12 @@ export const uploadKnowledgeAsset = createAsyncThunk(
 
 export const uploadProposalTemplate = createAsyncThunk(
   "app/uploadProposalTemplate",
-  async (payload: { file: File; template_name: string }, { rejectWithValue }) => {
+  async (payload: { file: File; template_name: string }, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.uploadProposalTemplate(payload, token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.uploadProposalTemplate(payload, token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -466,10 +511,12 @@ export const uploadProposalTemplate = createAsyncThunk(
 
 export const fetchKnowledgeAssets = createAsyncThunk(
   "app/fetchKnowledgeAssets",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const token = getToken();
-      const res = await api.getKnowledgeAssets(token!);
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.getKnowledgeAssets(token!, teamId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));

@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { FormEvent, useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import { completeOnboarding } from "../store/appSlice";
 import { submitOnboardingRemote } from "../store/apiThunks";
@@ -118,7 +118,10 @@ function formatRelativeTime(value: string) {
 
 function Index() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const onboarding = useAppSelector((state) => state.app.onboarding);
+  const auth = useAppSelector((state) => state.app.auth);
+  const team = useAppSelector((state) => state.app.team);
   const [icpInput, setIcpInput] = useState(onboarding.icp);
   const [icpSaved, setIcpSaved] = useState(false);
   const leads = useAppSelector((state) => state.app.leads);
@@ -128,6 +131,13 @@ function Index() {
   const proposals = useAppSelector((state) => state.app.proposals);
   const proposalsStatus = useAppSelector((state) => state.app.proposalsStatus);
   const profile = useAppSelector((state) => state.app.profile);
+
+  useEffect(() => {
+    if (auth.userTeamsStatus !== "succeeded") return;
+    if (!team.id && auth.userTeams.length === 0) {
+      void navigate({ to: "/team-setup" });
+    }
+  }, [auth.userTeamsStatus, auth.userTeams.length, team.id, navigate]);
   const liveColumns = useMemo(
     () => [
       {

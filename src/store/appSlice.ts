@@ -182,6 +182,7 @@ type AppState = {
   outreachLeadsStatus: "idle" | "loading" | "succeeded" | "failed";
   leadDraftEmails: Record<string, { subject: string; body: string }>;
   sidebarOpen: boolean;
+  teamSwitching: boolean;
 };
 
 export const initialState: AppState = {
@@ -244,6 +245,7 @@ export const initialState: AppState = {
   outreachLeadsStatus: "idle",
   leadDraftEmails: {},
   sidebarOpen: true,
+  teamSwitching: false,
 };
 
 const appSlice = createSlice({
@@ -261,6 +263,15 @@ const appSlice = createSlice({
       state.team.name = action.payload.name;
       state.team.currentUserRole = action.payload.role;
       state.auth.teamChoiceCompleted = true;
+      state.teamSwitching = true;
+      state.leads = [];
+      state.meetings = [];
+      state.proposals = [];
+      state.knowledgeAssets = [];
+      state.outreachLeads = [];
+    },
+    completeTeamSwitch(state) {
+      state.teamSwitching = false;
     },
     openSidebar(state) {
       state.sidebarOpen = true;
@@ -1085,6 +1096,7 @@ export const {
   qualifyLead,
   removeMemberLocal,
   resetProposalTemplate,
+  completeTeamSwitch,
   setActiveTeam,
   toggleSidebar,
   updateProposalTemplate,

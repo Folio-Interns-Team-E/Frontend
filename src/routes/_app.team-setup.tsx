@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useEffect, useState } from "react";
-import { setActiveTeam, createTeamLocal, joinTeamLocal, skipTeamSetup } from "../store/appSlice";
+import { setActiveTeam, createTeamLocal, joinTeamLocal } from "../store/appSlice";
 import { createTeamRemote, joinTeamRemote, fetchMyTeams } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
@@ -11,15 +11,29 @@ export const Route = createFileRoute("/_app/team-setup")({
 
 type Choice = "join" | "create" | null;
 
+function getInviteCodeFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  const params = new URLSearchParams(window.location.search);
+  return params.get("invite");
+}
+
 function TeamSetup() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const profile = useAppSelector((state) => state.app.profile);
   const auth = useAppSelector((state) => state.app.auth);
   const team = useAppSelector((state) => state.app.team);
-  const [choice, setChoice] = useState<Choice>(null);
+  const urlInviteCode = getInviteCodeFromUrl();
+  const [choice, setChoice] = useState<Choice>(urlInviteCode ? "join" : null);
   const [teamName, setTeamName] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
+  const [inviteCode, setInviteCode] = useState(urlInviteCode || "");
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(id);
+  }, [toast]);
 
   const accessToken =
     auth.accessToken ??
@@ -48,10 +62,13 @@ function TeamSetup() {
     const result = auth.accessToken
       ? await dispatch(createTeamRemote({ name: teamName, accessToken: auth.accessToken }))
       : null;
-    if (createTeamRemote.fulfilled.match(result)) continueToDashboard();
-    else {
+    if (createTeamRemote.fulfilled.match(result)) {
+      setToast({ message: "Team created successfully!", type: "success" });
+      setTimeout(() => continueToDashboard(), 1200);
+    } else {
       dispatch(createTeamLocal({ name: teamName }));
-      continueToDashboard();
+      setToast({ message: "Team created successfully!", type: "success" });
+      setTimeout(() => continueToDashboard(), 1200);
     }
   }
 
@@ -60,10 +77,13 @@ function TeamSetup() {
     const result = auth.accessToken
       ? await dispatch(joinTeamRemote({ inviteCode, accessToken: auth.accessToken }))
       : null;
-    if (joinTeamRemote.fulfilled.match(result)) continueToDashboard();
-    else {
+    if (joinTeamRemote.fulfilled.match(result)) {
+      setToast({ message: "Joined team successfully!", type: "success" });
+      setTimeout(() => continueToDashboard(), 1200);
+    } else {
       dispatch(joinTeamLocal({ inviteCode }));
-      continueToDashboard();
+      setToast({ message: "Joined team successfully!", type: "success" });
+      setTimeout(() => continueToDashboard(), 1200);
     }
   }
 
@@ -162,7 +182,7 @@ function TeamSetup() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
           <ChoiceCard
             icon="group_add"
             title="Join a team"
@@ -173,26 +193,31 @@ function TeamSetup() {
           <ChoiceCard
             icon="domain_add"
             title="Create a team"
-            description="Start a new workspace. You’ll automatically become its admin."
+            description="Start a new workspace. You'll automatically become its admin."
             selected={choice === "create"}
             recommended
             onClick={() => setChoice("create")}
-          />
-          <ChoiceCard
-            icon="person"
-            title="Skip for now"
-            description="Enter the dashboard without a team and configure one later."
-            selected={false}
-            onClick={() => {
-              dispatch(skipTeamSetup());
-              continueToDashboard();
-            }}
           />
         </div>
 
         {(team.error || !auth.accessToken) && (
           <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-xs text-error">
             {team.error ?? "Please log in before creating or joining a team."}
+          </div>
+        )}
+
+        {toast && (
+          <div
+            className={`mx-auto mt-6 flex max-w-2xl items-center gap-3 rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg transition-all ${
+              toast.type === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border-error/20 bg-error/5 text-error"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">
+              {toast.type === "success" ? "check_circle" : "error"}
+            </span>
+            {toast.message}
           </div>
         )}
 
