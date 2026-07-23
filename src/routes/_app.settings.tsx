@@ -23,6 +23,13 @@ function Settings() {
   const [gmailEmail, setGmailEmail] = useState<string | null>(null);
   const [gmailLoading, setGmailLoading] = useState(true);
 
+  const [calendlyModalOpen, setCalendlyModalOpen] = useState(false);
+  const [calendlyApiKey, setCalendlyApiKey] = useState(integrations.calendlyApiKey);
+  const [calendlyEventTypeId, setCalendlyEventTypeId] = useState(integrations.calendlyEventTypeId);
+
+  const [apolloModalOpen, setApolloModalOpen] = useState(false);
+  const [apolloApiKey, setApolloApiKey] = useState(integrations.apolloApiKey);
+
   const token = auth.accessToken ?? localStorage.getItem("access_token");
 
   useEffect(() => {
@@ -32,6 +39,7 @@ function Settings() {
       .then((res) => {
         setGmailConnected(res.data.connected);
         setGmailEmail(res.data.email ?? null);
+        dispatch(setIntegration({ integration: "gmail", value: res.data.connected }));
       })
       .catch(() => {})
       .finally(() => setGmailLoading(false));
@@ -45,6 +53,19 @@ function Settings() {
     } catch {
       // handled
     }
+  };
+
+  const saveCalendly = () => {
+    dispatch(setIntegration({ integration: "calendlyApiKey", value: calendlyApiKey }));
+    dispatch(setIntegration({ integration: "calendlyEventTypeId", value: calendlyEventTypeId }));
+    dispatch(setIntegration({ integration: "calendly", value: !!(calendlyApiKey && calendlyEventTypeId) }));
+    setCalendlyModalOpen(false);
+  };
+
+  const saveApollo = () => {
+    dispatch(setIntegration({ integration: "apolloApiKey", value: apolloApiKey }));
+    dispatch(setIntegration({ integration: "apollo", value: !!apolloApiKey }));
+    setApolloModalOpen(false);
   };
 
   function saveProfile(event: FormEvent) {
@@ -102,23 +123,23 @@ function Settings() {
             />
             <Integration
               icon="calendar_month"
-              name="Google Calendar"
-              description="Book meetings and keep the sales calendar synchronized."
-              connected={integrations.calendar}
-              onToggle={() =>
-                dispatch(
-                  setIntegration({ integration: "calendar", connected: !integrations.calendar }),
-                )
+              name="Calendly"
+              description={
+                integrations.calendly
+                  ? "Connected"
+                  : "Schedule meetings and sync with your calendar."
               }
+              connected={integrations.calendly}
+              onToggle={() => setCalendlyModalOpen(true)}
             />
             <Integration
               icon="person_search"
               name="Apollo"
-              description="Pull leads using filters generated from your ICP."
-              connected={integrations.apollo}
-              onToggle={() =>
-                dispatch(setIntegration({ integration: "apollo", connected: !integrations.apollo }))
+              description={
+                integrations.apollo ? "Connected" : "Pull leads using filters generated from your ICP."
               }
+              connected={integrations.apollo}
+              onToggle={() => setApolloModalOpen(true)}
             />
           </div>
         </section>
@@ -142,6 +163,108 @@ function Settings() {
           </Link>
         </section>
       </div>
+
+      {calendlyModalOpen && (
+        <div className="modal-backdrop">
+          <div className="modal-surface w-full max-w-md">
+            <div className="flex items-center justify-between border-b border-outline-variant p-5">
+              <h3 className="text-lg font-bold">Connect Calendly</h3>
+              <button
+                onClick={() => setCalendlyModalOpen(false)}
+                className="p-1 text-on-surface-variant hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="space-y-4 p-5">
+              <p className="text-sm text-on-surface-variant">
+                Enter your Calendly API key and Event Type ID to enable scheduling.
+              </p>
+              <label className="block text-sm font-semibold">
+                API Key
+                <input
+                  type="password"
+                  className="control mt-2 w-full px-4 py-2.5 font-normal outline-none"
+                  value={calendlyApiKey}
+                  onChange={(e) => setCalendlyApiKey(e.target.value)}
+                  placeholder="Paste your Calendly API key"
+                />
+              </label>
+              <label className="block text-sm font-semibold">
+                Event Type ID
+                <input
+                  type="text"
+                  className="control mt-2 w-full px-4 py-2.5 font-normal outline-none"
+                  value={calendlyEventTypeId}
+                  onChange={(e) => setCalendlyEventTypeId(e.target.value)}
+                  placeholder="e.g. abc123-def456"
+                />
+              </label>
+            </div>
+            <div className="flex justify-end gap-3 border-t border-outline-variant p-5">
+              <button
+                onClick={() => setCalendlyModalOpen(false)}
+                className="secondary-action"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveCalendly}
+                disabled={!calendlyApiKey || !calendlyEventTypeId}
+                className="primary-action disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {apolloModalOpen && (
+        <div className="modal-backdrop">
+          <div className="modal-surface w-full max-w-md">
+            <div className="flex items-center justify-between border-b border-outline-variant p-5">
+              <h3 className="text-lg font-bold">Connect Apollo</h3>
+              <button
+                onClick={() => setApolloModalOpen(false)}
+                className="p-1 text-on-surface-variant hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="space-y-4 p-5">
+              <p className="text-sm text-on-surface-variant">
+                Enter your Apollo API key to enable lead sourcing.
+              </p>
+              <label className="block text-sm font-semibold">
+                API Key
+                <input
+                  type="password"
+                  className="control mt-2 w-full px-4 py-2.5 font-normal outline-none"
+                  value={apolloApiKey}
+                  onChange={(e) => setApolloApiKey(e.target.value)}
+                  placeholder="Paste your Apollo API key"
+                />
+              </label>
+            </div>
+            <div className="flex justify-end gap-3 border-t border-outline-variant p-5">
+              <button
+                onClick={() => setApolloModalOpen(false)}
+                className="secondary-action"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveApollo}
+                disabled={!apolloApiKey}
+                className="primary-action disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

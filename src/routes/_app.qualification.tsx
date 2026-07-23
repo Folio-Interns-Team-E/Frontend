@@ -57,7 +57,7 @@ function Qualification() {
           <div>
             <p className="section-heading mb-1">Lead intelligence</p>
             <h3 className="text-xl font-extrabold tracking-[-0.025em] text-on-surface sm:text-2xl">
-              Qualified Batch #422
+              Qualified Batch
             </h3>
             <p className="text-body-sm text-on-surface-variant">
               Leads scored based on ICP match and intent signals.
@@ -164,7 +164,7 @@ function Qualification() {
                 </div>
                 <div className="mb-5 min-h-20 rounded-lg border border-primary/10 bg-primary/[0.045] p-3">
                   <p className="text-[12px] text-on-primary-fixed-variant italic">
-                    “{c.reasoning}”
+                    "{c.evaluationJustification || c.reasoning}"
                   </p>
                 </div>
                 <div className="flex gap-2">

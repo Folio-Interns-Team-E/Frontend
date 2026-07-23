@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useState } from "react";
-import { AuthDivider, AuthField, AuthLayout, GoogleButton } from "../components/AuthLayout";
+import { AuthField, AuthLayout } from "../components/AuthLayout";
 import { registerAccount } from "../store/apiThunks";
 import { clearApiFeedback, demoRegister } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -46,8 +46,6 @@ function Register() {
       description="Set up your account, define your ICP, and put your AI sales team to work."
     >
       
-      <AuthDivider />
-
       <form className="space-y-4" onSubmit={handleSubmit}>
         {auth.error && <ApiError message={auth.error} />}
         {auth.accessToken?.startsWith("demo-token") && (

@@ -240,18 +240,8 @@ function LeadGeneration() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-1.5">
-                            <button
-                              onClick={() => dispatch(qualifyLeadRemote(r.id))}
-                              className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 transition hover:bg-emerald-100"
-                            >
-                              Qualify
-                            </button>
-                            <button
-                              onClick={() => draftLead(r)}
-                              className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary hover:bg-primary/10"
-                            >
-                              Draft
-                            </button>
+                           
+                          
                             <button
                               onClick={() => dispatch(discardLeadRemote(r.id))}
                               className="rounded-lg border border-error/20 bg-error/5 px-2.5 py-1 text-[10px] font-bold text-error hover:bg-error/10"
@@ -261,32 +251,7 @@ function LeadGeneration() {
                           </div>
                         </td>
                       </tr>
-                      {index === 0 && r.email && (
-                        <tr className="bg-primary/[0.02]">
-                          <td className="px-6 py-4" colSpan={6}>
-                            <div className="flex items-center gap-stack_gap_md border border-primary/20 rounded-xl p-4 bg-white/50 backdrop-blur-sm">
-                              <div className="flex-1 grid grid-cols-2 gap-4">
-                                <div className="flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-on-surface-variant text-[18px]">
-                                    mail
-                                  </span>
-                                  <span className="text-body-sm text-on-surface-variant">
-                                    {r.email}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex-[2] bg-primary/[0.05] border border-primary/10 rounded-lg px-4 py-2.5 flex items-start gap-3">
-                                <span className="material-symbols-outlined text-primary text-[18px] mt-0.5">
-                                  auto_awesome
-                                </span>
-                                <p className="text-body-sm text-on-primary-fixed-variant leading-tight">
-                                  {r.reasoning}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
+                      
                     </Fragment>
                   ))}
                 </tbody>

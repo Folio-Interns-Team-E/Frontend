@@ -153,7 +153,7 @@ function TeamManagement() {
                       )}
                     </div>
                     <p className="mt-0.5 text-xs capitalize text-on-surface-variant">
-                      Role: {t.role}
+                      Role: {t.role ==="admin" ? t.role : "member"}
                     </p>
                   </div>
                   <span className="material-symbols-outlined text-on-surface-variant">
@@ -210,7 +210,7 @@ function TeamManagement() {
                     </span>
                     <span>
                       Your role:{" "}
-                      <strong className="capitalize text-white">{team.currentUserRole}</strong>
+                      <strong className="capitalize text-white">{team.currentUserRole === "admin" ? team.currentUserRole : "member"}</strong>
                     </span>
                     <span>
                       Members: <strong className="text-white">{team.members.length}</strong>
@@ -310,34 +310,13 @@ function TeamManagement() {
                       </div>
                     </div>
                     <div className="relative mt-4 flex items-center gap-2">
-                      <select
-                        value={member.role}
-                        disabled={!isAdmin || member.id === auth.userId || !team.id}
-                        onChange={(event) => {
-                          const role = event.target.value as TeamRole;
-                          if (!team.id || !auth.accessToken) {
-                            dispatch(updateMemberRoleLocal({ userId: member.id, role }));
-                            return;
-                          }
-                          void dispatch(
-                            updateMemberRoleRemote({
-                              teamId: team.id,
-                              userId: member.id,
-                              role,
-                              accessToken: auth.accessToken,
-                            }),
-                          ).then((result) => {
-                            if (updateMemberRoleRemote.rejected.match(result)) {
-                              dispatch(updateMemberRoleLocal({ userId: member.id, role }));
-                            }
-                          });
-                        }}
-                        className="control h-9 min-h-9 flex-1 px-3 text-xs font-semibold capitalize disabled:bg-slate-50"
+                      <div
+                        
+                        className="h-9 flex justify-left items-center flex-1 px-3 text-xs font-semibold capitalize control "
                       >
-                        <option value="admin">Admin</option>
-                        <option value="manager">Manager</option>
-                        <option value="rep">Sales rep</option>
-                      </select>
+                        {member.role === "admin"?   member.role: "member" }
+                        
+                      </div>
                       {canManageMembers && member.id !== auth.userId && (
                         <button
                           onClick={() => setConfirmRemove({ id: member.id, name: member.name })}

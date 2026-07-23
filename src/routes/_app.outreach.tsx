@@ -35,6 +35,7 @@ interface ComposerContentProps {
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
+  readOnly?: boolean;
 }
 
 const ComposerContent = ({
@@ -47,6 +48,7 @@ const ComposerContent = ({
   canRedo,
   onUndo,
   onRedo,
+  readOnly = false,
 }: ComposerContentProps) => (
   <>
     <div className="flex items-center gap-4 border-b border-outline-variant py-2 shrink-0">
@@ -72,12 +74,13 @@ const ComposerContent = ({
           type="text"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
+          readOnly={readOnly}
         />
       </div>
       <div className="flex items-center gap-1 border-l border-outline-variant/60 pl-2">
         <button
           onClick={onUndo}
-          disabled={!canUndo}
+          disabled={!canUndo || readOnly}
           className="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-on-surface-variant transition-colors"
           title="Undo (Ctrl+Z)"
         >
@@ -85,7 +88,7 @@ const ComposerContent = ({
         </button>
         <button
           onClick={onRedo}
-          disabled={!canRedo}
+          disabled={!canRedo || readOnly}
           className="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-on-surface-variant transition-colors"
           title="Redo (Ctrl+Y)"
         >
@@ -100,6 +103,7 @@ const ComposerContent = ({
         placeholder="Write your email here..."
         value={body}
         onChange={(e) => updateBody(e.target.value)}
+        readOnly={readOnly}
       />
     </div>
   </>
@@ -108,19 +112,34 @@ const ComposerContent = ({
 interface ComposerActionsProps {
   onSend: () => void;
   disabled: boolean;
+  sending: boolean;
   isSent: boolean;
   sentTo: string;
 }
 
-const ComposerActions = ({ onSend, disabled, isSent, sentTo }: ComposerActionsProps) => (
+const ComposerActions = ({ onSend, disabled, sending, isSent, sentTo }: ComposerActionsProps) => (
   <div className="flex shrink-0 items-center justify-end border-t border-outline-variant/45 bg-surface-container-low/25 p-4">
     <button
       onClick={onSend}
-      disabled={disabled}
+      disabled={disabled || sending}
       className="primary-action min-w-36 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      <span className="material-symbols-outlined text-[20px]">send</span>
-      {isSent ? `Sent to ${sentTo || "recipient"}` : "Send Now"}
+      {sending ? (
+        <>
+          <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+          Sending…
+        </>
+      ) : isSent ? (
+        <>
+          <span className="material-symbols-outlined text-[20px]">check_circle</span>
+          Sent to {sentTo || "recipient"}
+        </>
+      ) : (
+        <>
+          <span className="material-symbols-outlined text-[20px]">send</span>
+          Send Now
+        </>
+      )}
     </button>
   </div>
 );
@@ -136,6 +155,7 @@ function Outreach() {
   const leadDraftEmails = useAppSelector((state) => state.app.leadDraftEmails);
   const leadEmailsLoading = useAppSelector((state) => state.app.leadEmailsLoading);
   const selectedEmailId = useAppSelector((state) => state.app.selectedEmailId);
+  const sendingEmail = useAppSelector((state) => state.app.sendingEmail);
   const chatRefreshKey = useAppSelector((state) => state.app.chatRefreshKey);
 
   const outreachLeads = useMemo(
@@ -243,7 +263,7 @@ function Outreach() {
   }, [selectedEmail?.id]);
 
   const handleSend = () => {
-    if (selectedLead && subject && body) {
+    if (selectedLead && subject && body && !sendingEmail) {
       dispatch(sendEmailRemote({ leadId: selectedLead.id, subject, body }));
       setIsExpanded(false);
     }
@@ -417,25 +437,27 @@ function Outreach() {
 
                 {/* Composer */}
                 <div className="custom-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-6">
-                  <ComposerContent
-                    email={selectedLead?.email ?? ""}
-                    subject={subject}
-                    setSubject={setSubject}
-                    body={body}
-                    updateBody={updateBody}
-                    canUndo={past.length > 0}
-                    canRedo={future.length > 0}
-                    onUndo={handleUndo}
-                    onRedo={handleRedo}
-                  />
-                </div>
-
-                <ComposerActions
-                  onSend={handleSend}
-                  disabled={!selectedLead || selectedEmail?.status.toLowerCase() === "sent"}
-                  isSent={selectedEmail?.status.toLowerCase() === "sent"}
-                  sentTo={selectedLead?.email ?? ""}
+                <ComposerContent
+                  email={selectedLead?.email ?? ""}
+                  subject={subject}
+                  setSubject={setSubject}
+                  body={body}
+                  updateBody={updateBody}
+                  canUndo={past.length > 0}
+                  canRedo={future.length > 0}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                  readOnly={selectedEmail?.status.toLowerCase() === "sent" || sendingEmail}
                 />
+              </div>
+
+              <ComposerActions
+                onSend={handleSend}
+                disabled={!selectedLead || selectedEmail?.status.toLowerCase() === "sent"}
+                sending={sendingEmail}
+                isSent={selectedEmail?.status.toLowerCase() === "sent"}
+                sentTo={selectedLead?.email ?? ""}
+              />
               </>
             )}
           </div>
@@ -487,6 +509,7 @@ function Outreach() {
                   canRedo={future.length > 0}
                   onUndo={handleUndo}
                   onRedo={handleRedo}
+                  readOnly={selectedEmail?.status.toLowerCase() === "sent" || sendingEmail}
                 />
               )}
             </div>
@@ -494,6 +517,7 @@ function Outreach() {
             <ComposerActions
               onSend={handleSend}
               disabled={!selectedLead || selectedEmail?.status.toLowerCase() === "sent"}
+              sending={sendingEmail}
               isSent={selectedEmail?.status.toLowerCase() === "sent"}
               sentTo={selectedLead?.email ?? ""}
             />

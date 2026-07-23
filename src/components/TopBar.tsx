@@ -136,45 +136,13 @@ export function TopBar({ title }: { title: string }) {
             )}
           </div>
         )}
-        <button
-          ref={helpButtonRef}
-          className="icon-button hidden sm:inline-flex"
-          onClick={() => {
-            setHelpOpen((open) => !open);
-            setNotificationsOpen(false);
-          }}
-          aria-label="Open help"
-        >
-          <span className="material-symbols-outlined text-[20px]">help</span>
-        </button>
-        {helpOpen && (
-          <div
-            ref={helpRef}
-            className="absolute right-4 top-[58px] z-30 w-[300px] rounded-xl border border-outline-variant/60 bg-white p-5 shadow-2xl shadow-slate-900/15"
-          >
-            <div className="mb-3 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px] text-primary">info</span>
-              <p className="text-sm font-extrabold">SalesSync AI help</p>
-            </div>
-            <p className="text-xs leading-5 text-on-surface-variant">
-              This is a frontend demo workspace. Use the sidebar to review leads, proposals,
-              meetings, team flows, and settings. The AI panel can be collapsed from its header.
-            </p>
-            <button
-              type="button"
-              onClick={() => setHelpOpen(false)}
-              className="mt-4 rounded-lg bg-primary px-3 py-2 text-[11px] font-bold text-white"
-            >
-              Got it
-            </button>
-          </div>
-        )}
+       
         <Link
           to="/settings"
           className="ml-1 hidden items-center gap-2 border-l border-outline-variant/45 pl-3 sm:flex"
           aria-label="Open profile settings"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0d2d39] text-[10px] font-extrabold text-white">
+          <span className="flex h-8 w-8 items-center pt-[3px] justify-center rounded-lg bg-[#0d2d39] text-[10px] font-extrabold text-white">
             {(profile.name || "User")
               .split(" ")
               .map((part) => part[0])
@@ -182,9 +150,7 @@ export function TopBar({ title }: { title: string }) {
               .slice(0, 2)
               .toUpperCase()}
           </span>
-          <span className="hidden max-w-28 truncate text-xs font-bold text-on-surface lg:block">
-            {profile.name || "Account"}
-          </span>
+         
         </Link>
       </div>
     </header>

@@ -20,7 +20,6 @@ const THINKING_MESSAGES = [
   "✨ Almost there",
 ];
 
-
 export function AIChatPanel({ onClose }: { onClose: () => void }) {
   const dispatch = useAppDispatch();
   const messages = useAppSelector((state) => state.app.assistantMessages);
@@ -50,24 +49,24 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
   }, [messages, stepIdx]);
 
   useEffect(() => {
-    if (!isSending) {
-      setStepIdx(0);
-      return;
-    }
-
-    let idx = 0;
+  if (!isSending) {
     setStepIdx(0);
+    return;
+  }
 
-    const interval = setInterval(() => {
-      idx += 1;
-      if (idx < THINKING_MESSAGES.length) {
-        setStepIdx(idx);
-      } else {
-        clearInterval(interval);
+  setStepIdx(0);
+
+  const interval = setInterval(() => {
+    setStepIdx((prev) => {
+      if (prev < THINKING_MESSAGES.length - 1) {
+        return prev + 1;
       }
-    }, 1800);
+      clearInterval(interval);
+      return prev;
+    });
+  }, 1200); // Adjusted to 1.2s for a snappier feel
 
-    return () => clearInterval(interval);
+  return () => clearInterval(interval);
 }, [isSending]);
 
   useEffect(() => {
@@ -151,14 +150,9 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
       {/* Header */}
       <div className="flex h-16 items-center justify-between border-b border-outline-variant/40 px-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <span className="material-symbols-outlined text-[20px]">smart_toy</span>
-          </div>
           <div>
-            <h3 className="text-sm font-extrabold text-on-surface">Sales copilot</h3>
-            <p className="text-[10px] font-medium text-on-surface-variant">
-              {activeChatName}
-            </p>
+            <h3 className="text-sm font-extrabold text-on-surface">Salsy AI</h3>
+            <p className="text-[10px] font-medium text-on-surface-variant">{activeChatName}</p>
           </div>
         </div>
         <div className="flex items-center gap-1 relative" ref={dropdownRef}>
@@ -202,7 +196,9 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                         : "font-medium text-on-surface-variant hover:bg-surface-container-low"
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[14px] opacity-50">chat_bubble</span>
+                    <span className="material-symbols-outlined text-[14px] opacity-50">
+                      chat_bubble
+                    </span>
                     {renamingId === chat.id ? (
                       <input
                         autoFocus
@@ -252,7 +248,9 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
             {[1, 2, 3].map((i) => (
               <div key={i} className={`flex flex-col ${i % 2 === 0 ? "items-end" : "items-start"}`}>
                 <div className="mb-1 h-2.5 w-16 rounded bg-outline-variant/40" />
-                <div className={`rounded-2xl p-3 ${i % 2 === 0 ? "rounded-tr-md" : "rounded-tl-md"}`}>
+                <div
+                  className={`rounded-2xl p-3 ${i % 2 === 0 ? "rounded-tr-md" : "rounded-tl-md"}`}
+                >
                   <div className="space-y-1.5">
                     <div className="h-2.5 w-48 rounded bg-outline-variant/30" />
                     <div className="h-2.5 w-32 rounded bg-outline-variant/20" />
@@ -284,57 +282,31 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                 item.author === "user" ? "text-on-surface-variant" : "text-primary"
               }`}
             >
-              {item.userName}
+              {item.author === "user" ? item.userName: `Salsy (replying to ${item.userName})`}
             </p>
             {item.body === "Thinking..." ? (
   <div className="max-w-[92%] rounded-2xl rounded-tl-md border border-primary/16 bg-primary/[0.065] p-3 shadow-sm">
-    <div className="flex flex-col gap-1.5">
-      {THINKING_MESSAGES.slice(0, stepIdx + 1).map((msg, i) => {
-        const isActive = i === stepIdx;
-        const isDone = i < stepIdx;
-        return (
-          <div
-            key={msg}
-            className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-1 duration-300"
-          >
-            {isDone ? (
-              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/20">
-                <svg
-                  className="h-2.5 w-2.5 text-primary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={3}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            ) : (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            )}
-            <span
-              className={`text-xs font-medium transition-colors duration-300 ${
-                isActive ? "text-primary" : "text-primary/45"
-              }`}
-            >
-              {msg}
-            </span>
-          </div>
-        );
-      })}
+    <div className="flex items-center gap-2.5">
+      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0" />
+      <span
+        key={stepIdx}
+        className="text-xs font-medium text-primary animate-in fade-in duration-200"
+      >
+        {THINKING_MESSAGES[stepIdx]}
+      </span>
     </div>
   </div>
 ) : (
-              <div
-                className={`max-w-[92%] rounded-2xl p-3 shadow-sm ${
-                  item.author === "user"
-                    ? "rounded-tr-md border border-outline-variant/55 bg-white"
-                    : "rounded-tl-md border border-primary/16 bg-primary/[0.065]"
-                }`}
-              >
-                <p className="whitespace-pre-line font-body-sm text-body-sm">{item.body}</p>
-              </div>
-            )}
+  <div
+    className={`max-w-[92%] rounded-2xl p-3 shadow-sm ${
+      item.author === "user"
+        ? "rounded-tr-md border border-outline-variant/55 bg-white"
+        : "rounded-tl-md border border-primary/16 bg-primary/[0.065]"
+    }`}
+  >
+    <p className="whitespace-pre-line font-body-sm text-body-sm">{item.body}</p>
+  </div>
+)}
             {item.body !== "Thinking..." && (
               <span className="text-[10px] text-outline mt-1 px-1">{item.time}</span>
             )}

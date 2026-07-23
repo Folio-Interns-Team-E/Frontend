@@ -12,6 +12,7 @@ export const Route = createFileRoute("/_app/billing")({
 function Billing() {
   const auth = useAppSelector((state) => state.app.auth);
   const token = auth.accessToken ?? localStorage.getItem("access_token");
+  const teamId = useAppSelector((state) => state.app.team.id);
 
   const [billing, setBilling] = useState<BillingStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,20 +21,20 @@ function Billing() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !teamId) return;
     setLoading(true);
     api
-      .getBillingStatus(token)
+      .getBillingStatus(token, teamId)
       .then((res) => setBilling(res.data))
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load billing"))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, teamId]);
 
   const handleUpgrade = async (tier: "growth" | "enterprise") => {
-    if (!token) return;
+    if (!token || !teamId) return;
     setCheckoutLoading(tier);
     try {
-      const res = await api.createCheckoutSession(tier, token);
+      const res = await api.createCheckoutSession(tier, token, teamId);
       window.location.href = res.data.checkout_url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed");
@@ -42,11 +43,11 @@ function Billing() {
   };
 
   const handleCancel = async () => {
-    if (!token) return;
+    if (!token || !teamId) return;
     setCancelling(true);
     try {
-      await api.cancelSubscription(token);
-      const res = await api.getBillingStatus(token);
+      await api.cancelSubscription(token, teamId);
+      const res = await api.getBillingStatus(token, teamId);
       setBilling(res.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Cancellation failed");

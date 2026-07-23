@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import { completeOnboarding } from "../store/appSlice";
-import { submitOnboardingRemote } from "../store/apiThunks";
+import { createLeadRemote, fetchLeads, submitOnboardingRemote } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { Skeleton, SkeletonKPIGrid } from "../components/ui/skeleton";
 
@@ -132,6 +132,10 @@ function Index() {
   const proposalsStatus = useAppSelector((state) => state.app.proposalsStatus);
   const profile = useAppSelector((state) => state.app.profile);
 
+  const [leadModalOpen, setLeadModalOpen] = useState(false);
+  const [leadForm, setLeadForm] = useState({ name: "", email: "", company: "", title: "", source: "" });
+  const [leadSaving, setLeadSaving] = useState(false);
+
   useEffect(() => {
     if (auth.userTeamsStatus !== "succeeded") return;
     if (!team.id && auth.userTeams.length === 0) {
@@ -241,6 +245,28 @@ function Index() {
     },
   ];
   const maxKpiValue = Math.max(...liveKpis.map((item) => Number(item.value) || 0), 1);
+
+  const handleAddLead = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!leadForm.name.trim() || !leadForm.email.trim()) return;
+    setLeadSaving(true);
+    try {
+      await dispatch(
+        createLeadRemote({
+          name: leadForm.name.trim(),
+          email: leadForm.email.trim(),
+          company: leadForm.company.trim() || undefined,
+          title: leadForm.title.trim() || undefined,
+          source: leadForm.source.trim() || undefined,
+        }),
+      ).unwrap();
+      dispatch(fetchLeads());
+      setLeadForm({ name: "", email: "", company: "", title: "", source: "" });
+      setLeadModalOpen(false);
+    } finally {
+      setLeadSaving(false);
+    }
+  };
 
   return (
     <>
@@ -377,7 +403,10 @@ function Index() {
               <button className="icon-button border border-outline-variant/60 bg-white">
                 <span className="material-symbols-outlined text-[18px]">filter_list</span>
               </button>
-              <button className="primary-action px-3 sm:px-4">
+              <button
+                onClick={() => setLeadModalOpen(true)}
+                className="primary-action px-3 sm:px-4"
+              >
                 <span className="material-symbols-outlined text-[17px]">add</span>
                 <span className="hidden sm:inline">Add lead</span>
               </button>
@@ -437,10 +466,6 @@ function Index() {
                         </p>
                       </div>
                     )}
-                    <button className="flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-[10px] font-semibold text-slate-400 transition hover:bg-white hover:text-primary">
-                      <span className="material-symbols-outlined text-[14px]">add</span>
-                      Add opportunity
-                    </button>
                   </div>
                 </div>
               ))}
@@ -512,6 +537,92 @@ function Index() {
           </div>
         </section>
       </div>
+
+      {leadModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900">Add lead</h2>
+              <button
+                onClick={() => setLeadModalOpen(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleAddLead} className="space-y-4">
+              <label className="block text-sm font-semibold text-slate-700">
+                Name *
+                <input
+                  type="text"
+                  required
+                  value={leadForm.name}
+                  onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
+                  className="mt-1.5 block w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/30"
+                  placeholder="e.g. Jane Smith"
+                />
+              </label>
+              <label className="block text-sm font-semibold text-slate-700">
+                Email *
+                <input
+                  type="email"
+                  required
+                  value={leadForm.email}
+                  onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+                  className="mt-1.5 block w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/30"
+                  placeholder="e.g. jane@company.com"
+                />
+              </label>
+              <label className="block text-sm font-semibold text-slate-700">
+                Company
+                <input
+                  type="text"
+                  value={leadForm.company}
+                  onChange={(e) => setLeadForm({ ...leadForm, company: e.target.value })}
+                  className="mt-1.5 block w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/30"
+                  placeholder="e.g. Acme Corp"
+                />
+              </label>
+              <label className="block text-sm font-semibold text-slate-700">
+                Job title
+                <input
+                  type="text"
+                  value={leadForm.title}
+                  onChange={(e) => setLeadForm({ ...leadForm, title: e.target.value })}
+                  className="mt-1.5 block w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/30"
+                  placeholder="e.g. VP of Sales"
+                />
+              </label>
+              <label className="block text-sm font-semibold text-slate-700">
+                Source
+                <input
+                  type="text"
+                  value={leadForm.source}
+                  onChange={(e) => setLeadForm({ ...leadForm, source: e.target.value })}
+                  className="mt-1.5 block w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/30"
+                  placeholder="e.g. LinkedIn, Manual"
+                />
+              </label>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setLeadModalOpen(false)}
+                  className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={leadSaving || !leadForm.name.trim() || !leadForm.email.trim()}
+                  className="rounded-lg bg-[#0d2d39] px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {leadSaving ? "Adding..." : "Add lead"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

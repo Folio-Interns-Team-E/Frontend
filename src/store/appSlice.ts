@@ -57,6 +57,7 @@ export type Lead = {
   score: number | null;
   status: LeadStatus;
   reasoning: string;
+  evaluationJustification: string;
   createdAt: string;
 };
 
@@ -157,8 +158,11 @@ type AppState = {
   };
   integrations: {
     gmail: boolean;
-    calendar: boolean;
+    calendly: boolean;
+    calendlyApiKey: string;
+    calendlyEventTypeId: string;
     apollo: boolean;
+    apolloApiKey: string;
   };
   team: {
     id: string | null;
@@ -200,6 +204,7 @@ type AppState = {
   leadDraftEmails: Record<string, Array<{ id: string; subject: string; body: string; status: string; sent_at?: string }>>;
   leadEmailsLoading: boolean;
   selectedEmailId: string | null;
+  sendingEmail: boolean;
   sidebarOpen: boolean;
   teamSwitching: boolean;
 };
@@ -230,8 +235,11 @@ export const initialState: AppState = {
   },
   integrations: {
     gmail: false,
-    calendar: false,
+    calendly: false,
+    calendlyApiKey: "",
+    calendlyEventTypeId: "",
     apollo: false,
+    apolloApiKey: "",
   },
   team: {
     id: null,
@@ -269,6 +277,7 @@ export const initialState: AppState = {
   leadDraftEmails: {},
   leadEmailsLoading: false,
   selectedEmailId: null,
+  sendingEmail: false,
   sidebarOpen: true,
   teamSwitching: false,
 };
@@ -414,9 +423,9 @@ const appSlice = createSlice({
     },
     setIntegration(
       state,
-      action: PayloadAction<{ integration: keyof AppState["integrations"]; connected: boolean }>,
+      action: PayloadAction<{ integration: keyof AppState["integrations"]; value: boolean | string }>,
     ) {
-      state.integrations[action.payload.integration] = action.payload.connected;
+      (state.integrations as Record<string, boolean | string>)[action.payload.integration] = action.payload.value;
     },
     updateProfile(state, action: PayloadAction<AppState["profile"]>) {
       state.profile = action.payload;
@@ -842,6 +851,7 @@ const appSlice = createSlice({
           score: lead.score ?? null,
           status: lead.status as LeadStatus,
           reasoning: lead.reasoning || "",
+          evaluationJustification: lead.evaluation_justification || "",
           createdAt: lead.created_at,
         }));
         state.leadsStatus = "succeeded";
@@ -859,13 +869,11 @@ const appSlice = createSlice({
         if (outreachLead) outreachLead.status = "Qualified";
       })
       .addCase(discardLeadRemote.fulfilled, (state, action) => {
-        const lead = state.leads.find((item) => item.id === action.payload.id);
-        if (lead) lead.status = "Discarded";
-        state.outreachLeads = state.outreachLeads.filter((item) => item.id !== action.payload.id);
+        state.leads = state.leads.filter((item) => item.id !== action.payload);
+        state.outreachLeads = state.outreachLeads.filter((item) => item.id !== action.payload);
       })
       .addCase(discardLeadRemote.pending, (state, action) => {
-        const lead = state.leads.find((item) => item.id === action.meta.arg);
-        if (lead) lead.status = "Discarded";
+        state.leads = state.leads.filter((item) => item.id !== action.meta.arg);
         state.outreachLeads = state.outreachLeads.filter((item) => item.id !== action.meta.arg);
       })
 
@@ -893,6 +901,7 @@ const appSlice = createSlice({
           score: lead.score ?? null,
           status: lead.status as LeadStatus,
           reasoning: lead.reasoning || "",
+          evaluationJustification: lead.evaluation_justification || "",
           createdAt: lead.created_at,
         }));
         state.outreachLeadsStatus = "succeeded";
@@ -921,12 +930,10 @@ const appSlice = createSlice({
 
       // === Emails ===
       .addCase(sendEmailRemote.pending, (state, action) => {
-        const lead = state.leads.find((item) => item.id === action.meta.arg.leadId);
-        if (lead) lead.status = "Sent";
-        const outreachLead = state.outreachLeads.find((item) => item.id === action.meta.arg.leadId);
-        if (outreachLead) outreachLead.status = "Sent";
+        state.sendingEmail = true;
       })
       .addCase(sendEmailRemote.fulfilled, (state, action) => {
+        state.sendingEmail = false;
         const lead = state.leads.find((item) => item.id === action.payload.leadId);
         if (lead) lead.status = "Sent";
         const oLead = state.outreachLeads.find((item) => item.id === action.payload.leadId);
@@ -941,6 +948,9 @@ const appSlice = createSlice({
         });
         state.leadDraftEmails[action.payload.leadId] = arr;
         state.selectedEmailId = action.payload.id;
+      })
+      .addCase(sendEmailRemote.rejected, (state) => {
+        state.sendingEmail = false;
       })
       .addCase(draftEmailRemote.pending, (state, action) => {
         const lead = state.leads.find((item) => item.id === action.meta.arg.leadId);
@@ -1266,6 +1276,7 @@ export function buildLeads(icp: string): Lead[] {
         score >= 80
           ? `${company} strongly matches your ICP description. ${title} is close to the revenue workflow.`
           : `${company} has partial fit, but the role or segment is weaker against your ICP.`,
+      evaluationJustification: "",
       createdAt: new Date().toISOString(),
     };
   });

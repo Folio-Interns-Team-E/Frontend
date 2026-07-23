@@ -261,8 +261,8 @@ export const discardLeadRemote = createAsyncThunk(
       const token = getToken();
       const state = getState() as RootState;
       const teamId = state.app.team.id;
-      const res = await api.discardLead(leadId, token!, teamId);
-      return res.data;
+      await api.deleteLead(leadId, token!, teamId);
+      return leadId;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }

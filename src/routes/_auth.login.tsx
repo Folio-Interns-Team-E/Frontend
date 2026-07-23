@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useEffect, useState } from "react";
-import { AuthDivider, AuthField, AuthLayout, GoogleButton } from "../components/AuthLayout";
+import { AuthField, AuthLayout } from "../components/AuthLayout";
 import { loginAccount } from "../store/apiThunks";
 import { clearApiFeedback, createTeamLocal, demoLogin } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -45,8 +45,6 @@ function Login() {
       title="Log in to your workspace"
       description="Pick up where your sales agents left off."
     >
-
-      <AuthDivider />
 
       <form className="space-y-5" onSubmit={handleSubmit}>
         {auth.error && (

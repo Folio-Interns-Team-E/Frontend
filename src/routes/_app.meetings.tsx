@@ -16,7 +16,7 @@ function Meetings() {
   const meetings = useAppSelector((state) => state.app.meetings);
   const meetingsStatus = useAppSelector((state) => state.app.meetingsStatus);
   const selectedMeetingId = useAppSelector((state) => state.app.selectedMeetingId);
-  const calendarConnected = useAppSelector((state) => state.app.integrations.calendar);
+  const calendarConnected = useAppSelector((state) => state.app.integrations.calendly);
   const selectedMeeting =
     meetings.find((meeting) => meeting.id === selectedMeetingId) ?? meetings[0];
 
@@ -28,12 +28,7 @@ function Meetings() {
     <>
       <TopBar title="Meetings" />
       <div className="page-shell space-y-6">
-        {!calendarConnected && (
-          <div className="flex items-center gap-3 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
-            <span className="material-symbols-outlined text-[19px]">event_busy</span>
-            Google Calendar is not connected. Connect it in Settings to sync bookings.
-          </div>
-        )}
+      
 
         <section className="flex flex-wrap items-end justify-between gap-3">
           <div>

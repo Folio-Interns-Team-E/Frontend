@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { AIChatPanel } from "../components/AIChatPanel";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { closeSidebar, setActiveTeam, completeTeamSwitch } from "../store/appSlice";
+import { closeSidebar, setActiveTeam, completeTeamSwitch, setIntegration } from "../store/appSlice";
 import {
   fetchMyTeams,
   fetchOnboardingStatus,
@@ -20,6 +20,7 @@ import {
   fetchChatMessages,
   fetchChats,
 } from "../store/apiThunks";
+import { api } from "../lib/api";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: ({ context, location }) => {
@@ -90,6 +91,12 @@ function AppLayout() {
       dispatch(fetchProposals());
       dispatch(fetchKnowledgeAssets());
       dispatch(fetchChats());
+      api
+        .getGmailStatus(accessToken)
+        .then((res) => {
+          dispatch(setIntegration({ integration: "gmail", value: res.data.connected }));
+        })
+        .catch(() => {});
     }
   }, [teamId, dispatch]);
 

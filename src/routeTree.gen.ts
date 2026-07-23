@@ -19,6 +19,7 @@ import { Route as AuthRegisterRouteImport } from './routes/_auth.register'
 import { Route as AuthLoginRouteImport } from './routes/_auth.login'
 import { Route as AppTeamSetupRouteImport } from './routes/_app.team-setup'
 import { Route as AppTeamRouteImport } from './routes/_app.team'
+import { Route as AppSuccessRouteImport } from './routes/_app.success'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppQualificationRouteImport } from './routes/_app.qualification'
 import { Route as AppProposalsRouteImport } from './routes/_app.proposals'
@@ -29,6 +30,7 @@ import { Route as AppLeadGenerationRouteImport } from './routes/_app.lead-genera
 import { Route as AppKnowledgeBaseRouteImport } from './routes/_app.knowledge-base'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppBillingRouteImport } from './routes/_app.billing'
+import { Route as AppBillingCancelRouteImport } from './routes/_app.billing.cancel'
 
 const MarketingRoute = MarketingRouteImport.update({
   id: '/_marketing',
@@ -75,6 +77,11 @@ const AppTeamSetupRoute = AppTeamSetupRouteImport.update({
 const AppTeamRoute = AppTeamRouteImport.update({
   id: '/team',
   path: '/team',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSuccessRoute = AppSuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -127,10 +134,15 @@ const AppBillingRoute = AppBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBillingCancelRoute = AppBillingCancelRouteImport.update({
+  id: '/cancel',
+  path: '/cancel',
+  getParentRoute: () => AppBillingRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
-  '/billing': typeof AppBillingRoute
+  '/billing': typeof AppBillingRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
   '/lead-generation': typeof AppLeadGenerationRoute
@@ -140,16 +152,18 @@ export interface FileRoutesByFullPath {
   '/proposals': typeof AppProposalsRoute
   '/qualification': typeof AppQualificationRoute
   '/settings': typeof AppSettingsRoute
+  '/success': typeof AppSuccessRoute
   '/team': typeof AppTeamRoute
   '/team-setup': typeof AppTeamSetupRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/verify-otp': typeof AuthVerifyOtpRoute
   '/pricing': typeof MarketingPricingRoute
+  '/billing/cancel': typeof AppBillingCancelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
-  '/billing': typeof AppBillingRoute
+  '/billing': typeof AppBillingRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
   '/lead-generation': typeof AppLeadGenerationRoute
@@ -159,19 +173,21 @@ export interface FileRoutesByTo {
   '/proposals': typeof AppProposalsRoute
   '/qualification': typeof AppQualificationRoute
   '/settings': typeof AppSettingsRoute
+  '/success': typeof AppSuccessRoute
   '/team': typeof AppTeamRoute
   '/team-setup': typeof AppTeamSetupRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/verify-otp': typeof AuthVerifyOtpRoute
   '/pricing': typeof MarketingPricingRoute
+  '/billing/cancel': typeof AppBillingCancelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
   '/_marketing': typeof MarketingRouteWithChildren
-  '/_app/billing': typeof AppBillingRoute
+  '/_app/billing': typeof AppBillingRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/knowledge-base': typeof AppKnowledgeBaseRoute
   '/_app/lead-generation': typeof AppLeadGenerationRoute
@@ -181,6 +197,7 @@ export interface FileRoutesById {
   '/_app/proposals': typeof AppProposalsRoute
   '/_app/qualification': typeof AppQualificationRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/success': typeof AppSuccessRoute
   '/_app/team': typeof AppTeamRoute
   '/_app/team-setup': typeof AppTeamSetupRoute
   '/_auth/login': typeof AuthLoginRoute
@@ -188,6 +205,7 @@ export interface FileRoutesById {
   '/_auth/verify-otp': typeof AuthVerifyOtpRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
   '/_marketing/': typeof MarketingIndexRoute
+  '/_app/billing/cancel': typeof AppBillingCancelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -203,12 +221,14 @@ export interface FileRouteTypes {
     | '/proposals'
     | '/qualification'
     | '/settings'
+    | '/success'
     | '/team'
     | '/team-setup'
     | '/login'
     | '/register'
     | '/verify-otp'
     | '/pricing'
+    | '/billing/cancel'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -222,12 +242,14 @@ export interface FileRouteTypes {
     | '/proposals'
     | '/qualification'
     | '/settings'
+    | '/success'
     | '/team'
     | '/team-setup'
     | '/login'
     | '/register'
     | '/verify-otp'
     | '/pricing'
+    | '/billing/cancel'
   id:
     | '__root__'
     | '/_app'
@@ -243,6 +265,7 @@ export interface FileRouteTypes {
     | '/_app/proposals'
     | '/_app/qualification'
     | '/_app/settings'
+    | '/_app/success'
     | '/_app/team'
     | '/_app/team-setup'
     | '/_auth/login'
@@ -250,6 +273,7 @@ export interface FileRouteTypes {
     | '/_auth/verify-otp'
     | '/_marketing/pricing'
     | '/_marketing/'
+    | '/_app/billing/cancel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -330,6 +354,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTeamRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/success': {
+      id: '/_app/success'
+      path: '/success'
+      fullPath: '/success'
+      preLoaderRoute: typeof AppSuccessRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
@@ -400,11 +431,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBillingRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/billing/cancel': {
+      id: '/_app/billing/cancel'
+      path: '/cancel'
+      fullPath: '/billing/cancel'
+      preLoaderRoute: typeof AppBillingCancelRouteImport
+      parentRoute: typeof AppBillingRoute
+    }
   }
 }
 
+interface AppBillingRouteChildren {
+  AppBillingCancelRoute: typeof AppBillingCancelRoute
+}
+
+const AppBillingRouteChildren: AppBillingRouteChildren = {
+  AppBillingCancelRoute: AppBillingCancelRoute,
+}
+
+const AppBillingRouteWithChildren = AppBillingRoute._addFileChildren(
+  AppBillingRouteChildren,
+)
+
 interface AppRouteChildren {
-  AppBillingRoute: typeof AppBillingRoute
+  AppBillingRoute: typeof AppBillingRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
   AppKnowledgeBaseRoute: typeof AppKnowledgeBaseRoute
   AppLeadGenerationRoute: typeof AppLeadGenerationRoute
@@ -414,12 +464,13 @@ interface AppRouteChildren {
   AppProposalsRoute: typeof AppProposalsRoute
   AppQualificationRoute: typeof AppQualificationRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppSuccessRoute: typeof AppSuccessRoute
   AppTeamRoute: typeof AppTeamRoute
   AppTeamSetupRoute: typeof AppTeamSetupRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppBillingRoute: AppBillingRoute,
+  AppBillingRoute: AppBillingRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
   AppKnowledgeBaseRoute: AppKnowledgeBaseRoute,
   AppLeadGenerationRoute: AppLeadGenerationRoute,
@@ -429,6 +480,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProposalsRoute: AppProposalsRoute,
   AppQualificationRoute: AppQualificationRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppSuccessRoute: AppSuccessRoute,
   AppTeamRoute: AppTeamRoute,
   AppTeamSetupRoute: AppTeamSetupRoute,
 }

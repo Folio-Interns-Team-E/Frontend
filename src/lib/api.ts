@@ -200,6 +200,9 @@ export const api = {
   discardLead(leadId: string, accessToken: string, teamId?: string | null) {
     return request<{ data: LeadApi }>(`/leads/${leadId}/discard`, { method: "POST" }, accessToken, teamId);
   },
+  deleteLead(leadId: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: Record<string, never> }>(`/leads/${leadId}`, { method: "DELETE" }, accessToken, teamId);
+  },
 
   // === Emails ===
   sendEmail(
@@ -431,6 +434,15 @@ export const api = {
     const response = await request<{ message: string } | { data: { message: string } }>(
       "/billing/cancel",
       { method: "POST" },
+      accessToken,
+      teamId,
+    );
+    return { data: "data" in response ? response.data : response };
+  },
+  async completeCheckout(sessionId: string, accessToken: string, teamId?: string | null) {
+    const response = await request<BillingStatus | { data: BillingStatus }>(
+      "/billing/checkout/complete",
+      { method: "POST", body: JSON.stringify({ session_id: sessionId }) },
       accessToken,
       teamId,
     );
