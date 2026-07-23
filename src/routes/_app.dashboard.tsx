@@ -124,6 +124,10 @@ function Index() {
   const team = useAppSelector((state) => state.app.team);
   const [icpInput, setIcpInput] = useState(onboarding.icp);
   const [icpSaved, setIcpSaved] = useState(false);
+
+  useEffect(() => {
+    setIcpInput(onboarding.icp);
+  }, [onboarding.icp]);
   const leads = useAppSelector((state) => state.app.leads);
   const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
   const meetings = useAppSelector((state) => state.app.meetings);

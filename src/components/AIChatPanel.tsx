@@ -282,7 +282,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                 item.author === "user" ? "text-on-surface-variant" : "text-primary"
               }`}
             >
-              {item.author === "user" ? item.userName: `Salsy (replying to ${item.userName})`}
+              {item.author === "user" ? item.userName: `Salsy`}
             </p>
             {item.body === "Thinking..." ? (
   <div className="max-w-[92%] rounded-2xl rounded-tl-md border border-primary/16 bg-primary/[0.065] p-3 shadow-sm">

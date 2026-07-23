@@ -102,6 +102,7 @@ function AppLayout() {
 
   useEffect(() => {
     if (teamId && chatRefreshKey > 0) {
+      dispatch(fetchOnboardingStatus());
       dispatch(fetchLeads());
       dispatch(fetchMeetings());
       dispatch(fetchProposals());
