@@ -45,7 +45,7 @@ function Register() {
       title="Create your workspace"
       description="Set up your account, define your ICP, and put your AI sales team to work."
     >
-      <GoogleButton label="Sign up with Google" />
+      
       <AuthDivider />
 
       <form className="space-y-4" onSubmit={handleSubmit}>
