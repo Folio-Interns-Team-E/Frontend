@@ -4,7 +4,6 @@ import { AuthDivider, AuthField, AuthLayout, GoogleButton } from "../components/
 import { loginAccount } from "../store/apiThunks";
 import { clearApiFeedback, createTeamLocal, demoLogin } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { useGoogleLogin } from "@react-oauth/google";
 
 export const Route = createFileRoute("/_auth/login")({
   head: () => ({ meta: [{ title: "Log in · SalesSync AI" }] }),
@@ -29,27 +28,6 @@ function Login() {
     if (auth.error) dispatch(clearApiFeedback());
   }
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      const accessToken = tokenResponse.access_token;
-
-      const response = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      const user = await response.json();
-
-      console.log(user);
-
-      //void navigate({ to: "/dashboard" });
-    },
-
-    onError: () => {
-      console.log("Google login failed");
-    },
-  });
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -67,7 +45,7 @@ function Login() {
       title="Log in to your workspace"
       description="Pick up where your sales agents left off."
     >
-      <GoogleButton label="Continue with Google" onClick={() => googleLogin()} />
+
       <AuthDivider />
 
       <form className="space-y-5" onSubmit={handleSubmit}>
