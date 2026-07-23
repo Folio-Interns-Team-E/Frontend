@@ -17,6 +17,8 @@ import {
   fetchMeetings,
   fetchProposals,
   fetchKnowledgeAssets,
+  fetchChatMessages,
+  fetchChats,
 } from "../store/apiThunks";
 
 export const Route = createFileRoute("/_app")({
@@ -86,6 +88,7 @@ function AppLayout() {
       dispatch(fetchMeetings());
       dispatch(fetchProposals());
       dispatch(fetchKnowledgeAssets());
+      dispatch(fetchChats());
     }
   }, [teamId, dispatch]);
 

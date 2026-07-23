@@ -46,6 +46,8 @@ function migrateState(savedState: unknown) {
       integrations: { ...appInitialState.integrations, ...savedApp.integrations },
       team: { ...appInitialState.team, ...savedApp.team, status: "idle" as const },
       assistantMessages: [],
+      chats: Array.isArray(savedApp.chats) ? savedApp.chats : [],
+      activeChatId: savedApp.activeChatId ?? null,
       leadsStatus: "idle" as const,
       meetingsStatus: "idle" as const,
       proposalsStatus: "idle" as const,

@@ -352,6 +352,66 @@ export const fetchLeadEmails = createAsyncThunk(
 );
 
 // === Chat Thunks ===
+export const fetchChats = createAsyncThunk(
+  "app/fetchChats",
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.listChats(token!, teamId);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const createChatRemote = createAsyncThunk(
+  "app/createChatRemote",
+  async (chatName: string, { rejectWithValue, getState }) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.createChat(chatName, token!, teamId);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const renameChatRemote = createAsyncThunk(
+  "app/renameChatRemote",
+  async (payload: { chatId: string; chatName: string }, { rejectWithValue, getState }) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.renameChat(payload.chatId, payload.chatName, token!, teamId);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const deleteChatRemote = createAsyncThunk(
+  "app/deleteChatRemote",
+  async (chatId: string, { rejectWithValue, getState }) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      await api.deleteChat(chatId, token!, teamId);
+      return chatId;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
 export const sendChatMessage = createAsyncThunk(
   "app/sendChatMessage",
   async (message: string, { rejectWithValue, getState }) => {
@@ -359,8 +419,10 @@ export const sendChatMessage = createAsyncThunk(
       const token = getToken();
       const state = getState() as RootState;
       const teamId = state.app.team.id;
-      await api.sendChat(message, token!, teamId);
-      const res = await api.getChatMessages(token!, teamId);
+      const chatId = state.app.activeChatId;
+      if (!chatId) throw new Error("No active chat selected");
+      await api.sendChat(message, token!, teamId, chatId);
+      const res = await api.getChatMessages(token!, teamId, chatId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
@@ -375,7 +437,9 @@ export const fetchChatMessages = createAsyncThunk(
       const token = getToken();
       const state = getState() as RootState;
       const teamId = state.app.team.id;
-      const res = await api.getChatMessages(token!, teamId);
+      const chatId = state.app.activeChatId;
+      if (!chatId) return [];
+      const res = await api.getChatMessages(token!, teamId, chatId);
       return res.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));

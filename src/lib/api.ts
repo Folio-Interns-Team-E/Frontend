@@ -442,16 +442,45 @@ export const api = {
       accessToken,
     );
   },
-  sendChat(message: string, accessToken: string, teamId?: string | null) {
+  sendChat(message: string, accessToken: string, teamId?: string | null, chatId?: string | null) {
     return request<{ data: { reply: string } }>(
-      "/chat/",
+      `/chat/chats/${chatId}/messages`,
       { method: "POST", body: JSON.stringify({ message }) },
       accessToken,
       teamId,
     );
   },
-  getChatMessages(accessToken: string, teamId?: string | null) {
-    return request<{ data: ChatMessageApi[] }>("/chat/", {}, accessToken, teamId);
+  getChatMessages(accessToken: string, teamId?: string | null, chatId?: string | null) {
+    return request<{ data: ChatMessageApi[] }>(`/chat/chats/${chatId}/messages`, {}, accessToken, teamId);
+  },
+
+  // === Multi-Chat ===
+  listChats(accessToken: string, teamId?: string | null) {
+    return request<{ data: ChatApi[] }>("/chat/chats", {}, accessToken, teamId);
+  },
+  createChat(chatName: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: ChatApi }>(
+      "/chat/chats",
+      { method: "POST", body: JSON.stringify({ chat_name: chatName }) },
+      accessToken,
+      teamId,
+    );
+  },
+  renameChat(chatId: string, chatName: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: ChatApi }>(
+      `/chat/chats/${chatId}`,
+      { method: "PATCH", body: JSON.stringify({ chat_name: chatName }) },
+      accessToken,
+      teamId,
+    );
+  },
+  deleteChat(chatId: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: unknown }>(
+      `/chat/chats/${chatId}`,
+      { method: "DELETE" },
+      accessToken,
+      teamId,
+    );
   },
 
   // === OTP Verification ===
@@ -482,9 +511,18 @@ export type LeadApi = {
   created_at: string;
 };
 
+export type ChatApi = {
+  id: string;
+  team_id: string;
+  chat_name: string;
+  created_at: string;
+};
+
 export type ChatMessageApi = {
   id: string;
+  chat_id: string;
   sent_by: "user" | "ai";
+  user_name: string;
   content: string;
   created_at: string;
 };

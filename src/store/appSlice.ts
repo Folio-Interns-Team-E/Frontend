@@ -30,6 +30,10 @@ import {
   fetchLeadEmails,
   requestOtp,
   verifyOtp,
+  fetchChats,
+  createChatRemote,
+  renameChatRemote,
+  deleteChatRemote,
 } from "./apiThunks";
 
 export type LeadStatus =
@@ -104,8 +108,16 @@ export type TeamMember = {
 type AssistantMessage = {
   id: string;
   author: "user" | "assistant";
+  userName: string;
   body: string;
   time: string;
+};
+
+type Chat = {
+  id: string;
+  team_id: string;
+  chat_name: string;
+  created_at: string;
 };
 
 type Notification = {
@@ -167,6 +179,9 @@ type AppState = {
   proposals: Proposal[];
   proposalsStatus: "idle" | "loading" | "succeeded" | "failed";
   assistantMessages: AssistantMessage[];
+  chatMessagesStatus: "idle" | "loading" | "succeeded" | "failed";
+  chats: Chat[];
+  activeChatId: string | null;
   knowledgeAssets: {
     id: string;
     title: string;
@@ -239,6 +254,9 @@ export const initialState: AppState = {
   proposals: [],
   proposalsStatus: "idle",
   assistantMessages: [],
+  chatMessagesStatus: "idle",
+  chats: [],
+  activeChatId: null,
   knowledgeAssets: [],
   knowledgeAssetsStatus: "idle",
   outreachLeads: [],
@@ -269,9 +287,17 @@ const appSlice = createSlice({
       state.proposals = [];
       state.knowledgeAssets = [];
       state.outreachLeads = [];
+      state.chats = [];
+      state.activeChatId = null;
+      state.assistantMessages = [];
     },
     completeTeamSwitch(state) {
       state.teamSwitching = false;
+    },
+    switchChat(state, action: PayloadAction<string>) {
+      state.activeChatId = action.payload;
+      state.assistantMessages = [];
+      state.chatMessagesStatus = "idle";
     },
     openSidebar(state) {
       state.sidebarOpen = true;
@@ -1000,12 +1026,53 @@ const appSlice = createSlice({
       })
 
       // === Chat ===
+      .addCase(fetchChats.fulfilled, (state, action) => {
+        state.chats = action.payload.map((c) => ({
+          id: c.id,
+          team_id: c.team_id,
+          chat_name: c.chat_name,
+          created_at: c.created_at,
+        }));
+        if (!state.activeChatId && state.chats.length > 0) {
+          state.activeChatId = state.chats[0].id;
+        }
+      })
+      .addCase(createChatRemote.fulfilled, (state, action) => {
+        const chat = {
+          id: action.payload.id,
+          team_id: action.payload.team_id,
+          chat_name: action.payload.chat_name,
+          created_at: action.payload.created_at,
+        };
+        state.chats.unshift(chat);
+        state.activeChatId = chat.id;
+        state.assistantMessages = [];
+      })
+      .addCase(renameChatRemote.fulfilled, (state, action) => {
+        const chat = state.chats.find((c) => c.id === action.payload.id);
+        if (chat) chat.chat_name = action.payload.chat_name;
+      })
+      .addCase(deleteChatRemote.fulfilled, (state, action) => {
+        state.chats = state.chats.filter((c) => c.id !== action.payload);
+        if (state.activeChatId === action.payload) {
+          state.activeChatId = state.chats.length > 0 ? state.chats[0].id : null;
+          state.assistantMessages = [];
+        }
+      })
+      .addCase(fetchChatMessages.pending, (state) => {
+        state.chatMessagesStatus = "loading";
+      })
+      .addCase(fetchChatMessages.rejected, (state) => {
+        state.chatMessagesStatus = "failed";
+      })
       .addCase(fetchChatMessages.fulfilled, (state, action) => {
+        state.chatMessagesStatus = "succeeded";
         state.assistantMessages = [...action.payload]
           .reverse()
           .map((message) => ({
             id: message.id,
             author: message.sent_by === "user" ? "user" : "assistant",
+            userName: message.user_name,
             body: message.content,
             time: new Date(message.created_at).toLocaleString(),
           }));
@@ -1014,12 +1081,14 @@ const appSlice = createSlice({
         state.assistantMessages.push({
           id: `user-${Date.now()}`,
           author: "user",
+          userName: "You",
           body: action.meta.arg,
           time: "Now",
         });
         state.assistantMessages.push({
           id: `assistant-${Date.now()}`,
           author: "assistant",
+          userName: "AI Agent",
           body: "Thinking...",
           time: "Now",
         });
@@ -1030,6 +1099,7 @@ const appSlice = createSlice({
           .map((message) => ({
             id: message.id,
             author: message.sent_by === "user" ? "user" : "assistant",
+            userName: message.user_name,
             body: message.content,
             time: new Date(message.created_at).toLocaleString(),
           }));
@@ -1041,6 +1111,7 @@ const appSlice = createSlice({
             msgs[i] = {
               id: `assistant-${Date.now()}`,
               author: "assistant",
+              userName: "AI Agent",
               body: "Sorry, I couldn't process that request. Please check your backend connection and try again.",
               time: "Now",
             };
@@ -1082,6 +1153,7 @@ export const {
   clearNeedsVerification,
   closeSidebar,
   completeOnboarding,
+  completeTeamSwitch,
   createTeamLocal,
   demoLogin,
   demoLogout,
@@ -1096,19 +1168,19 @@ export const {
   qualifyLead,
   removeMemberLocal,
   resetProposalTemplate,
-  completeTeamSwitch,
-  setActiveTeam,
-  toggleSidebar,
-  updateProposalTemplate,
+  reviseProposal,
   selectMeeting,
   sendEmail,
+  setActiveTeam,
   setIntegration,
   skipTeamSetup,
+  switchChat,
+  toggleSidebar,
   updateMemberRoleLocal,
   updateProfile,
-  reviseProposal,
   updateProposalOutcome,
   updateProposalStatus,
+  updateProposalTemplate,
 } = appSlice.actions;
 
 export default appSlice.reducer;
