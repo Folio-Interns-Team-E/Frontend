@@ -99,6 +99,10 @@ function AppLayout() {
       dispatch(fetchMeetings());
       dispatch(fetchProposals());
       dispatch(fetchKnowledgeAssets());
+      // Chat can update the ICP via the AI agent (icp_agent.py) — refetch it
+      // here so the dashboard's ICP board reflects agent-made changes without
+      // needing a page reload.
+      dispatch(fetchOnboardingStatus());
     }
   }, [chatRefreshKey, teamId, dispatch]);
 
@@ -196,5 +200,3 @@ function AppLayout() {
     </div>
   );
 }
-
-

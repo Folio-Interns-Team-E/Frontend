@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import { completeOnboarding } from "../store/appSlice";
+import { fetchOnboardingStatus, submitOnboardingRemote } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_app/onboarding")({
@@ -15,13 +15,51 @@ function Onboarding() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const onboarding = useAppSelector((state) => state.app.onboarding);
+  const team = useAppSelector((state) => state.app.team);
   const [icp, setIcp] = useState(onboarding.icp);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loadingLatest, setLoadingLatest] = useState(true);
+  const userEditedRef = useRef(false);
 
-  function handleSubmit(event: FormEvent) {
+  // Always pull the true current ICP from the server when this page opens,
+  // rather than trusting whatever happened to be in local state — that gap
+  // is what let a stale textarea overwrite newer saved edits.
+  useEffect(() => {
+    if (!team.id) return;
+    let cancelled = false;
+    void dispatch(fetchOnboardingStatus()).finally(() => {
+      if (!cancelled) setLoadingLatest(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [team.id]);
+
+  // Keep the textarea in sync with the freshly-fetched value until the user
+  // actually starts typing, so we never save on top of a stale baseline.
+  useEffect(() => {
+    if (!userEditedRef.current) setIcp(onboarding.icp);
+  }, [onboarding.icp]);
+
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!icp.trim()) return;
-    dispatch(completeOnboarding({ icp }));
-    void navigate({ to: "/" });
+    const text = icp.trim();
+    if (!text || saving || loadingLatest) return;
+    setSaving(true);
+    setError(null);
+    const result = await dispatch(submitOnboardingRemote({ icp: text }));
+    setSaving(false);
+    if (submitOnboardingRemote.fulfilled.match(result)) {
+      void navigate({ to: "/" });
+    } else {
+      setError(
+        typeof result.payload === "string"
+          ? result.payload
+          : "Couldn't save your ICP. Please try again.",
+      );
+    }
   }
 
   return (
@@ -46,10 +84,18 @@ function Onboarding() {
             <label className="block text-sm font-semibold">
               How would you describe your ideal customer?
               <textarea
-                className="control mt-2 min-h-40 w-full resize-y px-4 py-3 text-sm outline-none"
+                className="control mt-2 min-h-40 w-full resize-y px-4 py-3 text-sm outline-none disabled:opacity-60"
                 value={icp}
-                onChange={(event) => setIcp(event.target.value)}
-                placeholder="e.g. B2B SaaS companies with 50-500 employees, where the Head of Sales or CRO is actively running outbound. They struggle with manual lead research and inconsistent proposal quality..."
+                disabled={loadingLatest}
+                onChange={(event) => {
+                  userEditedRef.current = true;
+                  setIcp(event.target.value);
+                }}
+                placeholder={
+                  loadingLatest
+                    ? "Loading your current ICP..."
+                    : "e.g. B2B SaaS companies with 50-500 employees, where the Head of Sales or CRO is actively running outbound. They struggle with manual lead research and inconsistent proposal quality..."
+                }
               />
             </label>
             <p className="mt-2 text-xs text-on-surface-variant">
@@ -58,11 +104,18 @@ function Onboarding() {
             </p>
           </section>
 
+          {error && (
+            <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-semibold text-red-700">
+              <span className="material-symbols-outlined text-[16px]">error</span>
+              {error}
+            </div>
+          )}
+
           <button
-            disabled={!icp.trim()}
+            disabled={!icp.trim() || saving || loadingLatest}
             className="primary-action w-full py-3 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Save ICP
+            {loadingLatest ? "Loading..." : saving ? "Saving..." : "Save ICP"}
           </button>
         </form>
       </div>

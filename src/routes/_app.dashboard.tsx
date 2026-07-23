@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { TopBar } from "../components/TopBar";
-import { completeOnboarding } from "../store/appSlice";
-import { submitOnboardingRemote } from "../store/apiThunks";
+import { ICPBoard } from "../components/ICPBoard";
+import { fetchOnboardingStatus } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { Skeleton, SkeletonKPIGrid } from "../components/ui/skeleton";
+import { isEmptyParsedICP, parseICP } from "../lib/icpParser";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -122,8 +123,16 @@ function Index() {
   const onboarding = useAppSelector((state) => state.app.onboarding);
   const auth = useAppSelector((state) => state.app.auth);
   const team = useAppSelector((state) => state.app.team);
-  const [icpInput, setIcpInput] = useState(onboarding.icp);
-  const [icpSaved, setIcpSaved] = useState(false);
+  const parsedIcp = useMemo(() => parseICP(onboarding.icp), [onboarding.icp]);
+  const hasStructuredIcp = parsedIcp !== null && !isEmptyParsedICP(parsedIcp);
+
+  useEffect(() => {
+    if (team.id) dispatch(fetchOnboardingStatus());
+    // Runs once on mount so the ICP board is always current, whether you
+    // arrived here from the Full editor page, after a chat-driven update,
+    // or a fresh page load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const leads = useAppSelector((state) => state.app.leads);
   const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
   const meetings = useAppSelector((state) => state.app.meetings);
@@ -285,44 +294,33 @@ function Index() {
         </section>
 
         <section className="section-panel p-4 sm:p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">tune</span>
-            <p className="text-sm font-bold text-on-surface">Ideal Customer Profile</p>
-          </div>
-          <p className="mb-3 text-xs text-on-surface-variant">
-            Describe who you sell to — industry, company size, decision-maker roles, and their pain
-            points. This is used to score leads and ground every recommendation.
-          </p>
-          <form
-            onSubmit={(event: FormEvent) => {
-              event.preventDefault();
-              const text = icpInput.trim();
-              if (!text) return;
-              dispatch(completeOnboarding({ icp: text }));
-              dispatch(submitOnboardingRemote({ icp: text }));
-              setIcpSaved(true);
-            }}
-          >
-            <textarea
-              value={icpInput}
-              onChange={(event) => setIcpInput(event.target.value)}
-              className="control w-full px-4 py-3 text-sm outline-none"
-              rows={3}
-              placeholder="e.g. B2B SaaS, 50-500 employees, Head of Sales or CRO running outbound..."
-            />
-            <div className="mt-3 flex justify-end gap-2">
-              <Link to="/onboarding" className="secondary-action">
-                Full editor
-              </Link>
-              <button
-                type="submit"
-                disabled={!icpInput.trim()}
-                className="primary-action disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {icpSaved ? "Saved!" : "Save ICP"}
-              </button>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">tune</span>
+              <p className="text-sm font-bold text-on-surface">Ideal Customer Profile</p>
             </div>
-          </form>
+            <div className="flex shrink-0 items-center gap-2">
+              <Link to="/onboarding" className="secondary-action">
+                <span className="material-symbols-outlined text-[16px]">edit</span>
+                Edit ICP
+              </Link>
+            </div>
+          </div>
+
+          {hasStructuredIcp && parsedIcp ? (
+            <ICPBoard icp={parsedIcp} />
+          ) : onboarding.icp.trim() ? (
+            <p className="whitespace-pre-line rounded-lg border border-outline-variant/50 bg-surface-container-low/30 p-3 text-xs leading-relaxed text-on-surface-variant">
+              {onboarding.icp}
+            </p>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-outline-variant/60 bg-white/50 px-3 py-8 text-center">
+              <span className="material-symbols-outlined text-[22px] text-outline">tune</span>
+              <p className="text-xs font-semibold text-slate-400">
+                No ICP yet — describe your ideal customer to get started.
+              </p>
+            </div>
+          )}
         </section>
 
         {isLoading ? (
