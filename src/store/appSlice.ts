@@ -28,6 +28,7 @@ import {
   fetchChatMessages,
   fetchOutreachLeads,
   fetchLeadEmails,
+  deleteEmailRemote,
   requestOtp,
   verifyOtp,
   fetchChats,
@@ -180,6 +181,7 @@ type AppState = {
   proposalsStatus: "idle" | "loading" | "succeeded" | "failed";
   assistantMessages: AssistantMessage[];
   chatMessagesStatus: "idle" | "loading" | "succeeded" | "failed";
+  chatRefreshKey: number;
   chats: Chat[];
   activeChatId: string | null;
   knowledgeAssets: {
@@ -195,7 +197,9 @@ type AppState = {
   knowledgeAssetsStatus: "idle" | "loading" | "succeeded" | "failed";
   outreachLeads: Lead[];
   outreachLeadsStatus: "idle" | "loading" | "succeeded" | "failed";
-  leadDraftEmails: Record<string, { subject: string; body: string }>;
+  leadDraftEmails: Record<string, Array<{ id: string; subject: string; body: string; status: string; sent_at?: string }>>;
+  leadEmailsLoading: boolean;
+  selectedEmailId: string | null;
   sidebarOpen: boolean;
   teamSwitching: boolean;
 };
@@ -255,6 +259,7 @@ export const initialState: AppState = {
   proposalsStatus: "idle",
   assistantMessages: [],
   chatMessagesStatus: "idle",
+  chatRefreshKey: 0,
   chats: [],
   activeChatId: null,
   knowledgeAssets: [],
@@ -262,6 +267,8 @@ export const initialState: AppState = {
   outreachLeads: [],
   outreachLeadsStatus: "idle",
   leadDraftEmails: {},
+  leadEmailsLoading: false,
+  selectedEmailId: null,
   sidebarOpen: true,
   teamSwitching: false,
 };
@@ -307,6 +314,12 @@ const appSlice = createSlice({
     },
     toggleSidebar(state) {
       state.sidebarOpen = !state.sidebarOpen;
+    },
+    selectEmail(state, action: PayloadAction<string | null>) {
+      state.selectedEmailId = action.payload;
+    },
+    clearSelectedEmail(state) {
+      state.selectedEmailId = null;
     },
     demoRegister(
       state,
@@ -884,17 +897,26 @@ const appSlice = createSlice({
         }));
         state.outreachLeadsStatus = "succeeded";
       })
+      .addCase(fetchLeadEmails.pending, (state) => {
+        state.leadEmailsLoading = true;
+      })
       .addCase(fetchLeadEmails.fulfilled, (state, action) => {
+        state.leadEmailsLoading = false;
         const { leadId, emails } = action.payload;
-        const draft = emails.find((e) => e.status.toLowerCase() === "draft");
-        if (draft) {
-          state.leadDraftEmails[leadId] = { subject: draft.subject, body: draft.body };
-        } else if (emails.length > 0) {
-          const latest = emails[0];
-          state.leadDraftEmails[leadId] = { subject: latest.subject, body: latest.body };
-        } else {
-          state.leadDraftEmails[leadId] = { subject: "", body: "" };
+        state.leadDraftEmails[leadId] = emails.map((e) => ({
+          id: e.id,
+          subject: e.subject,
+          body: e.body,
+          status: e.status,
+          sent_at: e.sent_at,
+        }));
+        if (!state.selectedEmailId && emails.length > 0) {
+          const draft = emails.find((e) => e.status.toLowerCase() === "draft");
+          state.selectedEmailId = draft?.id ?? emails[0].id;
         }
+      })
+      .addCase(fetchLeadEmails.rejected, (state) => {
+        state.leadEmailsLoading = false;
       })
 
       // === Emails ===
@@ -909,10 +931,16 @@ const appSlice = createSlice({
         if (lead) lead.status = "Sent";
         const oLead = state.outreachLeads.find((item) => item.id === action.payload.leadId);
         if (oLead) oLead.status = "Sent";
-        state.leadDraftEmails[action.payload.leadId] = {
+        const arr = state.leadDraftEmails[action.payload.leadId] ?? [];
+        arr.unshift({
+          id: action.payload.id,
           subject: action.payload.subject,
           body: action.payload.body,
-        };
+          status: "sent",
+          sent_at: action.payload.sent_at,
+        });
+        state.leadDraftEmails[action.payload.leadId] = arr;
+        state.selectedEmailId = action.payload.id;
       })
       .addCase(draftEmailRemote.pending, (state, action) => {
         const lead = state.leads.find((item) => item.id === action.meta.arg.leadId);
@@ -925,6 +953,24 @@ const appSlice = createSlice({
         if (lead) lead.status = "Drafted";
         const oLead = state.outreachLeads.find((item) => item.id === action.payload.leadId);
         if (oLead) oLead.status = "Drafted";
+        const arr = state.leadDraftEmails[action.payload.leadId] ?? [];
+        arr.unshift({
+          id: action.payload.id,
+          subject: action.payload.subject,
+          body: action.payload.body,
+          status: "draft",
+        });
+        state.leadDraftEmails[action.payload.leadId] = arr;
+        state.selectedEmailId = action.payload.id;
+      })
+      .addCase(deleteEmailRemote.fulfilled, (state, action) => {
+        const { emailId, leadId } = action.payload;
+        const arr = state.leadDraftEmails[leadId] ?? [];
+        state.leadDraftEmails[leadId] = arr.filter((e) => e.id !== emailId);
+        if (state.selectedEmailId === emailId) {
+          const remaining = state.leadDraftEmails[leadId];
+          state.selectedEmailId = remaining.length > 0 ? remaining[0].id : null;
+        }
       })
 
       // === Meetings ===
@@ -1094,6 +1140,7 @@ const appSlice = createSlice({
         });
       })
       .addCase(sendChatMessage.fulfilled, (state, action) => {
+        state.chatRefreshKey += 1;
         state.assistantMessages = [...action.payload]
           .reverse()
           .map((message) => ({
@@ -1176,6 +1223,8 @@ export const {
   skipTeamSetup,
   switchChat,
   toggleSidebar,
+  selectEmail,
+  clearSelectedEmail,
   updateMemberRoleLocal,
   updateProfile,
   updateProposalOutcome,

@@ -351,6 +351,21 @@ export const fetchLeadEmails = createAsyncThunk(
   },
 );
 
+export const deleteEmailRemote = createAsyncThunk(
+  "app/deleteEmailRemote",
+  async (payload: { emailId: string; leadId: string }, { rejectWithValue, getState }) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      await api.deleteEmail(payload.emailId, token!, teamId);
+      return payload;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
 // === Chat Thunks ===
 export const fetchChats = createAsyncThunk(
   "app/fetchChats",

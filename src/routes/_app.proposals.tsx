@@ -11,6 +11,7 @@ import {
   uploadProposalTemplate,
 } from "../store/apiThunks";
 import type { ProposalTemplateApi } from "../lib/api";
+import { api } from "../lib/api";
 
 export const Route = createFileRoute("/_app/proposals")({
   head: () => ({
@@ -31,21 +32,22 @@ function Proposals() {
   const proposalsStatus = useAppSelector((state) => state.app.proposalsStatus);
 
   const [template, setTemplate] = useState<ProposalTemplateApi | null>(null);
+  const accessToken = useAppSelector(
+    (state) => state.app.auth.accessToken ?? localStorage.getItem("access_token"),
+  );
+  const teamId = useAppSelector((state) => state.app.team.id);
 
   useEffect(() => {
     dispatch(fetchProposals());
   }, [dispatch]);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
-    fetch("/api/proposals/template", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
+    if (!accessToken || !teamId) return;
+    api
+      .getProposalTemplate(accessToken, teamId)
       .then((res) => setTemplate(res.data ?? null))
       .catch(() => {});
-  }, []);
+  }, [accessToken, teamId]);
 
   const [showTemplateUpload, setShowTemplateUpload] = useState(false);
   const [templateName, setTemplateName] = useState("");
@@ -71,6 +73,16 @@ function Proposals() {
     }
   };
 
+  const handleTemplateDelete = async () => {
+    if (!accessToken) return;
+    try {
+      await api.deleteProposalTemplate(accessToken, teamId);
+      setTemplate(null);
+    } catch {
+      // ignore
+    }
+  };
+
   const [search, setSearch] = useState("");
 
   const filteredProposals = useMemo(() => {
@@ -82,8 +94,6 @@ function Proposals() {
         .includes(query),
     );
   }, [proposals, search]);
-
-  const featured = filteredProposals[0];
 
   return (
     <>
@@ -109,12 +119,12 @@ function Proposals() {
           </div>
         </div>
 
-        <section className="section-panel p-5">
+        <section className="section-panel mb-6 p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-bold">Proposal template</h2>
               <p className="text-sm text-on-surface-variant">
-                Upload a branded .docx template used as the base for generated proposals.
+                Upload a branded .doc/.docx template used as the base for generated proposals.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -126,20 +136,31 @@ function Proposals() {
                   className="secondary-action"
                 >
                   <span className="material-symbols-outlined text-[16px]">visibility</span>
-                  View template
+                  View
                 </a>
               )}
               <button onClick={() => setShowTemplateUpload(true)} className="primary-action">
                 <span className="material-symbols-outlined text-[18px]">upload_file</span>
                 {template ? "Replace" : "Upload"}
               </button>
+              {template && (
+                <button onClick={handleTemplateDelete} className="secondary-action text-red-600 hover:bg-red-50">
+                  <span className="material-symbols-outlined text-[16px]">delete</span>
+                  Delete
+                </button>
+              )}
             </div>
           </div>
           {template && (
-            <div className="mt-3 text-xs text-on-surface-variant">
-              <span className="font-semibold">{template.template_name}</span>
-              {template.file_size ? ` · ${(template.file_size / 1024).toFixed(0)} KB` : ""}
-              {template.file_type ? ` · ${template.file_type.toUpperCase()}` : ""}
+            <div className="mt-3 flex items-center gap-3 rounded-lg border border-outline-variant/50 bg-surface-container-low/40 p-3">
+              <span className="material-symbols-outlined text-[28px] text-primary">description</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{template.template_name}</p>
+                <p className="text-xs text-on-surface-variant">
+                  {template.file_size ? `${(template.file_size / 1024).toFixed(0)} KB` : ""}
+                  {template.file_type ? ` · ${template.file_type.toUpperCase()}` : ""}
+                </p>
+              </div>
             </div>
           )}
         </section>
@@ -151,40 +172,27 @@ function Proposals() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
-            {featured && (
-              <div className="app-card app-card-hover overflow-hidden p-5 ring-1 ring-primary/10">
-                <ProposalHeader proposal={featured} />
+            {filteredProposals.map((proposal) => (
+              <div key={proposal.id} className="app-card app-card-hover overflow-hidden p-5 ring-1 ring-primary/10">
+                <ProposalHeader proposal={proposal} />
                 <div className="mb-5 rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/6 to-white p-5">
                   <h4 className="mb-3 font-label-caps text-label-caps uppercase tracking-wider text-primary">
                     Executive Summary
                   </h4>
                   <p className="text-body-base leading-relaxed text-on-surface-variant">
-                    {featured.summary}
+                    {proposal.summary}
                   </p>
                 </div>
                 <div className="mb-5 grid gap-4 md:grid-cols-[1fr_260px]">
                   <div className="overflow-hidden rounded-2xl border border-outline-variant/70 bg-white p-5">
                     <p className="text-sm text-on-surface-variant">
-                      Version <strong>{featured.version}</strong>
-                      {featured.fileSize ? ` · ${(featured.fileSize / 1024).toFixed(0)} KB` : ""}
+                      Version <strong>{proposal.version}</strong>
+                      {proposal.fileSize ? ` · ${(proposal.fileSize / 1024).toFixed(0)} KB` : ""}
                     </p>
                   </div>
-                  <OutcomePanel proposal={featured} />
+                  <OutcomePanel proposal={proposal} />
                 </div>
-                <ProposalActions proposal={featured} />
-              </div>
-            )}
-
-            {filteredProposals.slice(1).map((proposal) => (
-              <div key={proposal.id} className="app-card app-card-hover p-5">
-                <ProposalHeader proposal={proposal} compact />
-                <p className="mt-4 line-clamp-3 text-sm leading-6 text-on-surface-variant">
-                  {proposal.summary}
-                </p>
-                <div className="mt-5">
-                  <OutcomePanel proposal={proposal} compact />
-                </div>
-                <ProposalActions proposal={proposal} compact />
+                <ProposalActions proposal={proposal} />
               </div>
             ))}
           </div>
@@ -202,12 +210,12 @@ function Proposals() {
             </h3>
 
             <label className="mb-1 block text-xs font-semibold text-on-surface-variant">
-              File (.docx or .pdf)
+              File (.doc or .docx only)
             </label>
             <input
               ref={templateFileRef}
               type="file"
-              accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               onChange={(e) => setTemplateFile(e.target.files?.[0] ?? null)}
               className="control mb-4 w-full p-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
             />
@@ -267,13 +275,22 @@ function Metric({ label, value }: { label: string; value: number }) {
   );
 }
 
-function ProposalHeader({ proposal, compact = false }: { proposal: Proposal; compact?: boolean }) {
+function ProposalHeader({ proposal }: { proposal: Proposal }) {
   const outcome = getOutcome(proposal);
+  const editedDate = useMemo(() => {
+    try {
+      const d = new Date(proposal.updatedAt);
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    } catch {
+      return proposal.updatedAt;
+    }
+  }, [proposal.updatedAt]);
+
   return (
     <div className="mb-5 flex items-start justify-between gap-4">
       <div>
         <div className="mb-1 flex flex-wrap items-center gap-2">
-          <h3 className={compact ? "text-[18px] font-black" : "font-headline-md text-headline-md"}>
+          <h3 className="font-headline-md text-headline-md">
             {proposal.title}
           </h3>
           <Badge label={proposal.status} />
@@ -286,7 +303,7 @@ function ProposalHeader({ proposal, compact = false }: { proposal: Proposal; com
       <p className="shrink-0 text-right text-[11px] text-on-surface-variant">
         Last edited
         <br />
-        <span className="font-semibold">{proposal.updatedAt}</span>
+        <span className="font-semibold">{editedDate}</span>
       </p>
     </div>
   );
@@ -313,7 +330,7 @@ function Badge({
   );
 }
 
-function OutcomePanel({ proposal, compact = false }: { proposal: Proposal; compact?: boolean }) {
+function OutcomePanel({ proposal }: { proposal: Proposal }) {
   const dispatch = useAppDispatch();
   const accessToken =
     useAppSelector((state) => state.app.auth.accessToken) ?? localStorage.getItem("access_token");
@@ -321,9 +338,7 @@ function OutcomePanel({ proposal, compact = false }: { proposal: Proposal; compa
 
   return (
     <div
-      className={`rounded-xl border border-outline-variant bg-surface-container-low/40 ${
-        compact ? "p-3" : "p-4"
-      }`}
+      className="rounded-xl border border-outline-variant bg-surface-container-low/40 p-4"
     >
       <p className="mb-3 text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant">
         Deal outcome
@@ -357,13 +372,13 @@ function OutcomePanel({ proposal, compact = false }: { proposal: Proposal; compa
   );
 }
 
-function ProposalActions({ proposal, compact = false }: { proposal: Proposal; compact?: boolean }) {
+function ProposalActions({ proposal }: { proposal: Proposal }) {
   const dispatch = useAppDispatch();
   const accessToken =
     useAppSelector((state) => state.app.auth.accessToken) ?? localStorage.getItem("access_token");
 
   return (
-    <div className={`mt-5 flex flex-wrap justify-end gap-2 ${compact ? "" : "border-t pt-5"}`}>
+    <div className="mt-5 flex flex-wrap justify-end gap-2 border-t pt-5">
       {proposal.presignedUrl && (
         <a
           href={proposal.presignedUrl}

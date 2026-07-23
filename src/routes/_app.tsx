@@ -54,6 +54,7 @@ function AppLayout() {
   const meetingsStatus = useAppSelector((state) => state.app.meetingsStatus);
   const proposalsStatus = useAppSelector((state) => state.app.proposalsStatus);
   const knowledgeAssetsStatus = useAppSelector((state) => state.app.knowledgeAssetsStatus);
+  const chatRefreshKey = useAppSelector((state) => state.app.chatRefreshKey);
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
 
   const accessToken =
@@ -91,6 +92,15 @@ function AppLayout() {
       dispatch(fetchChats());
     }
   }, [teamId, dispatch]);
+
+  useEffect(() => {
+    if (teamId && chatRefreshKey > 0) {
+      dispatch(fetchLeads());
+      dispatch(fetchMeetings());
+      dispatch(fetchProposals());
+      dispatch(fetchKnowledgeAssets());
+    }
+  }, [chatRefreshKey, teamId, dispatch]);
 
   useEffect(() => {
     if (

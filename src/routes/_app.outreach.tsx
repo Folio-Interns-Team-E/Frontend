@@ -3,7 +3,13 @@ import { useEffect, useMemo, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { Skeleton, SkeletonList } from "../components/ui/skeleton";
-import { fetchLeads, fetchLeadEmails, sendEmailRemote } from "../store/apiThunks";
+import {
+  fetchLeads,
+  fetchLeadEmails,
+  sendEmailRemote,
+  deleteEmailRemote,
+} from "../store/apiThunks";
+import { selectEmail, clearSelectedEmail } from "../store/appSlice";
 
 export const Route = createFileRoute("/_app/outreach")({
   head: () => ({
@@ -128,6 +134,9 @@ function Outreach() {
   const allLeads = useAppSelector((state) => state.app.leads);
   const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
   const leadDraftEmails = useAppSelector((state) => state.app.leadDraftEmails);
+  const leadEmailsLoading = useAppSelector((state) => state.app.leadEmailsLoading);
+  const selectedEmailId = useAppSelector((state) => state.app.selectedEmailId);
+  const chatRefreshKey = useAppSelector((state) => state.app.chatRefreshKey);
 
   const outreachLeads = useMemo(
     () => allLeads.filter((l) => OUTREACH_STATUSES.includes(l.status)),
@@ -149,6 +158,15 @@ function Outreach() {
     }
   }, [outreachLeads, selectedId]);
 
+  const leadEmails = useMemo(
+    () => (selectedLead?.id ? leadDraftEmails[selectedLead.id] ?? [] : []),
+    [selectedLead?.id, leadDraftEmails],
+  );
+  const selectedEmail = useMemo(
+    () => leadEmails.find((e) => e.id === selectedEmailId) ?? null,
+    [leadEmails, selectedEmailId],
+  );
+
   const [subject, setSubject] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -157,7 +175,6 @@ function Outreach() {
   const [past, setPast] = useState<string[]>([]);
   const [future, setFuture] = useState<string[]>([]);
 
-  // Custom function to handle state updates explicitly
   const updateBody = (nextBody: string) => {
     setPast((prev) => [...prev, body]);
     setBodyState(nextBody);
@@ -168,7 +185,6 @@ function Outreach() {
     if (past.length === 0) return;
     const previous = past[past.length - 1];
     const newPast = past.slice(0, past.length - 1);
-
     setFuture((prev) => [body, ...prev]);
     setPast(newPast);
     setBodyState(previous);
@@ -178,13 +194,11 @@ function Outreach() {
     if (future.length === 0) return;
     const next = future[0];
     const newFuture = future.slice(1);
-
     setPast((prev) => [...prev, body]);
     setFuture(newFuture);
     setBodyState(next);
   };
 
-  // Keyboard Shortcuts Bindings (Ctrl+Z / Ctrl+Y)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
@@ -207,33 +221,37 @@ function Outreach() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [body, past, future]);
 
-  // Fetch draft email when selected lead changes
+  // Fetch emails when selected lead changes or after AI chat responds
   useEffect(() => {
     if (selectedLead?.id) {
+      dispatch(clearSelectedEmail());
       dispatch(fetchLeadEmails(selectedLead.id));
     }
-  }, [selectedLead?.id, dispatch]);
+  }, [selectedLead?.id, chatRefreshKey, dispatch]);
 
-  // Sync composer fields from draft or empty when selected lead changes
+  // Sync composer fields when selected email changes
   useEffect(() => {
-    if (selectedLead) {
-      const draft = leadDraftEmails[selectedLead.id];
-      if (draft) {
-        setSubject(draft.subject);
-        setBodyState(draft.body);
-      } else {
-        setSubject("");
-        setBodyState("");
-      }
-      setPast([]);
-      setFuture([]);
+    if (selectedEmail) {
+      setSubject(selectedEmail.subject);
+      setBodyState(selectedEmail.body);
+    } else {
+      setSubject("");
+      setBodyState("");
     }
-  }, [selectedLead?.id, leadDraftEmails]);
+    setPast([]);
+    setFuture([]);
+  }, [selectedEmail?.id]);
 
   const handleSend = () => {
     if (selectedLead && subject && body) {
       dispatch(sendEmailRemote({ leadId: selectedLead.id, subject, body }));
       setIsExpanded(false);
+    }
+  };
+
+  const handleDelete = (emailId: string) => {
+    if (selectedLead?.id) {
+      dispatch(deleteEmailRemote({ emailId, leadId: selectedLead.id }));
     }
   };
 
@@ -250,29 +268,8 @@ function Outreach() {
           </div>
         )}
 
-        {/* Stats Grid */}
-        <div className="grid shrink-0 grid-cols-1 gap-3 sm:grid-cols-3">
-          {[
-            { label: "EMAILS SENT", value: sentCount.toString(), detail: "From lead status" },
-            { label: "OPEN RATE", value: "--", detail: "Not tracked yet" },
-            { label: "REPLIED", value: repliedCount.toString(), detail: "From lead status" },
-          ].map((s) => (
-            <div key={s.label} className="metric-card flex flex-col p-4">
-              <span className="font-label-caps text-label-caps text-on-surface-variant">
-                {s.label}
-              </span>
-              <div className="flex items-end gap-2 mt-1">
-                <span className="font-display-lg text-display-lg text-on-surface">{s.value}</span>
-                <span className="mb-1 hidden text-xs text-on-surface-variant md:inline">
-                  {s.detail}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
         <div className="flex min-h-0 flex-1 flex-col gap-4 xl:flex-row">
-          {/* Sidebar Area */}
+          {/* Sidebar Area — Leads */}
           {leadsStatus === "loading" ? (
             <div className="section-panel min-h-64 w-full xl:w-[36%]">
               <div className="p-4 border-b border-outline-variant">
@@ -345,12 +342,15 @@ function Outreach() {
             </div>
           )}
 
-          {/* Inline Email Composer */}
+          {/* Right Panel — Drafts list + Composer */}
           <div className="section-panel flex min-h-[520px] w-full flex-col xl:min-h-0 xl:w-[64%]">
+            {/* Drafts List */}
             <div className="flex shrink-0 items-center justify-between border-b border-outline-variant/45 p-4">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">edit_note</span>
-                <h3 className="font-headline-md text-body-base font-bold">Email Composer</h3>
+                <h3 className="font-headline-md text-body-base font-bold">
+                  Emails {leadEmails.length > 0 && <span className="text-on-surface-variant font-normal text-sm">({leadEmails.length})</span>}
+                </h3>
               </div>
               <div className="flex gap-2">
                 <button
@@ -360,33 +360,84 @@ function Outreach() {
                 >
                   <span className="material-symbols-outlined text-[20px] block">open_in_full</span>
                 </button>
-                <button className="secondary-action min-h-8 px-3 py-1">
-                  <span className="material-symbols-outlined text-[16px]">schedule</span>
-                  Later
-                </button>
               </div>
             </div>
 
-            <div className="custom-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-6">
-              <ComposerContent
-                email={selectedLead?.email ?? ""}
-                subject={subject}
-                setSubject={setSubject}
-                body={body}
-                updateBody={updateBody}
-                canUndo={past.length > 0}
-                canRedo={future.length > 0}
-                onUndo={handleUndo}
-                onRedo={handleRedo}
-              />
-            </div>
+            {leadEmailsLoading ? (
+              <div className="flex flex-1 flex-col gap-3 p-4">
+                <Skeleton className="h-14 w-full rounded-lg" />
+                <Skeleton className="h-14 w-full rounded-lg" />
+                <Skeleton className="h-40 w-full" />
+              </div>
+            ) : leadEmails.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
+                <span className="material-symbols-outlined text-4xl text-outline">draft</span>
+                <p className="mt-2 text-body-sm text-on-surface-variant">No emails yet for this lead.</p>
+                <p className="text-[11px] text-outline">Use the AI Chat to draft outreach emails.</p>
+              </div>
+            ) : (
+              <>
+                {/* Email tabs */}
+                <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-outline-variant/45 px-4 pt-2">
+                  {leadEmails.map((e) => (
+                    <button
+                      key={e.id}
+                      onClick={() => dispatch(selectEmail(e.id))}
+                      className={`group flex items-center gap-2 whitespace-nowrap rounded-t-lg px-3 py-2 text-xs font-medium transition-colors ${
+                        e.id === selectedEmailId
+                          ? "bg-primary/10 text-primary border-b-2 border-primary"
+                          : "text-on-surface-variant hover:bg-surface-container-low"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[14px]">
+                        {e.status.toLowerCase() === "sent" ? "send" : e.status.toLowerCase() === "draft" ? "edit" : "mark_email_read"}
+                      </span>
+                      <span className="truncate max-w-[120px]">
+                        {e.subject || "(no subject)"}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                        e.status.toLowerCase() === "sent"
+                          ? "bg-green-50 text-green-700"
+                          : "bg-surface-container text-on-surface-variant"
+                      }`}>
+                        {e.status}
+                      </span>
+                      {e.status.toLowerCase() === "draft" && (
+                        <span
+                          onClick={(ev) => { ev.stopPropagation(); handleDelete(e.id); }}
+                          className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-error cursor-pointer"
+                          title="Delete draft"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">close</span>
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
 
-            <ComposerActions
-              onSend={handleSend}
-              disabled={!selectedLead}
-              isSent={selectedLead?.status === "Sent"}
-              sentTo={selectedLead?.email ?? ""}
-            />
+                {/* Composer */}
+                <div className="custom-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-6">
+                  <ComposerContent
+                    email={selectedLead?.email ?? ""}
+                    subject={subject}
+                    setSubject={setSubject}
+                    body={body}
+                    updateBody={updateBody}
+                    canUndo={past.length > 0}
+                    canRedo={future.length > 0}
+                    onUndo={handleUndo}
+                    onRedo={handleRedo}
+                  />
+                </div>
+
+                <ComposerActions
+                  onSend={handleSend}
+                  disabled={!selectedLead || selectedEmail?.status.toLowerCase() === "sent"}
+                  isSent={selectedEmail?.status.toLowerCase() === "sent"}
+                  sentTo={selectedLead?.email ?? ""}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -401,7 +452,7 @@ function Outreach() {
                 <h3 className="text-body-base font-bold">
                   Email Composer{" "}
                   <span className="text-on-surface-variant font-normal text-sm">
-                    — Editing Draft
+                    — {selectedEmail?.status.toLowerCase() === "sent" ? "Viewing" : "Editing Draft"}
                   </span>
                 </h3>
               </div>
@@ -419,23 +470,31 @@ function Outreach() {
             </div>
 
             <div className="custom-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto bg-white p-4 sm:p-8">
-              <ComposerContent
-                email={selectedLead?.email ?? ""}
-                subject={subject}
-                setSubject={setSubject}
-                body={body}
-                updateBody={updateBody}
-                canUndo={past.length > 0}
-                canRedo={future.length > 0}
-                onUndo={handleUndo}
-                onRedo={handleRedo}
-              />
+              {leadEmailsLoading ? (
+                <div className="flex flex-1 flex-col gap-3 p-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-40 w-full" />
+                </div>
+              ) : (
+                <ComposerContent
+                  email={selectedLead?.email ?? ""}
+                  subject={subject}
+                  setSubject={setSubject}
+                  body={body}
+                  updateBody={updateBody}
+                  canUndo={past.length > 0}
+                  canRedo={future.length > 0}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                />
+              )}
             </div>
 
             <ComposerActions
               onSend={handleSend}
-              disabled={!selectedLead}
-              isSent={selectedLead?.status === "Sent"}
+              disabled={!selectedLead || selectedEmail?.status.toLowerCase() === "sent"}
+              isSent={selectedEmail?.status.toLowerCase() === "sent"}
               sentTo={selectedLead?.email ?? ""}
             />
           </div>

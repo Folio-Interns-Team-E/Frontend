@@ -43,10 +43,11 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
     }
   }, [dispatch, activeChatId]);
 
+  const [stepIdx, setStepIdx] = useState(0);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-  const [stepIdx, setStepIdx] = useState(0);
+  }, [messages, stepIdx]);
 
   useEffect(() => {
     if (!isSending) {

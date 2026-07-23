@@ -35,10 +35,11 @@ function Qualification() {
   const cards = useMemo(() => {
     const visible = leads.filter((lead) => {
       if (lead.status === "Discarded") return false;
-      if (filterMode === "high") return (lead.score ?? -1) >= 85;
+      if (lead.score == null || lead.score === 0) return false;
+      if (filterMode === "high") return lead.score >= 85;
       if (filterMode === "qualified")
         return lead.status === "Qualified" || lead.status === "Drafted";
-      if (filterMode === "review") return lead.score == null || lead.score < 85;
+      if (filterMode === "review") return lead.score < 85;
       return true;
     });
     return [...visible].sort((a, b) =>

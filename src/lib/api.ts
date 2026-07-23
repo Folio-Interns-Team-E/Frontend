@@ -225,6 +225,9 @@ export const api = {
   getEmails(leadId: string, accessToken: string, teamId?: string | null) {
     return request<{ data: EmailApi[] }>(`/emails/?lead_id=${leadId}`, {}, accessToken, teamId);
   },
+  deleteEmail(emailId: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: Record<string, never> }>(`/emails/${emailId}`, { method: "DELETE" }, accessToken, teamId);
+  },
 
   // === Meetings ===
   getMeetings(accessToken: string, teamId?: string | null) {
@@ -341,6 +344,9 @@ export const api = {
       accessToken,
       teamId,
     );
+  },
+  deleteProposalTemplate(accessToken: string, teamId?: string | null) {
+    return request<{ data: Record<string, never> }>("/proposals/template", { method: "DELETE" }, accessToken, teamId);
   },
 
   // === Knowledge Base ===
