@@ -133,7 +133,7 @@ function TeamSetup() {
                 <div className="flex-1">
                   <p className="font-extrabold text-on-surface">{team.name}</p>
                   <p className="mt-0.5 text-xs capitalize text-on-surface-variant">
-                    Your role: {team.role}
+                    Your role: {team.role === "admin" ? team.role : "member"}
                   </p>
                 </div>
                 <span className="material-symbols-outlined text-on-surface-variant">
