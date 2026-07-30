@@ -1,0 +1,14 @@
+{
+  "APP-06": {
+    "area": "Authentication",
+    "summary": "Signed-out protected route does not redirect safely to login",
+    "impact": "Signed-out users cannot reliably recover from opening a protected application route.",
+    "expected": "The user is redirected once to the login page and the intended destination is preserved."
+  },
+  "AUTH-09": {
+    "area": "Authentication",
+    "summary": "Login response reveals whether an account exists",
+    "impact": "An attacker can distinguish registered email addresses from unknown addresses.",
+    "expected": "Unknown-email and wrong-password attempts return the same generic response."
+  }
+}

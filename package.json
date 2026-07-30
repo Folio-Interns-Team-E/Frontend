@@ -13,6 +13,7 @@
     "test:e2e:setup": "docker compose -f e2e/docker-compose.e2e.yml up -d --wait",
     "test:e2e": "npm run test:e2e:setup && playwright test",
     "test:e2e:twice": "npm run test:e2e:setup && playwright test --repeat-each=2",
+    "test:e2e:jira-demo": "node scripts/e2e-jira-demo.mjs",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report"
   },
