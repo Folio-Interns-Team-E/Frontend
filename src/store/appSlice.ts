@@ -655,13 +655,13 @@ const appSlice = createSlice({
       team: {
         id: string;
         name: string;
-        invite_code: string;
+        invite_code?: string | null;
         members: { id: string; full_name: string; email: string; role: TeamRole }[];
       },
     ) => {
       state.team.id = team.id;
       state.team.name = team.name;
-      state.team.inviteCode = team.invite_code;
+      state.team.inviteCode = team.invite_code ?? null;
       state.team.members = team.members.map((member) => ({
         id: member.id,
         name: member.full_name,

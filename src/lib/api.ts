@@ -19,7 +19,7 @@ export type ApiMember = {
 export type ApiTeam = {
   id: string;
   name: string;
-  invite_code: string;
+  invite_code?: string | null;
   created_at: string;
   members: ApiMember[];
 };
@@ -59,7 +59,7 @@ async function request<T>(
 export type ApiUserTeam = {
   id: string;
   name: string;
-  invite_code: string;
+  invite_code?: string | null;
   created_at: string;
   role: "admin" | "manager" | "rep";
 };

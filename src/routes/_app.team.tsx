@@ -2,11 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useEffect, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import {
-  inviteMemberLocal,
-  removeMemberLocal,
   setActiveTeam,
   type TeamRole,
-  updateMemberRoleLocal,
 } from "../store/appSlice";
 import {
   fetchMyTeams,
@@ -53,15 +50,13 @@ function TeamManagement() {
 
   async function invite(event: FormEvent) {
     event.preventDefault();
-    const result = auth.accessToken
-      ? await dispatch(inviteMemberRemote({ email, accessToken: auth.accessToken }))
-      : null;
+    if (!auth.accessToken) return;
+    const result = await dispatch(
+      inviteMemberRemote({ email, accessToken: auth.accessToken }),
+    );
     if (inviteMemberRemote.fulfilled.match(result)) {
       setEmail("");
-      return;
     }
-    dispatch(inviteMemberLocal({ email }));
-    setEmail("");
   }
 
   async function joinTeam(event: FormEvent) {
@@ -93,22 +88,14 @@ function TeamManagement() {
 
   function confirmRemoveMember() {
     if (!confirmRemove) return;
-    if (!team.id || !auth.accessToken) {
-      dispatch(removeMemberLocal(confirmRemove.id));
-      setConfirmRemove(null);
-      return;
-    }
+    if (!team.id || !auth.accessToken) return;
     void dispatch(
       removeMemberRemote({
         teamId: team.id,
         userId: confirmRemove.id,
         accessToken: auth.accessToken,
       }),
-    ).then((result) => {
-      if (removeMemberRemote.rejected.match(result)) {
-        dispatch(removeMemberLocal(confirmRemove.id));
-      }
-    });
+    );
     setConfirmRemove(null);
   }
 
@@ -199,7 +186,7 @@ function TeamManagement() {
             <section className="subtle-grid relative overflow-hidden rounded-2xl bg-[#102b38] p-5 text-white shadow-xl sm:p-6">
               <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-primary/18 to-transparent" />
               <div className="relative flex flex-col justify-between gap-5 md:flex-row md:items-end">
-                <div>
+                {isAdmin && team.inviteCode && <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#72e1e3]">
                     Team workspace
                   </p>
@@ -216,7 +203,7 @@ function TeamManagement() {
                       Members: <strong className="text-white">{team.members.length}</strong>
                     </span>
                   </div>
-                </div>
+                </div>}
                 <div>
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                     External invite code

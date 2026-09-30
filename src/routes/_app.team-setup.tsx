@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useEffect, useState } from "react";
-import { setActiveTeam, createTeamLocal, joinTeamLocal } from "../store/appSlice";
+import { setActiveTeam } from "../store/appSlice";
 import { createTeamRemote, joinTeamRemote, fetchMyTeams } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
@@ -59,14 +59,11 @@ function TeamSetup() {
 
   async function submitCreate(event: FormEvent) {
     event.preventDefault();
-    const result = auth.accessToken
-      ? await dispatch(createTeamRemote({ name: teamName, accessToken: auth.accessToken }))
-      : null;
+    if (!auth.accessToken) return;
+    const result = await dispatch(
+      createTeamRemote({ name: teamName, accessToken: auth.accessToken }),
+    );
     if (createTeamRemote.fulfilled.match(result)) {
-      setToast({ message: "Team created successfully!", type: "success" });
-      setTimeout(() => continueToDashboard(), 1200);
-    } else {
-      dispatch(createTeamLocal({ name: teamName }));
       setToast({ message: "Team created successfully!", type: "success" });
       setTimeout(() => continueToDashboard(), 1200);
     }
@@ -74,14 +71,11 @@ function TeamSetup() {
 
   async function submitJoin(event: FormEvent) {
     event.preventDefault();
-    const result = auth.accessToken
-      ? await dispatch(joinTeamRemote({ inviteCode, accessToken: auth.accessToken }))
-      : null;
+    if (!auth.accessToken) return;
+    const result = await dispatch(
+      joinTeamRemote({ inviteCode, accessToken: auth.accessToken }),
+    );
     if (joinTeamRemote.fulfilled.match(result)) {
-      setToast({ message: "Joined team successfully!", type: "success" });
-      setTimeout(() => continueToDashboard(), 1200);
-    } else {
-      dispatch(joinTeamLocal({ inviteCode }));
       setToast({ message: "Joined team successfully!", type: "success" });
       setTimeout(() => continueToDashboard(), 1200);
     }
