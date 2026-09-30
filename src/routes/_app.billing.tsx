@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_app/billing")({
 
 function Billing() {
   const auth = useAppSelector((state) => state.app.auth);
-  const token = auth.accessToken ?? localStorage.getItem("access_token");
+  const token = auth.accessToken;
   const teamId = useAppSelector((state) => state.app.team.id);
 
   const [billing, setBilling] = useState<BillingStatus | null>(null);

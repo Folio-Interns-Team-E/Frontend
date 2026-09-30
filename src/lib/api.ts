@@ -1,5 +1,37 @@
 export const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 
+let currentAccessToken: string | null = null;
+let refreshPromise: Promise<string | null> | null = null;
+
+export function setAccessToken(token: string | null) {
+  currentAccessToken = token;
+}
+
+export function getAccessToken() {
+  return currentAccessToken;
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${API_URL}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        const body = (await response.json()) as { data?: { access_token?: string } };
+        const token = body.data?.access_token ?? null;
+        setAccessToken(token);
+        return token;
+      })
+      .catch(() => null)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
 export type AuthResponse = {
   access_token: string;
   token_type: string;
@@ -33,16 +65,42 @@ async function request<T>(
   const headers = new Headers(options.headers);
   if (options.body && !(options.body instanceof FormData))
     headers.set("Content-Type", "application/json");
-  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+  const activeAccessToken = currentAccessToken ?? accessToken;
+  if (activeAccessToken) headers.set("Authorization", `Bearer ${activeAccessToken}`);
   if (teamId) headers.set("X-Team-Id", teamId);
 
   let response: Response;
   try {
-    response = await fetch(`${API_URL}${path}`, { ...options, headers });
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+      credentials: "include",
+    });
   } catch {
     throw new Error(
       `Could not reach the API at ${API_URL}. Make sure FastAPI is running and CORS allows this frontend origin.`,
     );
+  }
+
+  const canRefresh =
+    response.status === 401 &&
+    !path.startsWith("/auth/login") &&
+    !path.startsWith("/auth/register") &&
+    !path.startsWith("/auth/refresh") &&
+    !path.startsWith("/auth/otp");
+
+  if (canRefresh) {
+    const refreshedToken = await refreshAccessToken();
+    if (refreshedToken) {
+      headers.set("Authorization", `Bearer ${refreshedToken}`);
+      response = await fetch(`${API_URL}${path}`, {
+        ...options,
+        headers,
+        credentials: "include",
+      });
+    } else {
+      setAccessToken(null);
+    }
   }
 
   if (!response.ok) {
@@ -76,6 +134,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  },
+  refreshSession() {
+    return request<{ data: AuthResponse }>("/auth/refresh", { method: "POST" });
   },
   logout(accessToken: string) {
     return request<{ data: unknown }>("/auth/logout", { method: "POST" }, accessToken);

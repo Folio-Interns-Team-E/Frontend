@@ -1,12 +1,12 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { api } from "../lib/api";
+import { api, getAccessToken, setAccessToken } from "../lib/api";
 import type { TeamRole } from "./appSlice";
 import type { RootState } from "./index";
 
 const errorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Something went wrong";
 
-const getToken = () => localStorage.getItem("access_token");
+const getToken = () => getAccessToken();
 
 export const registerAccount = createAsyncThunk(
   "app/registerAccount",
@@ -39,11 +39,7 @@ export const loginAccount = createAsyncThunk(
 
       const access_token = data.access_token;
 
-      if (access_token && access_token !== "undefined") {
-        localStorage.setItem("access_token", access_token);
-      } else {
-        localStorage.removeItem("access_token");
-      }
+      setAccessToken(access_token && access_token !== "undefined" ? access_token : null);
 
       return data;
     } catch (error) {
@@ -57,7 +53,9 @@ export const logoutAccount = createAsyncThunk(
   async (accessToken: string, { rejectWithValue }) => {
     try {
       await api.logout(accessToken);
+      setAccessToken(null);
     } catch (error) {
+      setAccessToken(null);
       return rejectWithValue(errorMessage(error));
     }
   },
@@ -661,6 +659,21 @@ export const verifyOtp = createAsyncThunk(
       await api.verifyOtp(payload.email, payload.otp);
       return payload.email;
     } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const refreshSession = createAsyncThunk(
+  "app/refreshSession",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.refreshSession();
+      const data = response.data;
+      setAccessToken(data.access_token);
+      return data;
+    } catch (error) {
+      setAccessToken(null);
       return rejectWithValue(errorMessage(error));
     }
   },

@@ -81,7 +81,15 @@ export const createAppStore = () => {
       try {
         const state = store.getState();
         const { assistantMessages: _assistantMessages, ...persistedApp } = state.app;
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, app: persistedApp }));
+        const persistedAuth = {
+          ...persistedApp.auth,
+          accessToken: null,
+          loggedIn: false,
+        };
+        window.localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ ...state, app: { ...persistedApp, auth: persistedAuth } }),
+        );
       } catch {
         // Ignore storage failures; the app still works for the active session.
       }

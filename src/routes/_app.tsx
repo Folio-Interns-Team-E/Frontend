@@ -1,7 +1,6 @@
 import {
   createFileRoute,
   Outlet,
-  redirect,
   useNavigate,
   useLocation,
 } from "@tanstack/react-router";
@@ -19,27 +18,11 @@ import {
   fetchKnowledgeAssets,
   fetchChatMessages,
   fetchChats,
+  refreshSession,
 } from "../store/apiThunks";
-import { api } from "../lib/api";
+import { api, setAccessToken } from "../lib/api";
 
 export const Route = createFileRoute("/_app")({
-  beforeLoad: ({ context, location }) => {
-    // Browser storage is unavailable during SSR. Deferring the check keeps a
-    // persisted session from being redirected before the client hydrates it.
-    if (typeof window === "undefined") return;
-
-    // Access Redux state directly from the router context
-    const state = context.store.getState();
-    const auth = state.app.auth;
-
-    // Rule 1: Redirect to login if unauthenticated
-    if (!auth.loggedIn && !localStorage.getItem("access_token")) {
-      throw redirect({
-        to: "/login",
-        search: { redirect: location.href },
-      });
-    }
-  },
   component: AppLayout,
 });
 
@@ -57,10 +40,24 @@ function AppLayout() {
   const knowledgeAssetsStatus = useAppSelector((state) => state.app.knowledgeAssetsStatus);
   const chatRefreshKey = useAppSelector((state) => state.app.chatRefreshKey);
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(Boolean(auth.accessToken));
 
-  const accessToken =
-    auth.accessToken ??
-    (typeof window !== "undefined" ? localStorage.getItem("access_token") : null);
+  const accessToken = auth.accessToken;
+
+  useEffect(() => {
+    if (auth.accessToken) {
+      setAccessToken(auth.accessToken);
+      setSessionChecked(true);
+      return;
+    }
+    if (sessionChecked) return;
+    void dispatch(refreshSession()).then((result) => {
+      setSessionChecked(true);
+      if (refreshSession.rejected.match(result)) {
+        void navigate({ to: "/login", search: { redirect: location.href }, replace: true });
+      }
+    });
+  }, [auth.accessToken, dispatch, location.href, navigate, sessionChecked]);
 
   useEffect(() => {
     if (window.matchMedia("(min-width: 1280px)").matches) {
@@ -72,9 +69,9 @@ function AppLayout() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || auth.loggedIn || accessToken) return;
+    if (!sessionChecked || auth.loggedIn || accessToken) return;
     void navigate({ to: "/login", search: { redirect: location.href }, replace: true });
-  }, [accessToken, auth.loggedIn, location.href, navigate]);
+  }, [accessToken, auth.loggedIn, location.href, navigate, sessionChecked]);
 
   useEffect(() => {
     const token = accessToken && accessToken !== "undefined" ? accessToken : null;
@@ -144,7 +141,7 @@ function AppLayout() {
     location.pathname,
   ]);
 
-  if (auth.userTeamsStatus === "idle" || auth.userTeamsStatus === "loading") {
+  if (!sessionChecked || auth.userTeamsStatus === "idle" || auth.userTeamsStatus === "loading") {
     return (
       <div className="flex h-screen items-center justify-center bg-[#f4f7fb]">
         <div className="flex flex-col items-center gap-3">

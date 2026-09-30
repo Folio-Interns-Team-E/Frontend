@@ -7,6 +7,7 @@ import {
   joinTeamRemote,
   loginAccount,
   logoutAccount,
+  refreshSession,
   registerAccount,
   removeMemberRemote,
   updateMemberRoleRemote,
@@ -760,6 +761,19 @@ const appSlice = createSlice({
         state.profile.name = action.payload.full_name;
         state.profile.email = action.payload.email;
         // backend doesn't return teamChoiceCompleted; keep existing value
+      })
+      .addCase(refreshSession.fulfilled, (state, action) => {
+        state.auth.status = "succeeded";
+        state.auth.loggedIn = true;
+        state.auth.accessToken = action.payload.access_token;
+        state.auth.userId = action.payload.user_id;
+        state.profile.name = action.payload.full_name;
+        state.profile.email = action.payload.email;
+      })
+      .addCase(refreshSession.rejected, (state) => {
+        state.auth.loggedIn = false;
+        state.auth.accessToken = null;
+        state.auth.userId = null;
       })
       .addCase(logoutAccount.fulfilled, (state) => {
         state.auth.loggedIn = false;

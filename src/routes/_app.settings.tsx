@@ -30,7 +30,7 @@ function Settings() {
   const [apolloModalOpen, setApolloModalOpen] = useState(false);
   const [apolloApiKey, setApolloApiKey] = useState(integrations.apolloApiKey);
 
-  const token = auth.accessToken ?? localStorage.getItem("access_token");
+  const token = auth.accessToken;
 
   useEffect(() => {
     if (!token) return;

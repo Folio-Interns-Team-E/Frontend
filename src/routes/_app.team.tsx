@@ -32,9 +32,7 @@ function TeamManagement() {
   const isAdmin = team.currentUserRole === "admin";
   const canManageMembers = team.currentUserRole === "admin" || team.currentUserRole === "manager";
 
-  const accessToken =
-    auth.accessToken ??
-    (typeof window !== "undefined" ? localStorage.getItem("access_token") : null);
+  const accessToken = auth.accessToken;
 
   useEffect(() => {
     const token = accessToken && accessToken !== "undefined" ? accessToken : null;

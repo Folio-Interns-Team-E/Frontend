@@ -32,9 +32,7 @@ function Proposals() {
   const proposalsStatus = useAppSelector((state) => state.app.proposalsStatus);
 
   const [template, setTemplate] = useState<ProposalTemplateApi | null>(null);
-  const accessToken = useAppSelector(
-    (state) => state.app.auth.accessToken ?? localStorage.getItem("access_token"),
-  );
+  const accessToken = useAppSelector((state) => state.app.auth.accessToken);
   const teamId = useAppSelector((state) => state.app.team.id);
 
   useEffect(() => {
@@ -332,8 +330,7 @@ function Badge({
 
 function OutcomePanel({ proposal }: { proposal: Proposal }) {
   const dispatch = useAppDispatch();
-  const accessToken =
-    useAppSelector((state) => state.app.auth.accessToken) ?? localStorage.getItem("access_token");
+  const accessToken = useAppSelector((state) => state.app.auth.accessToken);
   const outcome = getOutcome(proposal);
 
   return (
@@ -374,8 +371,7 @@ function OutcomePanel({ proposal }: { proposal: Proposal }) {
 
 function ProposalActions({ proposal }: { proposal: Proposal }) {
   const dispatch = useAppDispatch();
-  const accessToken =
-    useAppSelector((state) => state.app.auth.accessToken) ?? localStorage.getItem("access_token");
+  const accessToken = useAppSelector((state) => state.app.auth.accessToken);
 
   return (
     <div className="mt-5 flex flex-wrap justify-end gap-2 border-t pt-5">

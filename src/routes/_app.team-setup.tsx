@@ -35,9 +35,7 @@ function TeamSetup() {
     return () => clearTimeout(id);
   }, [toast]);
 
-  const accessToken =
-    auth.accessToken ??
-    (typeof window !== "undefined" ? localStorage.getItem("access_token") : null);
+  const accessToken = auth.accessToken;
 
   useEffect(() => {
     const token = accessToken && accessToken !== "undefined" ? accessToken : null;
