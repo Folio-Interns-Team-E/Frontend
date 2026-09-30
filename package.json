@@ -9,13 +9,7 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write .",
-    "test:e2e:setup": "docker compose -f e2e/docker-compose.e2e.yml up -d --wait",
-    "test:e2e": "npm run test:e2e:setup && playwright test",
-    "test:e2e:twice": "npm run test:e2e:setup && playwright test --repeat-each=2",
-    "test:e2e:jira-demo": "node scripts/e2e-jira-demo.mjs",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:report": "playwright show-report"
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -77,7 +71,6 @@
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@lovable.dev/vite-tanstack-config": "^2.5.2",
-    "@playwright/test": "^1.62.0",
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
