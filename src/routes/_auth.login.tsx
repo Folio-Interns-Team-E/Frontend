@@ -86,9 +86,9 @@ function Login() {
             />
             Remember me
           </label>
-          <button type="button" className="text-xs font-bold text-primary hover:underline">
+          <Link to="/forgot-password" className="text-xs font-bold text-primary hover:underline">
             Forgot password?
-          </button>
+          </Link>
         </div>
 
         <button

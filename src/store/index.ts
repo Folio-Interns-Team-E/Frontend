@@ -28,7 +28,6 @@ function migrateState(savedState: unknown) {
       ...savedApp,
       auth: {
         ...appInitialState.auth,
-        ...savedApp.auth,
         userTeams: [],
         userTeamsStatus: "idle" as const,
       },
@@ -82,9 +81,7 @@ export const createAppStore = () => {
         const state = store.getState();
         const { assistantMessages: _assistantMessages, ...persistedApp } = state.app;
         const persistedAuth = {
-          ...persistedApp.auth,
-          accessToken: null,
-          loggedIn: false,
+          ...appInitialState.auth,
         };
         window.localStorage.setItem(
           STORAGE_KEY,

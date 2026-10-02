@@ -17,6 +17,7 @@ import { Route as MarketingPricingRouteImport } from './routes/_marketing.pricin
 import { Route as AuthVerifyOtpRouteImport } from './routes/_auth.verify-otp'
 import { Route as AuthRegisterRouteImport } from './routes/_auth.register'
 import { Route as AuthLoginRouteImport } from './routes/_auth.login'
+import { Route as AuthForgotPasswordRouteImport } from './routes/_auth.forgot-password'
 import { Route as AppTeamSetupRouteImport } from './routes/_app.team-setup'
 import { Route as AppTeamRouteImport } from './routes/_app.team'
 import { Route as AppSuccessRouteImport } from './routes/_app.success'
@@ -67,6 +68,11 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => AuthRoute,
 } as any)
 const AppTeamSetupRoute = AppTeamSetupRouteImport.update({
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/success': typeof AppSuccessRoute
   '/team': typeof AppTeamRoute
   '/team-setup': typeof AppTeamSetupRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/verify-otp': typeof AuthVerifyOtpRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/success': typeof AppSuccessRoute
   '/team': typeof AppTeamRoute
   '/team-setup': typeof AppTeamSetupRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/verify-otp': typeof AuthVerifyOtpRoute
@@ -200,6 +208,7 @@ export interface FileRoutesById {
   '/_app/success': typeof AppSuccessRoute
   '/_app/team': typeof AppTeamRoute
   '/_app/team-setup': typeof AppTeamSetupRoute
+  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/verify-otp': typeof AuthVerifyOtpRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/success'
     | '/team'
     | '/team-setup'
+    | '/forgot-password'
     | '/login'
     | '/register'
     | '/verify-otp'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/success'
     | '/team'
     | '/team-setup'
+    | '/forgot-password'
     | '/login'
     | '/register'
     | '/verify-otp'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/_app/success'
     | '/_app/team'
     | '/_app/team-setup'
+    | '/_auth/forgot-password'
     | '/_auth/login'
     | '/_auth/register'
     | '/_auth/verify-otp'
@@ -338,6 +350,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_app/team-setup': {
@@ -488,12 +507,14 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AuthRouteChildren {
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   AuthVerifyOtpRoute: typeof AuthVerifyOtpRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   AuthVerifyOtpRoute: AuthVerifyOtpRoute,

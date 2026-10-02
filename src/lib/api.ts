@@ -1,4 +1,4 @@
-export const API_URL = import.meta.env.VITE_API_URL ?? "/api";
+export const API_URL = import.meta.env.DEV ? "/api" : (import.meta.env.VITE_API_URL ?? "/api");
 
 let currentAccessToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;
@@ -87,7 +87,8 @@ async function request<T>(
     !path.startsWith("/auth/login") &&
     !path.startsWith("/auth/register") &&
     !path.startsWith("/auth/refresh") &&
-    !path.startsWith("/auth/otp");
+    !path.startsWith("/auth/otp") &&
+    !path.startsWith("/auth/password");
 
   if (canRefresh) {
     const refreshedToken = await refreshAccessToken();
@@ -123,6 +124,16 @@ export type ApiUserTeam = {
 };
 
 export const api = {
+  requestPasswordReset(email: string) {
+    return request<{ message: string }>("/auth/password/request", {
+      method: "POST", body: JSON.stringify({ email }),
+    });
+  },
+  resetPassword(token: string, password: string) {
+    return request<{ message: string }>("/auth/password/reset", {
+      method: "POST", body: JSON.stringify({ token, password }),
+    });
+  },
   register(payload: { full_name: string; email: string; password: string }) {
     return request<{ data: AuthResponse & { needs_verification?: boolean } }>("/auth/register", {
       method: "POST",
