@@ -195,7 +195,9 @@ VITE_API_URL=http://localhost:8000
 VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id
 ```
 
-If `VITE_API_URL` is omitted during local Vite development, the frontend uses `/api`, which is proxied by `vite.config.ts`.
+Local Vite development always uses `/api`, which is proxied by `vite.config.ts`. Production builds use `VITE_API_URL`, falling back to `/api`.
+
+Authentication requests include `X-SalesSync-Request: 1` and credentials. Deploy this frontend alongside the matching backend origin protection. The backend must allow the frontend's exact origin in `FRONTEND_ORIGINS`. Refresh cookies use Path=/ to work through the local proxy. For HTTPS deployments on different sites, configure the backend's `REFRESH_COOKIE_SAMESITE=none`; local HTTP development uses `lax`.
 
 ## Common Commands
 

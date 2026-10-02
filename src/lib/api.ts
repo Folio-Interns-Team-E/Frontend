@@ -15,6 +15,7 @@ async function refreshAccessToken(): Promise<string | null> {
   if (!refreshPromise) {
     refreshPromise = fetch(`${API_URL}/auth/refresh`, {
       method: "POST",
+      headers: { "X-SalesSync-Request": "1" },
       credentials: "include",
     })
       .then(async (response) => {
@@ -63,6 +64,7 @@ async function request<T>(
   teamId?: string | null,
 ): Promise<T> {
   const headers = new Headers(options.headers);
+  if (path.startsWith("/auth/")) headers.set("X-SalesSync-Request", "1");
   if (options.body && !(options.body instanceof FormData))
     headers.set("Content-Type", "application/json");
   const activeAccessToken = currentAccessToken ?? accessToken;
