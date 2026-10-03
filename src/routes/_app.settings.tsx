@@ -5,6 +5,7 @@ import { demoLogout, setIntegration, updateProfile } from "../store/appSlice";
 import { logoutAccount } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { api } from "../lib/api";
+import { SocialSignIn } from "../components/SocialSignIn";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings · SalesSync AI" }] }),
@@ -144,11 +145,16 @@ function Settings() {
           </div>
         </section>
 
+        <section className="section-panel space-y-4 p-5 sm:p-6">
+          <h2 className="font-bold">Connected sign-in methods</h2>
+          <p className="text-sm text-on-surface-variant">Connect Google or GitHub to sign in to this account. This does not grant access to Gmail or repositories.</p>
+          <SocialSignIn link />
+        </section>
         <section className="section-panel flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
           <div>
             <h2 className="font-bold">Account session</h2>
             <p className="text-sm text-on-surface-variant">
-              Authentication is represented as a frontend flow until the backend provider is added.
+              Sign out of this browser session.
             </p>
           </div>
           <Link

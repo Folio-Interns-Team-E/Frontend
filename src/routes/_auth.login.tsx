@@ -4,6 +4,7 @@ import { AuthField, AuthLayout } from "../components/AuthLayout";
 import { loginAccount } from "../store/apiThunks";
 import { clearApiFeedback, createTeamLocal, demoLogin } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { SocialSignIn } from "../components/SocialSignIn";
 
 export const Route = createFileRoute("/_auth/login")({
   head: () => ({ meta: [{ title: "Log in · SalesSync AI" }] }),
@@ -46,6 +47,7 @@ function Login() {
       description="Pick up where your sales agents left off."
     >
 
+      <div className="mb-5"><SocialSignIn /></div>
       <form className="space-y-5" onSubmit={handleSubmit}>
         {auth.error && (
           <div className="rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-xs text-error">

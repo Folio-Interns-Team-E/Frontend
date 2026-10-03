@@ -126,6 +126,9 @@ export type ApiUserTeam = {
 };
 
 export const api = {
+  socialSignIn(provider: "google" | "github", link = false) {
+    return request<{ data: { url: string } }>(`/auth/oauth/${provider}/${link ? "link" : "start"}`, { method: "POST" });
+  },
   requestPasswordReset(email: string) {
     return request<{ message: string }>("/auth/password/request", {
       method: "POST", body: JSON.stringify({ email }),
