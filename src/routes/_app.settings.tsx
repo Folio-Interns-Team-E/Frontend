@@ -6,6 +6,7 @@ import { logoutAccount } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { api } from "../lib/api";
 import { SocialSignIn } from "../components/SocialSignIn";
+import { SecurityActivity } from "../components/SecurityActivity";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings · SalesSync AI" }] }),
@@ -168,6 +169,7 @@ function Settings() {
             Log out
           </Link>
         </section>
+        {token && <SecurityActivity key={auth.userId} accessToken={token} />}
       </div>
 
       {calendlyModalOpen && (

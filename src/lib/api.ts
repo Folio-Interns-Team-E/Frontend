@@ -42,6 +42,12 @@ export type AuthResponse = {
   needs_verification?: boolean;
 };
 
+export type SecurityEventApi = {
+  id: string;
+  action: "password_login" | "password_reset" | "google_login" | "github_login" | "google_linked" | "github_linked";
+  created_at: string;
+};
+
 export type ApiMember = {
   id: string;
   full_name: string;
@@ -126,6 +132,12 @@ export type ApiUserTeam = {
 };
 
 export const api = {
+  securityActivity(accessToken: string, cursor?: string) {
+    const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+    return request<{ data: { events: SecurityEventApi[]; next_cursor: string | null } }>(
+      `/auth/activity${query}`, {}, accessToken,
+    );
+  },
   socialSignIn(provider: "google" | "github", link = false) {
     return request<{ data: { url: string } }>(`/auth/oauth/${provider}/${link ? "link" : "start"}`, { method: "POST" });
   },
