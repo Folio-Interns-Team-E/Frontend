@@ -138,7 +138,7 @@ function LeadGeneration() {
             className="primary-action w-full disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             <span className="material-symbols-outlined text-[18px]">bolt</span>
-            {isGenerating ? "Generating..." : "Generate from ICP"}
+            {isGenerating ? "Generating..." : "Generate with Apollo"}
           </button>
           <input
             ref={fileInputRef}
