@@ -27,8 +27,12 @@ function Settings() {
   const [gmailLoading, setGmailLoading] = useState(true);
 
   const [calendlyModalOpen, setCalendlyModalOpen] = useState(false);
-  const [calendlyApiKey, setCalendlyApiKey] = useState(integrations.calendlyApiKey);
-  const [calendlyEventTypeId, setCalendlyEventTypeId] = useState(integrations.calendlyEventTypeId);
+  const [calendlyApiKey, setCalendlyApiKey] = useState("");
+  const [calendlyEventTypeId, setCalendlyEventTypeId] = useState("");
+  const [calcomConnected, setCalcomConnected] = useState(false);
+  const [calcomLoading, setCalcomLoading] = useState(true);
+  const [calcomSaving, setCalcomSaving] = useState(false);
+  const [calcomError, setCalcomError] = useState("");
 
   const [apolloModalOpen, setApolloModalOpen] = useState(false);
   const [apolloApiKey, setApolloApiKey] = useState("");
@@ -68,6 +72,19 @@ function Settings() {
       .finally(() => setApolloLoading(false));
   }, [token, team.id, dispatch]);
 
+  useEffect(() => {
+    if (!token || !team.id) return;
+    setCalcomLoading(true);
+    api.getCalcomStatus(token, team.id)
+      .then((res) => {
+        setCalcomConnected(res.data.connected);
+        setCalendlyEventTypeId(res.data.event_type_id ?? "");
+        dispatch(setIntegration({ integration: "calendly", value: res.data.connected }));
+      })
+      .catch(() => {})
+      .finally(() => setCalcomLoading(false));
+  }, [token, team.id, dispatch]);
+
   const connectGmail = async () => {
     if (!token) return;
     try {
@@ -78,11 +95,39 @@ function Settings() {
     }
   };
 
-  const saveCalendly = () => {
-    dispatch(setIntegration({ integration: "calendlyApiKey", value: calendlyApiKey }));
-    dispatch(setIntegration({ integration: "calendlyEventTypeId", value: calendlyEventTypeId }));
-    dispatch(setIntegration({ integration: "calendly", value: !!(calendlyApiKey && calendlyEventTypeId) }));
-    setCalendlyModalOpen(false);
+  const saveCalendly = async () => {
+    if (!token || !team.id) return;
+    setCalcomSaving(true);
+    setCalcomError("");
+    try {
+      await api.configureCalcom(calendlyApiKey, calendlyEventTypeId, token, team.id);
+      setCalcomConnected(true);
+      setCalendlyApiKey("");
+      dispatch(setIntegration({ integration: "calendly", value: true }));
+      setCalendlyModalOpen(false);
+    } catch (error) {
+      setCalcomError(error instanceof Error ? error.message : "Could not connect Cal.com");
+    } finally {
+      setCalcomSaving(false);
+    }
+  };
+
+  const disconnectCalcom = async () => {
+    if (!token || !team.id) return;
+    setCalcomSaving(true);
+    setCalcomError("");
+    try {
+      await api.disconnectCalcom(token, team.id);
+      setCalcomConnected(false);
+      setCalendlyApiKey("");
+      setCalendlyEventTypeId("");
+      dispatch(setIntegration({ integration: "calendly", value: false }));
+      setCalendlyModalOpen(false);
+    } catch (error) {
+      setCalcomError(error instanceof Error ? error.message : "Could not disconnect Cal.com");
+    } finally {
+      setCalcomSaving(false);
+    }
   };
 
   const saveApollo = async () => {
@@ -176,13 +221,14 @@ function Settings() {
             />
             <Integration
               icon="calendar_month"
-              name="Calendly"
+              name="Cal.com"
               description={
-                integrations.calendly
-                  ? "Connected"
+                calcomConnected
+                  ? `Connected · Event type ${calendlyEventTypeId}`
                   : "Schedule meetings and sync with your calendar."
               }
-              connected={integrations.calendly}
+              connected={calcomConnected}
+              loading={calcomLoading}
               onToggle={() => setCalendlyModalOpen(true)}
             />
             <Integration
@@ -230,7 +276,7 @@ function Settings() {
         <div className="modal-backdrop">
           <div className="modal-surface w-full max-w-md">
             <div className="flex items-center justify-between border-b border-outline-variant p-5">
-              <h3 className="text-lg font-bold">Connect Calendly</h3>
+              <h3 className="text-lg font-bold">Connect Cal.com</h3>
               <button
                 onClick={() => setCalendlyModalOpen(false)}
                 className="p-1 text-on-surface-variant hover:text-on-surface"
@@ -240,7 +286,7 @@ function Settings() {
             </div>
             <div className="space-y-4 p-5">
               <p className="text-sm text-on-surface-variant">
-                Enter your Calendly API key and Event Type ID to enable scheduling.
+                Enter a Cal.com API v2 key and numeric Event Type ID. The credentials are verified before they are encrypted and saved.
               </p>
               <label className="block text-sm font-semibold">
                 API Key
@@ -249,7 +295,7 @@ function Settings() {
                   className="control mt-2 w-full px-4 py-2.5 font-normal outline-none"
                   value={calendlyApiKey}
                   onChange={(e) => setCalendlyApiKey(e.target.value)}
-                  placeholder="Paste your Calendly API key"
+                  placeholder="Paste your Cal.com API key"
                 />
               </label>
               <label className="block text-sm font-semibold">
@@ -259,11 +305,17 @@ function Settings() {
                   className="control mt-2 w-full px-4 py-2.5 font-normal outline-none"
                   value={calendlyEventTypeId}
                   onChange={(e) => setCalendlyEventTypeId(e.target.value)}
-                  placeholder="e.g. abc123-def456"
+                  placeholder="e.g. 123456"
                 />
               </label>
             </div>
+            {calcomError && <p className="px-5 pb-4 text-sm text-error">{calcomError}</p>}
             <div className="flex justify-end gap-3 border-t border-outline-variant p-5">
+              {calcomConnected && (
+                <button onClick={disconnectCalcom} disabled={calcomSaving} className="secondary-action mr-auto border-error/40 text-error">
+                  Disconnect
+                </button>
+              )}
               <button
                 onClick={() => setCalendlyModalOpen(false)}
                 className="secondary-action"
@@ -272,10 +324,10 @@ function Settings() {
               </button>
               <button
                 onClick={saveCalendly}
-                disabled={!calendlyApiKey || !calendlyEventTypeId}
+                disabled={!calendlyApiKey || !calendlyEventTypeId || calcomSaving}
                 className="primary-action disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Save
+                {calcomSaving ? "Verifying…" : "Verify and save"}
               </button>
             </div>
           </div>

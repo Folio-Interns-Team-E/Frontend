@@ -22,6 +22,8 @@ function migrateState(savedState: unknown) {
   const savedProposals = Array.isArray(savedApp.proposals) ? savedApp.proposals : [];
   const savedIntegrations = { ...(savedApp.integrations ?? {}) } as Record<string, unknown>;
   delete savedIntegrations.apolloApiKey;
+  delete savedIntegrations.calendlyApiKey;
+  delete savedIntegrations.calendlyEventTypeId;
 
   return {
     ...(savedState as object),

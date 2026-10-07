@@ -583,6 +583,15 @@ export const api = {
       accessToken,
     );
   },
+  getCalcomStatus(accessToken: string, teamId: string) {
+    return request<{ data: { connected: boolean; event_type_id?: string | null } }>("/integrations/calcom/status", {}, accessToken, teamId);
+  },
+  configureCalcom(apiKey: string, eventTypeId: string, accessToken: string, teamId: string) {
+    return request<{ data: { id: string; event_type_id: string } }>("/integrations/calcom", { method: "PUT", body: JSON.stringify({ cal_api_key: apiKey, cal_event_type_id: eventTypeId }) }, accessToken, teamId);
+  },
+  disconnectCalcom(accessToken: string, teamId: string) {
+    return request<{ data: Record<string, never> }>("/integrations/calcom", { method: "DELETE" }, accessToken, teamId);
+  },
   sendChat(message: string, accessToken: string, teamId?: string | null, chatId?: string | null) {
     return request<{ data: { reply: string } }>(
       `/chat/chats/${chatId}/messages`,
@@ -759,7 +768,7 @@ export type AdminOverview = {
   meetings: { total: number; by_status: Record<string, number> };
   proposals: { total: number; by_outcome: Record<string, number>; win_rate: number };
   knowledge_base: { total: number; by_status: Record<string, number> };
-  integrations: { gmail_connected: boolean; apollo_connected: boolean; apollo_used: number; apollo_limit: number };
+  integrations: { gmail_connected: boolean; calcom_connected: boolean; apollo_connected: boolean; apollo_used: number; apollo_limit: number };
   billing: { tier: string; status: string; renews_or_ends_at: string | null };
   recent_activity: Array<{ type: "lead" | "meeting" | "proposal"; label: string; detail: string; timestamp: string }>;
 };

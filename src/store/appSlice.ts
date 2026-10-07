@@ -160,8 +160,6 @@ type AppState = {
   integrations: {
     gmail: boolean;
     calendly: boolean;
-    calendlyApiKey: string;
-    calendlyEventTypeId: string;
     apollo: boolean;
   };
   team: {
@@ -236,8 +234,6 @@ export const initialState: AppState = {
   integrations: {
     gmail: false,
     calendly: false,
-    calendlyApiKey: "",
-    calendlyEventTypeId: "",
     apollo: false,
   },
   team: {
