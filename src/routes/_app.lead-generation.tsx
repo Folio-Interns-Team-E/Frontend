@@ -1,11 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import { buildLeads } from "../store/appSlice";
 import {
-  createLeadRemote,
   discardLeadRemote,
   draftEmailRemote,
+  generateLeadsRemote,
   qualifyLeadRemote,
 } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -30,7 +29,6 @@ function LeadGeneration() {
   const dispatch = useAppDispatch();
   const leads = useAppSelector((state) => state.app.leads);
   const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
-  const icp = useAppSelector((state) => state.app.onboarding.icp);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -38,32 +36,24 @@ function LeadGeneration() {
   }, [dispatch]);
   const [fitFilter, setFitFilter] = useState("all");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [generationMessage, setGenerationMessage] = useState<string | null>(null);
 
   const generateLeads = async () => {
     if (isGenerating) return;
     setIsGenerating(true);
-    const existingEmails = new Set(leads.map((lead) => lead.email.toLowerCase()));
-    const newLeads = buildLeads(icp).filter(
-      (lead) => !existingEmails.has(lead.email.toLowerCase()),
-    );
+    setGenerationError(null);
+    setGenerationMessage(null);
     try {
-      await Promise.all(
-        newLeads.map((lead) =>
-          dispatch(
-            createLeadRemote({
-              name: lead.name,
-              company: lead.company,
-              title: lead.title,
-              email: lead.email,
-              source: lead.source,
-              status: lead.status,
-              score: lead.score ?? undefined,
-              reasoning: lead.reasoning,
-            }),
-          ).unwrap(),
-        ),
+      const result = await dispatch(generateLeadsRemote(10)).unwrap();
+      setGenerationMessage(
+        result.created > 0
+          ? `Added ${result.created} live Apollo leads${result.skipped_duplicates ? `; skipped ${result.skipped_duplicates} duplicates` : ""}.`
+          : "No new prospects with available business emails matched this ICP.",
       );
-      dispatch(fetchLeads());
+      await dispatch(fetchLeads()).unwrap();
+    } catch (error) {
+      setGenerationError(typeof error === "string" ? error : "Lead generation failed. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -130,6 +120,17 @@ function LeadGeneration() {
             {isGenerating ? "Generating..." : "Generate from ICP"}
           </button>
         </div>
+
+        {generationError && (
+          <p className="mt-3 rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm text-error">
+            {generationError}
+          </p>
+        )}
+        {generationMessage && (
+          <p className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
+            {generationMessage}
+          </p>
+        )}
 
         {leadsStatus === "loading" ? (
           <SkeletonTable rows={5} cols={6} />

@@ -664,6 +664,21 @@ export const verifyOtp = createAsyncThunk(
   },
 );
 
+export const generateLeadsRemote = createAsyncThunk(
+  "app/generateLeadsRemote",
+  async (limit: number = 10, { rejectWithValue, getState }) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.generateLeads(limit, token!, teamId);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
 export const refreshSession = createAsyncThunk(
   "app/refreshSession",
   async (_, { rejectWithValue }) => {

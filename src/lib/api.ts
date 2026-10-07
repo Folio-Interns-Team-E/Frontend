@@ -262,6 +262,14 @@ export const api = {
   getLead(leadId: string, accessToken: string, teamId?: string | null) {
     return request<{ data: LeadApi }>(`/leads/${leadId}`, {}, accessToken, teamId);
   },
+  generateLeads(limit: number, accessToken: string, teamId?: string | null) {
+    return request<{ data: { created: number; skipped_duplicates: number; leads: LeadApi[] } }>(
+      "/leads/generate",
+      { method: "POST", body: JSON.stringify({ limit }) },
+      accessToken,
+      teamId,
+    );
+  },
   createLead(
     payload: {
       name: string;
