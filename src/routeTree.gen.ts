@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as MarketingRouteImport } from './routes/_marketing'
+import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppBillingRouteImport } from './routes/_app.billing'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppKnowledgeBaseRouteImport } from './routes/_app.knowledge-base'
@@ -44,6 +45,11 @@ const AuthRoute = AuthRouteImport.update({
 const MarketingRoute = MarketingRouteImport.update({
   id: '/_marketing',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppBillingRoute = AppBillingRouteImport.update({
   id: '/billing',
@@ -148,6 +154,7 @@ const AppBillingCancelRoute = AppBillingCancelRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
+  '/admin': typeof AppAdminRoute
   '/billing': typeof AppBillingRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
+  '/admin': typeof AppAdminRoute
   '/billing': typeof AppBillingRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
   '/_marketing': typeof MarketingRouteWithChildren
+  '/_app/admin': typeof AppAdminRoute
   '/_app/billing': typeof AppBillingRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/knowledge-base': typeof AppKnowledgeBaseRoute
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/billing'
     | '/dashboard'
     | '/knowledge-base'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/billing'
     | '/dashboard'
     | '/knowledge-base'
@@ -266,6 +277,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_auth'
     | '/_marketing'
+    | '/_app/admin'
     | '/_app/billing'
     | '/_app/dashboard'
     | '/_app/knowledge-base'
@@ -316,6 +328,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof MarketingRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/billing': {
       id: '/_app/billing'
@@ -473,6 +492,7 @@ const AppBillingRouteWithChildren = AppBillingRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRoute
   AppBillingRoute: typeof AppBillingRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
   AppKnowledgeBaseRoute: typeof AppKnowledgeBaseRoute
@@ -489,6 +509,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRoute,
   AppBillingRoute: AppBillingRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
   AppKnowledgeBaseRoute: AppKnowledgeBaseRoute,

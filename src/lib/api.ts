@@ -132,6 +132,9 @@ export type ApiUserTeam = {
 };
 
 export const api = {
+  getAdminOverview(accessToken: string, teamId: string) {
+    return request<{ data: AdminOverview }>("/admin/overview", {}, accessToken, teamId);
+  },
   securityActivity(accessToken: string, cursor?: string) {
     const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
     return request<{ data: { events: SecurityEventApi[]; next_cursor: string | null } }>(
@@ -746,4 +749,17 @@ export type LeadProviderStatus = {
   connected: boolean;
   monthly_limit: number;
   used_this_month: number;
+};
+
+export type AdminOverview = {
+  workspace: { id: string; name: string; created_at: string; icp_configured: boolean };
+  members: { total: number; by_role: Record<string, number> };
+  pipeline: { total_leads: number; by_status: Record<string, number>; average_score: number; qualification_rate: number };
+  outreach: { drafts: number; sent: number };
+  meetings: { total: number; by_status: Record<string, number> };
+  proposals: { total: number; by_outcome: Record<string, number>; win_rate: number };
+  knowledge_base: { total: number; by_status: Record<string, number> };
+  integrations: { gmail_connected: boolean; apollo_connected: boolean; apollo_used: number; apollo_limit: number };
+  billing: { tier: string; status: string; renews_or_ends_at: string | null };
+  recent_activity: Array<{ type: "lead" | "meeting" | "proposal"; label: string; detail: string; timestamp: string }>;
 };

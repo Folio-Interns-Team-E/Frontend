@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useAppSelector } from "../store/hooks";
 
 const navItems = [
   { to: "/dashboard", icon: "dashboard", label: "Dashboard" },
@@ -16,6 +17,7 @@ type SidebarProps = {
 };
 
 export function Sidebar({ onClose }: SidebarProps) {
+  const isAdmin = useAppSelector((state) => state.app.team.currentUserRole === "admin");
   const handleNavigate = () => {
     if (window.matchMedia("(max-width: 767px)").matches) onClose();
   };
@@ -41,6 +43,17 @@ export function Sidebar({ onClose }: SidebarProps) {
         Workspace
       </div>
       <nav className="relative flex-1 space-y-1 px-2.5 pb-4">
+        {isAdmin && (
+          <Link
+            to="/admin"
+            onClick={handleNavigate}
+            className="group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[12px] font-medium text-slate-400 transition-all hover:bg-white/[0.055] hover:text-white"
+            activeProps={{ className: "group relative flex items-center gap-3 rounded-lg bg-primary/14 px-3 py-2.5 text-[12px] font-semibold text-white ring-1 ring-inset ring-primary/24" }}
+          >
+            <span className="material-symbols-outlined text-[19px]">admin_panel_settings</span>
+            <span>Admin overview</span>
+          </Link>
+        )}
         {navItems.map((item) => (
           <Link
             key={item.to}
