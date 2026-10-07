@@ -679,6 +679,21 @@ export const generateLeadsRemote = createAsyncThunk(
   },
 );
 
+export const importLeadsRemote = createAsyncThunk(
+  "app/importLeadsRemote",
+  async (file: File, { rejectWithValue, getState }) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const res = await api.importLeads(file, token!, teamId);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
 export const refreshSession = createAsyncThunk(
   "app/refreshSession",
   async (_, { rejectWithValue }) => {

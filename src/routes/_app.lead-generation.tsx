@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { TopBar } from "../components/TopBar";
 import {
   discardLeadRemote,
   draftEmailRemote,
   generateLeadsRemote,
+  importLeadsRemote,
   qualifyLeadRemote,
 } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -38,6 +39,7 @@ function LeadGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [generationMessage, setGenerationMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const generateLeads = async () => {
     if (isGenerating) return;
@@ -56,6 +58,25 @@ function LeadGeneration() {
       setGenerationError(typeof error === "string" ? error : "Lead generation failed. Please try again.");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const importCsv = async (file?: File) => {
+    if (!file || isGenerating) return;
+    setIsGenerating(true);
+    setGenerationError(null);
+    setGenerationMessage(null);
+    try {
+      const result = await dispatch(importLeadsRemote(file)).unwrap();
+      setGenerationMessage(
+        `Imported ${result.created} leads; skipped ${result.skipped_duplicates} duplicates and ${result.invalid_rows} invalid rows.`,
+      );
+      await dispatch(fetchLeads()).unwrap();
+    } catch (error) {
+      setGenerationError(typeof error === "string" ? error : "CSV import failed. Please try again.");
+    } finally {
+      setIsGenerating(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -118,6 +139,22 @@ function LeadGeneration() {
           >
             <span className="material-symbols-outlined text-[18px]">bolt</span>
             {isGenerating ? "Generating..." : "Generate from ICP"}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(event) => void importCsv(event.target.files?.[0])}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isGenerating}
+            className="secondary-action w-full disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          >
+            <span className="material-symbols-outlined text-[18px]">upload_file</span>
+            Import CSV
           </button>
         </div>
 

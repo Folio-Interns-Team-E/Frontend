@@ -270,6 +270,13 @@ export const api = {
       teamId,
     );
   },
+  importLeads(file: File, accessToken: string, teamId?: string | null) {
+    const body = new FormData();
+    body.append("file", file);
+    return request<{ data: { created: number; skipped_duplicates: number; invalid_rows: number; leads: LeadApi[] } }>(
+      "/leads/import", { method: "POST", body }, accessToken, teamId,
+    );
+  },
   createLead(
     payload: {
       name: string;
