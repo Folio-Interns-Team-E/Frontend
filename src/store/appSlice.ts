@@ -163,7 +163,6 @@ type AppState = {
     calendlyApiKey: string;
     calendlyEventTypeId: string;
     apollo: boolean;
-    apolloApiKey: string;
   };
   team: {
     id: string | null;
@@ -240,7 +239,6 @@ export const initialState: AppState = {
     calendlyApiKey: "",
     calendlyEventTypeId: "",
     apollo: false,
-    apolloApiKey: "",
   },
   team: {
     id: null,

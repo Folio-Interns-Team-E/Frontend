@@ -277,6 +277,22 @@ export const api = {
       "/leads/import", { method: "POST", body }, accessToken, teamId,
     );
   },
+  getLeadProvider(accessToken: string, teamId?: string | null) {
+    return request<{ data: LeadProviderStatus }>("/leads/provider", {}, accessToken, teamId);
+  },
+  configureLeadProvider(apiKey: string, monthlyLimit: number, accessToken: string, teamId?: string | null) {
+    return request<{ data: LeadProviderStatus }>(
+      "/leads/provider",
+      { method: "PUT", body: JSON.stringify({ api_key: apiKey, monthly_limit: monthlyLimit }) },
+      accessToken,
+      teamId,
+    );
+  },
+  disconnectLeadProvider(accessToken: string, teamId?: string | null) {
+    return request<{ data: Record<string, never> }>(
+      "/leads/provider", { method: "DELETE" }, accessToken, teamId,
+    );
+  },
   createLead(
     payload: {
       name: string;
@@ -723,4 +739,11 @@ export type KnowledgeAssetApi = {
   presigned_url?: string;
   created_at: string;
   updated_at?: string;
+};
+
+export type LeadProviderStatus = {
+  provider: "apollo";
+  connected: boolean;
+  monthly_limit: number;
+  used_this_month: number;
 };

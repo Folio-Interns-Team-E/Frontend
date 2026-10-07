@@ -20,6 +20,8 @@ function migrateState(savedState: unknown) {
 
   const savedApp = (savedState as { app?: Partial<typeof appInitialState> }).app ?? {};
   const savedProposals = Array.isArray(savedApp.proposals) ? savedApp.proposals : [];
+  const savedIntegrations = { ...(savedApp.integrations ?? {}) } as Record<string, unknown>;
+  delete savedIntegrations.apolloApiKey;
 
   return {
     ...(savedState as object),
@@ -42,7 +44,7 @@ function migrateState(savedState: unknown) {
         })(),
       },
       profile: { ...appInitialState.profile, ...savedApp.profile },
-      integrations: { ...appInitialState.integrations, ...savedApp.integrations },
+      integrations: { ...appInitialState.integrations, ...savedIntegrations },
       team: { ...appInitialState.team, ...savedApp.team, status: "idle" as const },
       assistantMessages: [],
       chats: Array.isArray(savedApp.chats) ? savedApp.chats : [],

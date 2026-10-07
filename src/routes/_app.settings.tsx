@@ -17,6 +17,7 @@ function Settings() {
   const dispatch = useAppDispatch();
   const profile = useAppSelector((state) => state.app.profile);
   const auth = useAppSelector((state) => state.app.auth);
+  const team = useAppSelector((state) => state.app.team);
   const integrations = useAppSelector((state) => state.app.integrations);
   const [draft, setDraft] = useState(profile);
   const [saved, setSaved] = useState(false);
@@ -30,7 +31,13 @@ function Settings() {
   const [calendlyEventTypeId, setCalendlyEventTypeId] = useState(integrations.calendlyEventTypeId);
 
   const [apolloModalOpen, setApolloModalOpen] = useState(false);
-  const [apolloApiKey, setApolloApiKey] = useState(integrations.apolloApiKey);
+  const [apolloApiKey, setApolloApiKey] = useState("");
+  const [apolloMonthlyLimit, setApolloMonthlyLimit] = useState(100);
+  const [apolloUsed, setApolloUsed] = useState(0);
+  const [apolloConnected, setApolloConnected] = useState(false);
+  const [apolloLoading, setApolloLoading] = useState(true);
+  const [apolloSaving, setApolloSaving] = useState(false);
+  const [apolloError, setApolloError] = useState("");
 
   const token = auth.accessToken;
 
@@ -46,6 +53,20 @@ function Settings() {
       .catch(() => {})
       .finally(() => setGmailLoading(false));
   }, [token]);
+
+  useEffect(() => {
+    if (!token || !team.id) return;
+    setApolloLoading(true);
+    api.getLeadProvider(token, team.id)
+      .then((res) => {
+        setApolloConnected(res.data.connected);
+        setApolloMonthlyLimit(res.data.monthly_limit);
+        setApolloUsed(res.data.used_this_month);
+        dispatch(setIntegration({ integration: "apollo", value: res.data.connected }));
+      })
+      .catch(() => {})
+      .finally(() => setApolloLoading(false));
+  }, [token, team.id, dispatch]);
 
   const connectGmail = async () => {
     if (!token) return;
@@ -64,10 +85,40 @@ function Settings() {
     setCalendlyModalOpen(false);
   };
 
-  const saveApollo = () => {
-    dispatch(setIntegration({ integration: "apolloApiKey", value: apolloApiKey }));
-    dispatch(setIntegration({ integration: "apollo", value: !!apolloApiKey }));
-    setApolloModalOpen(false);
+  const saveApollo = async () => {
+    if (!token || !team.id) return;
+    setApolloSaving(true);
+    setApolloError("");
+    try {
+      const res = await api.configureLeadProvider(apolloApiKey, apolloMonthlyLimit, token, team.id);
+      setApolloConnected(true);
+      setApolloUsed(res.data.used_this_month);
+      setApolloApiKey("");
+      dispatch(setIntegration({ integration: "apollo", value: true }));
+      setApolloModalOpen(false);
+    } catch (error) {
+      setApolloError(error instanceof Error ? error.message : "Could not save Apollo settings");
+    } finally {
+      setApolloSaving(false);
+    }
+  };
+
+  const disconnectApollo = async () => {
+    if (!token || !team.id) return;
+    setApolloSaving(true);
+    setApolloError("");
+    try {
+      await api.disconnectLeadProvider(token, team.id);
+      setApolloConnected(false);
+      setApolloUsed(0);
+      setApolloApiKey("");
+      dispatch(setIntegration({ integration: "apollo", value: false }));
+      setApolloModalOpen(false);
+    } catch (error) {
+      setApolloError(error instanceof Error ? error.message : "Could not disconnect Apollo");
+    } finally {
+      setApolloSaving(false);
+    }
   };
 
   function saveProfile(event: FormEvent) {
@@ -138,9 +189,12 @@ function Settings() {
               icon="person_search"
               name="Apollo"
               description={
-                integrations.apollo ? "Connected" : "Pull leads using filters generated from your ICP."
+                apolloConnected
+                  ? `${apolloUsed} of ${apolloMonthlyLimit} monthly enrichment attempts used`
+                  : "Pull leads using filters generated from your ICP."
               }
-              connected={integrations.apollo}
+              connected={apolloConnected}
+              loading={apolloLoading}
               onToggle={() => setApolloModalOpen(true)}
             />
           </div>
@@ -254,8 +308,32 @@ function Settings() {
                   placeholder="Paste your Apollo API key"
                 />
               </label>
+              <label className="block text-sm font-semibold">
+                Monthly usage limit
+                <input
+                  type="number"
+                  min={1}
+                  max={10000}
+                  className="control mt-2 w-full px-4 py-2.5 font-normal outline-none"
+                  value={apolloMonthlyLimit}
+                  onChange={(e) => setApolloMonthlyLimit(Number(e.target.value))}
+                />
+                <span className="mt-1 block text-xs font-normal text-on-surface-variant">
+                  A workspace safety cap; Apollo may apply separate credit limits.
+                </span>
+              </label>
+              {apolloError && <p className="text-sm text-error">{apolloError}</p>}
             </div>
             <div className="flex justify-end gap-3 border-t border-outline-variant p-5">
+              {apolloConnected && (
+                <button
+                  onClick={disconnectApollo}
+                  disabled={apolloSaving}
+                  className="secondary-action mr-auto border-error/40 text-error"
+                >
+                  Disconnect
+                </button>
+              )}
               <button
                 onClick={() => setApolloModalOpen(false)}
                 className="secondary-action"
@@ -264,10 +342,10 @@ function Settings() {
               </button>
               <button
                 onClick={saveApollo}
-                disabled={!apolloApiKey}
+                disabled={!apolloApiKey || apolloSaving || apolloMonthlyLimit < 1}
                 className="primary-action disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Save
+                {apolloSaving ? "Saving…" : "Save securely"}
               </button>
             </div>
           </div>
