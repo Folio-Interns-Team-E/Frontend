@@ -586,6 +586,12 @@ export const api = {
   getCalcomStatus(accessToken: string, teamId: string) {
     return request<{ data: { connected: boolean; event_type_id?: string | null } }>("/integrations/calcom/status", {}, accessToken, teamId);
   },
+  startCalcomOAuth(accessToken: string, teamId: string) {
+    return request<{ data: { url: string } }>("/integrations/calcom/oauth/start", { method: "POST" }, accessToken, teamId);
+  },
+  configureCalcomEventType(eventTypeId: string, accessToken: string, teamId: string) {
+    return request<{ data: { connected: boolean; event_type_id: string; needs_event_type: boolean } }>("/integrations/calcom/event-type", { method: "PUT", body: JSON.stringify({ event_type_id: eventTypeId }) }, accessToken, teamId);
+  },
   configureCalcom(apiKey: string, eventTypeId: string, accessToken: string, teamId: string) {
     return request<{ data: { id: string; event_type_id: string } }>("/integrations/calcom", { method: "PUT", body: JSON.stringify({ cal_api_key: apiKey, cal_event_type_id: eventTypeId }) }, accessToken, teamId);
   },

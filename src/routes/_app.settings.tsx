@@ -27,12 +27,12 @@ function Settings() {
   const [gmailLoading, setGmailLoading] = useState(true);
 
   const [calendlyModalOpen, setCalendlyModalOpen] = useState(false);
-  const [calendlyApiKey, setCalendlyApiKey] = useState("");
   const [calendlyEventTypeId, setCalendlyEventTypeId] = useState("");
   const [calcomConnected, setCalcomConnected] = useState(false);
   const [calcomLoading, setCalcomLoading] = useState(true);
   const [calcomSaving, setCalcomSaving] = useState(false);
   const [calcomError, setCalcomError] = useState("");
+  const [calcomNeedsEventType, setCalcomNeedsEventType] = useState(false);
 
   const [apolloModalOpen, setApolloModalOpen] = useState(false);
   const [apolloApiKey, setApolloApiKey] = useState("");
@@ -74,11 +74,16 @@ function Settings() {
 
   useEffect(() => {
     if (!token || !team.id) return;
+    if (new URLSearchParams(window.location.search).get("calcom") === "failed") {
+      setCalcomError("Cal.com authorization was cancelled or could not be completed.");
+      setCalendlyModalOpen(true);
+    }
     setCalcomLoading(true);
     api.getCalcomStatus(token, team.id)
       .then((res) => {
         setCalcomConnected(res.data.connected);
         setCalendlyEventTypeId(res.data.event_type_id ?? "");
+        setCalcomNeedsEventType(Boolean(res.data.needs_event_type));
         dispatch(setIntegration({ integration: "calendly", value: res.data.connected }));
       })
       .catch(() => {})
@@ -95,18 +100,31 @@ function Settings() {
     }
   };
 
+  const connectCalcom = async () => {
+    if (!token || !team.id) return;
+    setCalcomSaving(true);
+    setCalcomError("");
+    try {
+      const response = await api.startCalcomOAuth(token, team.id);
+      window.location.href = response.data.url;
+    } catch (error) {
+      setCalcomError(error instanceof Error ? error.message : "Could not connect Cal.com");
+      setCalendlyModalOpen(true);
+    } finally {
+      setCalcomSaving(false);
+    }
+  };
+
   const saveCalendly = async () => {
     if (!token || !team.id) return;
     setCalcomSaving(true);
     setCalcomError("");
     try {
-      await api.configureCalcom(calendlyApiKey, calendlyEventTypeId, token, team.id);
-      setCalcomConnected(true);
-      setCalendlyApiKey("");
-      dispatch(setIntegration({ integration: "calendly", value: true }));
+      await api.configureCalcomEventType(calendlyEventTypeId, token, team.id);
+      setCalcomNeedsEventType(false);
       setCalendlyModalOpen(false);
     } catch (error) {
-      setCalcomError(error instanceof Error ? error.message : "Could not connect Cal.com");
+      setCalcomError(error instanceof Error ? error.message : "Could not save the Cal.com event type");
     } finally {
       setCalcomSaving(false);
     }
@@ -119,8 +137,8 @@ function Settings() {
     try {
       await api.disconnectCalcom(token, team.id);
       setCalcomConnected(false);
-      setCalendlyApiKey("");
       setCalendlyEventTypeId("");
+      setCalcomNeedsEventType(false);
       dispatch(setIntegration({ integration: "calendly", value: false }));
       setCalendlyModalOpen(false);
     } catch (error) {
@@ -224,12 +242,12 @@ function Settings() {
               name="Cal.com"
               description={
                 calcomConnected
-                  ? `Connected · Event type ${calendlyEventTypeId}`
+                  ? calcomNeedsEventType ? "Connected · Choose an event type" : `Connected · Event type ${calendlyEventTypeId}`
                   : "Schedule meetings and sync with your calendar."
               }
               connected={calcomConnected}
-              loading={calcomLoading}
-              onToggle={() => setCalendlyModalOpen(true)}
+              loading={calcomLoading || calcomSaving}
+              onToggle={() => calcomConnected ? setCalendlyModalOpen(true) : void connectCalcom()}
             />
             <Integration
               icon="person_search"
@@ -286,18 +304,8 @@ function Settings() {
             </div>
             <div className="space-y-4 p-5">
               <p className="text-sm text-on-surface-variant">
-                Enter a Cal.com API v2 key and numeric Event Type ID. The credentials are verified before they are encrypted and saved.
+                SalesSync is authorized through Cal.com OAuth. Enter the numeric Event Type ID that should be used for workspace bookings.
               </p>
-              <label className="block text-sm font-semibold">
-                API Key
-                <input
-                  type="password"
-                  className="control mt-2 w-full px-4 py-2.5 font-normal outline-none"
-                  value={calendlyApiKey}
-                  onChange={(e) => setCalendlyApiKey(e.target.value)}
-                  placeholder="Paste your Cal.com API key"
-                />
-              </label>
               <label className="block text-sm font-semibold">
                 Event Type ID
                 <input
@@ -324,10 +332,10 @@ function Settings() {
               </button>
               <button
                 onClick={saveCalendly}
-                disabled={!calendlyApiKey || !calendlyEventTypeId || calcomSaving}
+                disabled={!calendlyEventTypeId || calcomSaving}
                 className="primary-action disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {calcomSaving ? "Verifying…" : "Verify and save"}
+                {calcomSaving ? "Verifying…" : "Save event type"}
               </button>
             </div>
           </div>
