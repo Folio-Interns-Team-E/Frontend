@@ -297,6 +297,37 @@ export const api = {
       teamId,
     );
   },
+  async downloadWorkspaceExport(
+    resource: "leads" | "contacts" | "opportunities" | "audit",
+    accessToken: string,
+    teamId: string,
+  ) {
+    const headers = new Headers({
+      Authorization: `Bearer ${currentAccessToken ?? accessToken}`,
+      "X-Team-Id": teamId,
+    });
+    let response = await fetch(`${API_URL}/admin/exports/${resource}.csv`, {
+      headers,
+      credentials: "include",
+    });
+    if (response.status === 401) {
+      const refreshedToken = await refreshAccessToken();
+      if (refreshedToken) {
+        headers.set("Authorization", `Bearer ${refreshedToken}`);
+        response = await fetch(`${API_URL}/admin/exports/${resource}.csv`, {
+          headers,
+          credentials: "include",
+        });
+      }
+    }
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as { detail?: string } | null;
+      throw new Error(data?.detail ?? `Export failed with status ${response.status}`);
+    }
+    const disposition = response.headers.get("Content-Disposition") ?? "";
+    const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? `salesync-${resource}.csv`;
+    return { blob: await response.blob(), filename };
+  },
   securityActivity(accessToken: string, cursor?: string) {
     const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
     return request<{ data: { events: SecurityEventApi[]; next_cursor: string | null } }>(
