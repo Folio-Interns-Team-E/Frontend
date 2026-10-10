@@ -9,6 +9,7 @@ import { toggleSidebar } from "../store/appSlice";
 export function TopBar({ title }: { title: string }) {
   const dispatch = useAppDispatch();
   const profile = useAppSelector((state) => state.app.profile);
+  const team = useAppSelector((state) => state.app.team);
   const notifications = useAppSelector((state) => state.app.notifications);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -74,7 +75,26 @@ export function TopBar({ title }: { title: string }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-1 sm:gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <label className="control hidden h-9 min-h-0 w-[220px] items-center gap-2 px-3 lg:flex">
+          <span className="material-symbols-outlined text-[17px] text-slate-400">search</span>
+          <input
+            type="search"
+            aria-label="Search workspace"
+            placeholder="Search leads, accounts..."
+            className="min-w-0 flex-1 bg-transparent text-[11px] font-medium outline-none placeholder:text-slate-400"
+          />
+          <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[8px] font-bold text-slate-400">
+            ⌘ K
+          </kbd>
+        </label>
+        <Link
+          to="/lead-generation"
+          className="hidden h-9 items-center gap-1.5 rounded-lg bg-[#0d2d39] px-3 text-[11px] font-bold text-white shadow-sm transition hover:bg-primary sm:flex"
+        >
+          <span className="material-symbols-outlined text-[16px]">add</span>
+          New prospect
+        </Link>
         <button
           ref={notificationsButtonRef}
           onClick={() => {
@@ -136,7 +156,7 @@ export function TopBar({ title }: { title: string }) {
             )}
           </div>
         )}
-       
+
         <Link
           to="/settings"
           className="ml-1 hidden items-center gap-2 border-l border-outline-variant/45 pl-3 sm:flex"
@@ -150,7 +170,17 @@ export function TopBar({ title }: { title: string }) {
               .slice(0, 2)
               .toUpperCase()}
           </span>
-         
+          <span className="hidden min-w-0 xl:block">
+            <span className="block max-w-28 truncate text-[10px] font-bold text-slate-700">
+              {profile.name || "Sales user"}
+            </span>
+            <span className="block max-w-28 truncate text-[8px] capitalize text-slate-400">
+              {team.currentUserRole || "member"}
+            </span>
+          </span>
+          <span className="material-symbols-outlined hidden text-[15px] text-slate-400 xl:block">
+            expand_more
+          </span>
         </Link>
       </div>
     </header>

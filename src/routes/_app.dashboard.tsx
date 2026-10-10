@@ -135,9 +135,23 @@ function Index() {
   const proposals = useAppSelector((state) => state.app.proposals);
   const proposalsStatus = useAppSelector((state) => state.app.proposalsStatus);
   const profile = useAppSelector((state) => state.app.profile);
+  const qualifiedCount = leads.filter((lead) =>
+    ["Qualified", "Drafted", "Sent", "Replied"].includes(lead.status),
+  ).length;
+  const contactedCount = leads.filter((lead) => ["Sent", "Replied"].includes(lead.status)).length;
+  const repliedCount = leads.filter((lead) => lead.status === "Replied").length;
+  const wonCount = proposals.filter((proposal) => proposal.outcome === "Won").length;
+  const percentage = (value: number, total: number) =>
+    total ? `${Math.round((value / total) * 100)}%` : "0%";
 
   const [leadModalOpen, setLeadModalOpen] = useState(false);
-  const [leadForm, setLeadForm] = useState({ name: "", email: "", company: "", title: "", source: "" });
+  const [leadForm, setLeadForm] = useState({
+    name: "",
+    email: "",
+    company: "",
+    title: "",
+    source: "",
+  });
   const [leadSaving, setLeadSaving] = useState(false);
 
   useEffect(() => {
@@ -314,7 +328,36 @@ function Index() {
           </div>
         </section>
 
-        <section className="section-panel p-4 sm:p-5">
+        <nav
+          className="flex items-center gap-1 overflow-x-auto border-b border-outline-variant/45"
+          aria-label="Dashboard sections"
+        >
+          {[
+            { label: "Overview", target: "performance", icon: "monitoring" },
+            { label: "Pipeline", target: "pipeline", icon: "account_tree" },
+            { label: "Activity", target: "activity", icon: "bolt" },
+            { label: "ICP settings", target: "icp", icon: "tune" },
+          ].map((tab, index) => (
+            <button
+              key={tab.target}
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById(tab.target)
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+              className={`flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-[11px] font-bold transition ${index === 0 ? "border-primary text-primary" : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800"}`}
+            >
+              <span className="material-symbols-outlined text-[16px]">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+          <div className="ml-auto hidden items-center gap-2 pb-2 text-[9px] font-semibold text-slate-400 sm:flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live workspace data
+          </div>
+        </nav>
+
+        <section id="icp" className="section-panel scroll-mt-24 p-4 sm:p-5">
           <div className="mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary">tune</span>
             <p className="text-sm font-bold text-on-surface">Ideal Customer Profile</p>
@@ -393,7 +436,66 @@ function Index() {
           </section>
         )}
 
-        <section className="section-panel">
+        <section id="performance" className="section-panel scroll-mt-24">
+          <div className="section-header">
+            <div>
+              <p className="section-heading">Revenue intelligence</p>
+              <h2 className="mt-1 text-[17px] font-extrabold tracking-tight">Funnel performance</h2>
+            </div>
+            <span className="rounded-full border border-outline-variant/50 bg-slate-50 px-3 py-1 text-[9px] font-bold text-slate-500">
+              All time
+            </span>
+          </div>
+          <div className="grid divide-y divide-outline-variant/40 sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4">
+            {[
+              {
+                label: "Qualification rate",
+                value: percentage(qualifiedCount, leads.length),
+                detail: `${qualifiedCount} sales-ready leads`,
+                icon: "verified",
+                tone: "text-amber-600 bg-amber-50",
+              },
+              {
+                label: "Reply rate",
+                value: percentage(repliedCount, contactedCount),
+                detail: `${repliedCount} positive responses`,
+                icon: "mark_email_read",
+                tone: "text-cyan-700 bg-cyan-50",
+              },
+              {
+                label: "Meeting conversion",
+                value: percentage(meetings.length, Math.max(contactedCount, meetings.length)),
+                detail: `${meetings.length} meetings created`,
+                icon: "event_available",
+                tone: "text-violet-700 bg-violet-50",
+              },
+              {
+                label: "Closed won",
+                value: wonCount.toString(),
+                detail: `${proposals.length} proposals tracked`,
+                icon: "trophy",
+                tone: "text-emerald-700 bg-emerald-50",
+              },
+            ].map((metric) => (
+              <div key={metric.label} className="flex items-center gap-4 p-5">
+                <span
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${metric.tone}`}
+                >
+                  <span className="material-symbols-outlined text-[19px]">{metric.icon}</span>
+                </span>
+                <div>
+                  <p className="text-[20px] font-black tracking-tight text-slate-900">
+                    {metric.value}
+                  </p>
+                  <p className="text-[11px] font-bold text-slate-700">{metric.label}</p>
+                  <p className="mt-0.5 text-[9px] text-slate-400">{metric.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="pipeline" className="section-panel scroll-mt-24">
           <div className="section-header flex-row items-center">
             <div>
               <h2 className="text-[17px] font-extrabold tracking-tight text-on-surface">
@@ -477,7 +579,7 @@ function Index() {
           </div>
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
+        <section id="activity" className="grid scroll-mt-24 gap-5 xl:grid-cols-[1.35fr_0.65fr]">
           <div className="app-card overflow-hidden">
             <div className="flex items-center justify-between border-b border-outline-variant/50 px-5 py-4">
               <div>
