@@ -87,11 +87,13 @@ function SequencesPage() {
             {error}
           </div>
         )}
-        <section className="grid grid-cols-3 gap-3">
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           {[
             ["Total sequences", items.length, "conversion_path"],
             ["Active", items.filter((x) => x.status === "Active").length, "play_circle"],
             ["Enrolled leads", items.reduce((a, x) => a + x.active_enrollments, 0), "group"],
+            ["Emails sent", items.reduce((a, x) => a + x.sent_deliveries, 0), "send"],
+            ["Failed", items.reduce((a, x) => a + x.failed_deliveries, 0), "error"],
           ].map(([l, v, i]) => (
             <div key={l} className="metric-card p-4">
               <span className="material-symbols-outlined text-primary">{i}</span>

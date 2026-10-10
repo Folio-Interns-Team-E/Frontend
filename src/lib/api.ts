@@ -178,6 +178,8 @@ export type SequenceApi = {
   daily_limit: number;
   stop_on_reply: boolean;
   active_enrollments: number;
+  sent_deliveries: number;
+  failed_deliveries: number;
   steps: { id: string; position: number; delay_days: number; subject: string; body: string }[];
   created_at: string;
   updated_at: string;
