@@ -215,6 +215,16 @@ export type SequenceEnrollmentApi = {
   }[];
 };
 
+export type NotificationApi = {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  link: string | null;
+  is_read: boolean;
+  created_at: string;
+};
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -285,6 +295,25 @@ export type ApiUserTeam = {
 };
 
 export const api = {
+  getNotifications(accessToken: string, teamId: string) {
+    return request<{ data: NotificationApi[] }>("/notifications/", {}, accessToken, teamId);
+  },
+  markAllNotificationsRead(accessToken: string, teamId: string) {
+    return request<{ data: { updated: number } }>(
+      "/notifications/read-all",
+      { method: "POST" },
+      accessToken,
+      teamId,
+    );
+  },
+  markNotificationRead(id: string, accessToken: string, teamId: string) {
+    return request<{ data: Record<string, never> }>(
+      `/notifications/${id}/read`,
+      { method: "POST" },
+      accessToken,
+      teamId,
+    );
+  },
   getAdminOverview(accessToken: string, teamId: string) {
     return request<{ data: AdminOverview }>("/admin/overview", {}, accessToken, teamId);
   },

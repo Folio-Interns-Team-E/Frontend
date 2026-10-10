@@ -1,9 +1,8 @@
 // TopBar.tsx
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { markNotificationsRead } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { api, SearchResultApi } from "../lib/api";
+import { api, NotificationApi, SearchResultApi } from "../lib/api";
 
 import { toggleSidebar } from "../store/appSlice";
 
@@ -11,13 +10,13 @@ export function TopBar({ title }: { title: string }) {
   const dispatch = useAppDispatch();
   const profile = useAppSelector((state) => state.app.profile);
   const team = useAppSelector((state) => state.app.team);
-  const notifications = useAppSelector((state) => state.app.notifications);
+  const [notifications, setNotifications] = useState<NotificationApi[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResultApi[]>([]);
   const accessToken = useAppSelector((state) => state.app.auth.accessToken);
-  const unreadCount = notifications.filter((notification) => notification.unread).length;
+  const unreadCount = notifications.filter((notification) => !notification.is_read).length;
   const sidebarOpen = useAppSelector((state) => state.app.sidebarOpen);
 
   const notificationsRef = useRef<HTMLDivElement>(null);
@@ -67,6 +66,37 @@ export function TopBar({ title }: { title: string }) {
     }, 250);
     return () => window.clearTimeout(timer);
   }, [search, accessToken, team.id]);
+
+  useEffect(() => {
+    if (!accessToken || !team.id) {
+      setNotifications([]);
+      return;
+    }
+    const loadNotifications = () => {
+      api
+        .getNotifications(accessToken, team.id!)
+        .then((response) => setNotifications(response.data))
+        .catch(() => {});
+    };
+    loadNotifications();
+    const timer = window.setInterval(loadNotifications, 60_000);
+    return () => window.clearInterval(timer);
+  }, [accessToken, team.id]);
+
+  async function openNotifications() {
+    const opening = !notificationsOpen;
+    setNotificationsOpen(opening);
+    setHelpOpen(false);
+    if (opening && unreadCount && accessToken && team.id) {
+      setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
+      try {
+        await api.markAllNotificationsRead(accessToken, team.id);
+      } catch {
+        const response = await api.getNotifications(accessToken, team.id).catch(() => null);
+        if (response) setNotifications(response.data);
+      }
+    }
+  }
 
   return (
     <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-outline-variant/35 bg-white/95 px-4 shadow-[0_1px_8px_rgba(15,23,42,0.025)] backdrop-blur-xl sm:px-6">
@@ -150,11 +180,7 @@ export function TopBar({ title }: { title: string }) {
         </Link>
         <button
           ref={notificationsButtonRef}
-          onClick={() => {
-            setNotificationsOpen((open) => !open);
-            setHelpOpen(false);
-            if (!notificationsOpen) dispatch(markNotificationsRead());
-          }}
+          onClick={() => void openNotifications()}
           className="icon-button relative"
           aria-label="Open notifications"
         >
@@ -186,11 +212,16 @@ export function TopBar({ title }: { title: string }) {
             ) : (
               <div className="max-h-[360px] divide-y divide-outline-variant/50 overflow-y-auto">
                 {notifications.slice(0, 8).map((notification) => (
-                  <div key={notification.id} className="px-5 py-4">
+                  <Link
+                    key={notification.id}
+                    to={(notification.link || "/dashboard") as "/dashboard"}
+                    onClick={() => setNotificationsOpen(false)}
+                    className="block px-5 py-4 hover:bg-slate-50"
+                  >
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                         <span className="material-symbols-outlined text-[17px]">
-                          {notification.unread ? "notifications_active" : "task_alt"}
+                          {!notification.is_read ? "notifications_active" : "task_alt"}
                         </span>
                       </div>
                       <div>
@@ -199,11 +230,11 @@ export function TopBar({ title }: { title: string }) {
                           {notification.body}
                         </p>
                         <p className="mt-2 text-[10px] font-semibold text-slate-400">
-                          {notification.time}
+                          {new Date(notification.created_at).toLocaleString()}
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
