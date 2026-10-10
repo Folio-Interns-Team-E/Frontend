@@ -115,6 +115,60 @@ export type OpportunitySummaryApi = {
   won_value: string;
 };
 
+export type AccountApi = {
+  id: string;
+  team_id: string;
+  owner_id: string | null;
+  name: string;
+  domain: string | null;
+  industry: string | null;
+  employee_count: string | null;
+  annual_revenue: string | null;
+  country: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type ContactApi = {
+  id: string;
+  team_id: string;
+  account_id: string | null;
+  account_name: string | null;
+  owner_id: string | null;
+  first_name: string;
+  last_name: string;
+  email: string | null;
+  phone: string | null;
+  job_title: string | null;
+  lifecycle_stage: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type SalesTaskApi = {
+  id: string;
+  team_id: string;
+  owner_id: string;
+  contact_id: string | null;
+  opportunity_id: string | null;
+  title: string;
+  task_type: string;
+  priority: string;
+  status: string;
+  due_at: string | null;
+  completed_at: string | null;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type SearchResultApi = {
+  id: string;
+  type: string;
+  title: string;
+  subtitle: string;
+  url: string;
+};
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -354,6 +408,74 @@ export const api = {
     return request<{ data: Record<string, never> }>(
       `/opportunities/${opportunityId}`,
       { method: "DELETE" },
+      accessToken,
+      teamId,
+    );
+  },
+
+  // === CRM ===
+  getAccounts(accessToken: string, teamId?: string | null) {
+    return request<{ data: AccountApi[] }>("/crm/accounts", {}, accessToken, teamId);
+  },
+  createAccount(
+    payload: Partial<AccountApi> & { name: string },
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: AccountApi }>(
+      "/crm/accounts",
+      { method: "POST", body: JSON.stringify(payload) },
+      accessToken,
+      teamId,
+    );
+  },
+  getContacts(accessToken: string, teamId?: string | null) {
+    return request<{ data: ContactApi[] }>("/crm/contacts", {}, accessToken, teamId);
+  },
+  createContact(
+    payload: Partial<ContactApi> & { first_name: string },
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: ContactApi }>(
+      "/crm/contacts",
+      { method: "POST", body: JSON.stringify(payload) },
+      accessToken,
+      teamId,
+    );
+  },
+  getSalesTasks(scope: "mine" | "team", accessToken: string, teamId?: string | null) {
+    return request<{ data: SalesTaskApi[] }>(`/crm/tasks?scope=${scope}`, {}, accessToken, teamId);
+  },
+  createSalesTask(
+    payload: Partial<SalesTaskApi> & { title: string },
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: SalesTaskApi }>(
+      "/crm/tasks",
+      { method: "POST", body: JSON.stringify(payload) },
+      accessToken,
+      teamId,
+    );
+  },
+  updateSalesTask(
+    id: string,
+    payload: Partial<SalesTaskApi>,
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: SalesTaskApi }>(
+      `/crm/tasks/${id}`,
+      { method: "PATCH", body: JSON.stringify(payload) },
+      accessToken,
+      teamId,
+    );
+  },
+  searchWorkspace(query: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: SearchResultApi[] }>(
+      `/crm/search?q=${encodeURIComponent(query)}`,
+      {},
       accessToken,
       teamId,
     );

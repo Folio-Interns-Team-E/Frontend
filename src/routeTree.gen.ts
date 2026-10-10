@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppBillingRouteImport } from './routes/_app.billing'
+import { Route as AppCrmRouteImport } from './routes/_app.crm'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDealsRouteImport } from './routes/_app.deals'
 import { Route as AppKnowledgeBaseRouteImport } from './routes/_app.knowledge-base'
@@ -55,6 +56,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
 const AppBillingRoute = AppBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCrmRoute = AppCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
   '/admin': typeof AppAdminRoute
   '/billing': typeof AppBillingRouteWithChildren
+  '/crm': typeof AppCrmRoute
   '/dashboard': typeof AppDashboardRoute
   '/deals': typeof AppDealsRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
   '/admin': typeof AppAdminRoute
   '/billing': typeof AppBillingRouteWithChildren
+  '/crm': typeof AppCrmRoute
   '/dashboard': typeof AppDashboardRoute
   '/deals': typeof AppDealsRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
@@ -213,6 +221,7 @@ export interface FileRoutesById {
   '/_marketing': typeof MarketingRouteWithChildren
   '/_app/admin': typeof AppAdminRoute
   '/_app/billing': typeof AppBillingRouteWithChildren
+  '/_app/crm': typeof AppCrmRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/deals': typeof AppDealsRoute
   '/_app/knowledge-base': typeof AppKnowledgeBaseRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/billing'
+    | '/crm'
     | '/dashboard'
     | '/deals'
     | '/knowledge-base'
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/billing'
+    | '/crm'
     | '/dashboard'
     | '/deals'
     | '/knowledge-base'
@@ -290,6 +301,7 @@ export interface FileRouteTypes {
     | '/_marketing'
     | '/_app/admin'
     | '/_app/billing'
+    | '/_app/crm'
     | '/_app/dashboard'
     | '/_app/deals'
     | '/_app/knowledge-base'
@@ -353,6 +365,13 @@ declare module '@tanstack/react-router' {
       path: '/billing'
       fullPath: '/billing'
       preLoaderRoute: typeof AppBillingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/crm': {
+      id: '/_app/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof AppCrmRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -513,6 +532,7 @@ const AppBillingRouteWithChildren = AppBillingRoute._addFileChildren(
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppBillingRoute: typeof AppBillingRouteWithChildren
+  AppCrmRoute: typeof AppCrmRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDealsRoute: typeof AppDealsRoute
   AppKnowledgeBaseRoute: typeof AppKnowledgeBaseRoute
@@ -531,6 +551,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppBillingRoute: AppBillingRouteWithChildren,
+  AppCrmRoute: AppCrmRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDealsRoute: AppDealsRoute,
   AppKnowledgeBaseRoute: AppKnowledgeBaseRoute,
