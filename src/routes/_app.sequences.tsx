@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { api, SequenceApi } from "../lib/api";
+import { api, EmailSuppressionApi, SequenceApi } from "../lib/api";
 import { TopBar } from "../components/TopBar";
 import { useAppSelector } from "../store/hooks";
 
@@ -18,6 +18,9 @@ function SequencesPage() {
   const [enroll, setEnroll] = useState<SequenceApi | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [suppressionOpen, setSuppressionOpen] = useState(false);
+  const [suppressions, setSuppressions] = useState<EmailSuppressionApi[]>([]);
+  const [suppressionEmail, setSuppressionEmail] = useState("");
   const [name, setName] = useState("");
   const [limit, setLimit] = useState(40);
   const [steps, setSteps] = useState([{ position: 0, delay_days: 0, subject: "", body: "" }]);
@@ -66,6 +69,27 @@ function SequencesPage() {
       setError(e instanceof Error ? e.message : "Could not enroll leads");
     }
   }
+  async function openSuppressions() {
+    if (!token || !team.id) return;
+    try {
+      setSuppressions((await api.getEmailSuppressions(token, team.id)).data);
+      setSuppressionOpen(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load suppression list");
+    }
+  }
+  async function addSuppression(e: FormEvent) {
+    e.preventDefault();
+    if (!token || !team.id) return;
+    await api.addEmailSuppression(suppressionEmail, token, team.id);
+    setSuppressionEmail("");
+    setSuppressions((await api.getEmailSuppressions(token, team.id)).data);
+  }
+  async function removeSuppression(id: string) {
+    if (!token || !team.id) return;
+    await api.removeEmailSuppression(id, token, team.id);
+    setSuppressions(suppressions.filter((item) => item.id !== id));
+  }
   return (
     <>
       <TopBar title="Sequences" />
@@ -78,9 +102,14 @@ function SequencesPage() {
               Build consistent multi-step follow-up journeys for qualified leads.
             </p>
           </div>
-          <button onClick={() => setModal(true)} className="primary-action">
-            <span className="material-symbols-outlined text-[17px]">add</span>New sequence
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => void openSuppressions()} className="secondary-action">
+              <span className="material-symbols-outlined text-[17px]">block</span>Suppression list
+            </button>
+            <button onClick={() => setModal(true)} className="primary-action">
+              <span className="material-symbols-outlined text-[17px]">add</span>New sequence
+            </button>
+          </div>
         </section>
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
@@ -319,6 +348,29 @@ function SequencesPage() {
               >
                 Enroll {selected.length} leads
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {suppressionOpen && (
+        <div className="modal-backdrop">
+          <div className="modal-surface max-w-xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+              <div><p className="section-heading">Deliverability</p><h2 className="mt-1 text-lg font-black">Suppression list</h2></div>
+              <button onClick={() => setSuppressionOpen(false)} className="icon-button"><span className="material-symbols-outlined">close</span></button>
+            </div>
+            <form onSubmit={addSuppression} className="flex gap-2 border-b border-slate-200 p-5">
+              <input required type="email" value={suppressionEmail} onChange={(e) => setSuppressionEmail(e.target.value)} className="control flex-1 px-3 text-sm" placeholder="person@company.com" />
+              <button className="primary-action">Suppress</button>
+            </form>
+            <div className="custom-scrollbar max-h-80 divide-y divide-slate-100 overflow-y-auto">
+              {suppressions.length ? suppressions.map((item) => (
+                <div key={item.id} className="flex items-center gap-3 px-6 py-3">
+                  <span className="material-symbols-outlined text-[18px] text-red-500">block</span>
+                  <div className="min-w-0 flex-1"><p className="truncate text-xs font-bold">{item.email}</p><p className="text-[9px] text-slate-400">{item.reason} · {item.source}</p></div>
+                  <button onClick={() => void removeSuppression(item.id)} className="icon-button" title="Remove"><span className="material-symbols-outlined text-[17px]">delete</span></button>
+                </div>
+              )) : <div className="empty-state py-10"><p className="text-xs">No suppressed addresses.</p></div>}
             </div>
           </div>
         </div>

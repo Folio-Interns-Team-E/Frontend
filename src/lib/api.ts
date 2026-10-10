@@ -185,6 +185,14 @@ export type SequenceApi = {
   updated_at: string;
 };
 
+export type EmailSuppressionApi = {
+  id: string;
+  email: string;
+  reason: string;
+  source: string;
+  created_at: string;
+};
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -529,6 +537,30 @@ export const api = {
     return request<{ data: { enrolled: number; skipped: number } }>(
       `/sequences/${id}/enroll`,
       { method: "POST", body: JSON.stringify({ lead_ids: leadIds }) },
+      accessToken,
+      teamId,
+    );
+  },
+  getEmailSuppressions(accessToken: string, teamId?: string | null) {
+    return request<{ data: EmailSuppressionApi[] }>(
+      "/sequences/suppressions",
+      {},
+      accessToken,
+      teamId,
+    );
+  },
+  addEmailSuppression(email: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: { id: string } }>(
+      "/sequences/suppressions",
+      { method: "POST", body: JSON.stringify({ email, reason: "Manual" }) },
+      accessToken,
+      teamId,
+    );
+  },
+  removeEmailSuppression(id: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: Record<string, never> }>(
+      `/sequences/suppressions/${id}`,
+      { method: "DELETE" },
       accessToken,
       teamId,
     );
