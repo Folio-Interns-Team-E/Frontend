@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { api, EmailSuppressionApi, SequenceApi } from "../lib/api";
+import { api, EmailSuppressionApi, SequenceApi, SequenceEnrollmentApi } from "../lib/api";
 import { TopBar } from "../components/TopBar";
 import { useAppSelector } from "../store/hooks";
 
@@ -22,6 +22,8 @@ function SequencesPage() {
   const [suppressions, setSuppressions] = useState<EmailSuppressionApi[]>([]);
   const [suppressionEmail, setSuppressionEmail] = useState("");
   const [deleting, setDeleting] = useState<SequenceApi | null>(null);
+  const [historySequence, setHistorySequence] = useState<SequenceApi | null>(null);
+  const [enrollments, setEnrollments] = useState<SequenceEnrollmentApi[]>([]);
   const [name, setName] = useState("");
   const [limit, setLimit] = useState(40);
   const [steps, setSteps] = useState([{ position: 0, delay_days: 0, subject: "", body: "" }]);
@@ -101,6 +103,43 @@ function SequencesPage() {
     await api.removeEmailSuppression(id, token, team.id);
     setSuppressions(suppressions.filter((item) => item.id !== id));
   }
+  async function openHistory(item: SequenceApi) {
+    if (!token || !team.id) return;
+    try {
+      setEnrollments((await api.getSequenceEnrollments(item.id, token, team.id)).data);
+      setHistorySequence(item);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load enrollment history");
+    }
+  }
+  async function cancelEnrollment(enrollmentId: string) {
+    if (!historySequence || !token || !team.id) return;
+    await api.cancelSequenceEnrollment(historySequence.id, enrollmentId, token, team.id);
+    setEnrollments((await api.getSequenceEnrollments(historySequence.id, token, team.id)).data);
+    await load();
+  }
+  async function restartEnrollment(item: SequenceEnrollmentApi) {
+    if (!historySequence || !token || !team.id) return;
+    const allowReplied = item.status === "Replied";
+    if (
+      allowReplied &&
+      !window.confirm("This lead already replied. Start a new outreach run anyway?")
+    )
+      return;
+    try {
+      await api.restartSequenceEnrollment(
+        historySequence.id,
+        item.id,
+        allowReplied,
+        token,
+        team.id,
+      );
+      setEnrollments((await api.getSequenceEnrollments(historySequence.id, token, team.id)).data);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not re-enroll lead");
+    }
+  }
   return (
     <>
       <TopBar title="Sequences" />
@@ -165,6 +204,9 @@ function SequencesPage() {
                     </p>
                   </div>
                   <div className="flex gap-2">
+                    <button onClick={() => void openHistory(item)} className="secondary-action">
+                      <span className="material-symbols-outlined text-[17px]">history</span>History
+                    </button>
                     <button
                       onClick={() => setDeleting(item)}
                       className="icon-button text-red-500 hover:bg-red-50"
@@ -374,21 +416,52 @@ function SequencesPage() {
         <div className="modal-backdrop">
           <div className="modal-surface max-w-xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
-              <div><p className="section-heading">Deliverability</p><h2 className="mt-1 text-lg font-black">Suppression list</h2></div>
-              <button onClick={() => setSuppressionOpen(false)} className="icon-button"><span className="material-symbols-outlined">close</span></button>
+              <div>
+                <p className="section-heading">Deliverability</p>
+                <h2 className="mt-1 text-lg font-black">Suppression list</h2>
+              </div>
+              <button onClick={() => setSuppressionOpen(false)} className="icon-button">
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
             <form onSubmit={addSuppression} className="flex gap-2 border-b border-slate-200 p-5">
-              <input required type="email" value={suppressionEmail} onChange={(e) => setSuppressionEmail(e.target.value)} className="control flex-1 px-3 text-sm" placeholder="person@company.com" />
+              <input
+                required
+                type="email"
+                value={suppressionEmail}
+                onChange={(e) => setSuppressionEmail(e.target.value)}
+                className="control flex-1 px-3 text-sm"
+                placeholder="person@company.com"
+              />
               <button className="primary-action">Suppress</button>
             </form>
             <div className="custom-scrollbar max-h-80 divide-y divide-slate-100 overflow-y-auto">
-              {suppressions.length ? suppressions.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 px-6 py-3">
-                  <span className="material-symbols-outlined text-[18px] text-red-500">block</span>
-                  <div className="min-w-0 flex-1"><p className="truncate text-xs font-bold">{item.email}</p><p className="text-[9px] text-slate-400">{item.reason} · {item.source}</p></div>
-                  <button onClick={() => void removeSuppression(item.id)} className="icon-button" title="Remove"><span className="material-symbols-outlined text-[17px]">delete</span></button>
+              {suppressions.length ? (
+                suppressions.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3 px-6 py-3">
+                    <span className="material-symbols-outlined text-[18px] text-red-500">
+                      block
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-bold">{item.email}</p>
+                      <p className="text-[9px] text-slate-400">
+                        {item.reason} · {item.source}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => void removeSuppression(item.id)}
+                      className="icon-button"
+                      title="Remove"
+                    >
+                      <span className="material-symbols-outlined text-[17px]">delete</span>
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-state py-10">
+                  <p className="text-xs">No suppressed addresses.</p>
                 </div>
-              )) : <div className="empty-state py-10"><p className="text-xs">No suppressed addresses.</p></div>}
+              )}
             </div>
           </div>
         </div>
@@ -401,11 +474,94 @@ function SequencesPage() {
             </div>
             <h2 className="mt-4 text-lg font-black">Delete sequence?</h2>
             <p className="mt-2 text-xs leading-5 text-slate-500">
-              <span className="font-bold text-slate-700">{deleting.name}</span> and its enrollment and delivery history will be permanently deleted. Your leads will not be deleted.
+              <span className="font-bold text-slate-700">{deleting.name}</span> and its enrollment
+              and delivery history will be permanently deleted. Your leads will not be deleted.
             </p>
             <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setDeleting(null)} className="secondary-action">Cancel</button>
-              <button onClick={() => void deleteSequence()} className="rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700">Delete sequence</button>
+              <button onClick={() => setDeleting(null)} className="secondary-action">
+                Cancel
+              </button>
+              <button
+                onClick={() => void deleteSequence()}
+                className="rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700"
+              >
+                Delete sequence
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {historySequence && (
+        <div className="modal-backdrop">
+          <div className="modal-surface max-w-4xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+              <div>
+                <p className="section-heading">Enrollment history</p>
+                <h2 className="mt-1 text-lg font-black">{historySequence.name}</h2>
+              </div>
+              <button onClick={() => setHistorySequence(null)} className="icon-button">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="custom-scrollbar max-h-[65vh] divide-y divide-slate-100 overflow-y-auto">
+              {enrollments.length ? (
+                enrollments.map((item) => (
+                  <div key={item.id} className="p-5">
+                    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-black">{item.lead_name}</p>
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[8px] font-black uppercase text-slate-600">
+                            {item.status}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-[10px] text-slate-400">
+                          {item.lead_email} · enrolled {new Date(item.enrolled_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {item.status === "Active" ? (
+                          <button
+                            onClick={() => void cancelEnrollment(item.id)}
+                            className="secondary-action text-red-600"
+                          >
+                            Cancel run
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => void restartEnrollment(item)}
+                            className="secondary-action"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">replay</span>
+                            Re-enrol
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {item.deliveries.length ? (
+                        item.deliveries.map((delivery, index) => (
+                          <span
+                            key={delivery.id}
+                            title={delivery.error || undefined}
+                            className={`rounded-lg px-2.5 py-1 text-[9px] font-bold ${delivery.status === "Sent" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}
+                          >
+                            Step {index + 1}: {delivery.status} · {delivery.attempt_count} attempt
+                            {delivery.attempt_count === 1 ? "" : "s"}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-[10px] text-slate-400">No delivery attempts yet</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-state py-14">
+                  <span className="material-symbols-outlined text-3xl text-slate-300">history</span>
+                  <p className="text-xs">No enrollment history yet.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

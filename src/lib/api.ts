@@ -193,6 +193,28 @@ export type EmailSuppressionApi = {
   created_at: string;
 };
 
+export type SequenceEnrollmentApi = {
+  id: string;
+  lead_id: string;
+  lead_name: string;
+  lead_email: string;
+  status: string;
+  current_step: number;
+  reply_override: boolean;
+  next_send_at: string | null;
+  last_sent_at: string | null;
+  enrolled_at: string;
+  completed_at: string | null;
+  deliveries: {
+    id: string;
+    status: string;
+    attempt_count: number;
+    error: string | null;
+    sent_at: string | null;
+    created_at: string;
+  }[];
+};
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -545,6 +567,41 @@ export const api = {
     return request<{ data: { enrolled: number; skipped: number } }>(
       `/sequences/${id}/enroll`,
       { method: "POST", body: JSON.stringify({ lead_ids: leadIds }) },
+      accessToken,
+      teamId,
+    );
+  },
+  getSequenceEnrollments(id: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: SequenceEnrollmentApi[] }>(
+      `/sequences/${id}/enrollments`,
+      {},
+      accessToken,
+      teamId,
+    );
+  },
+  cancelSequenceEnrollment(
+    sequenceId: string,
+    enrollmentId: string,
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: Record<string, never> }>(
+      `/sequences/${sequenceId}/enrollments/${enrollmentId}/cancel`,
+      { method: "POST" },
+      accessToken,
+      teamId,
+    );
+  },
+  restartSequenceEnrollment(
+    sequenceId: string,
+    enrollmentId: string,
+    allowReplied: boolean,
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: { enrollment_id: string } }>(
+      `/sequences/${sequenceId}/enrollments/${enrollmentId}/restart`,
+      { method: "POST", body: JSON.stringify({ allow_replied: allowReplied }) },
       accessToken,
       teamId,
     );
