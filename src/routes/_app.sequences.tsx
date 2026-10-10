@@ -140,6 +140,16 @@ function SequencesPage() {
       setError(e instanceof Error ? e.message : "Could not re-enroll lead");
     }
   }
+  async function retryEnrollment(enrollmentId: string) {
+    if (!historySequence || !token || !team.id) return;
+    try {
+      await api.retrySequenceEnrollment(historySequence.id, enrollmentId, token, team.id);
+      setEnrollments((await api.getSequenceEnrollments(historySequence.id, token, team.id)).data);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not retry failed delivery");
+    }
+  }
   return (
     <>
       <TopBar title="Sequences" />
@@ -526,6 +536,14 @@ function SequencesPage() {
                             className="secondary-action text-red-600"
                           >
                             Cancel run
+                          </button>
+                        ) : item.status === "Failed" ? (
+                          <button
+                            onClick={() => void retryEnrollment(item.id)}
+                            className="primary-action"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">refresh</span>
+                            Retry failed step
                           </button>
                         ) : (
                           <button

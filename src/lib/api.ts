@@ -615,6 +615,19 @@ export const api = {
       teamId,
     );
   },
+  retrySequenceEnrollment(
+    sequenceId: string,
+    enrollmentId: string,
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: Record<string, never> }>(
+      `/sequences/${sequenceId}/enrollments/${enrollmentId}/retry`,
+      { method: "POST" },
+      accessToken,
+      teamId,
+    );
+  },
   getEmailSuppressions(accessToken: string, teamId?: string | null) {
     return request<{ data: EmailSuppressionApi[] }>(
       "/sequences/suppressions",
