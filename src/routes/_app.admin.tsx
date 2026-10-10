@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import { api, AdminOverview, AuditEventApi } from "../lib/api";
+import { api, AdminOverview, AuditEventApi, WorkspaceApiKey } from "../lib/api";
 import { useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_app/admin")({
@@ -19,6 +19,11 @@ function AdminDashboard() {
   const [auditCursor, setAuditCursor] = useState<string | null>(null);
   const [loadingAudit, setLoadingAudit] = useState(false);
   const [exporting, setExporting] = useState<string | null>(null);
+  const [apiKeys, setApiKeys] = useState<WorkspaceApiKey[]>([]);
+  const [keyName, setKeyName] = useState("");
+  const [keyDays, setKeyDays] = useState(90);
+  const [newSecret, setNewSecret] = useState<string | null>(null);
+  const [savingKey, setSavingKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -28,11 +33,16 @@ function AdminDashboard() {
       return;
     }
     setLoading(true);
-    Promise.all([api.getAdminOverview(token, team.id), api.getAuditEvents(token, team.id)])
-      .then(([overview, audit]) => {
+    Promise.all([
+      api.getAdminOverview(token, team.id),
+      api.getAuditEvents(token, team.id),
+      api.getWorkspaceApiKeys(token, team.id),
+    ])
+      .then(([overview, audit, keys]) => {
         setData(overview.data);
         setAuditEvents(audit.data.events);
         setAuditCursor(audit.data.next_cursor);
+        setApiKeys(keys.data);
       })
       .catch((reason) =>
         setError(reason instanceof Error ? reason.message : "Could not load admin data"),
@@ -147,6 +157,42 @@ function AdminDashboard() {
       setError(reason instanceof Error ? reason.message : "Could not export workspace data");
     } finally {
       setExporting(null);
+    }
+  };
+  const createApiKey = async () => {
+    if (!token || !team.id || !keyName.trim() || savingKey) return;
+    setSavingKey(true);
+    setError("");
+    try {
+      const response = await api.createWorkspaceApiKey(keyName.trim(), keyDays, token, team.id);
+      setApiKeys((current) => [response.data.api_key, ...current]);
+      setNewSecret(response.data.key);
+      setKeyName("");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not create API key");
+    } finally {
+      setSavingKey(false);
+    }
+  };
+  const revokeApiKey = async (key: WorkspaceApiKey) => {
+    if (
+      !token ||
+      !team.id ||
+      key.revoked_at ||
+      !window.confirm(
+        `Revoke API key “${key.name}”? Existing integrations using it will stop working.`,
+      )
+    )
+      return;
+    try {
+      await api.revokeWorkspaceApiKey(key.id, token, team.id);
+      setApiKeys((current) =>
+        current.map((item) =>
+          item.id === key.id ? { ...item, revoked_at: new Date().toISOString() } : item,
+        ),
+      );
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not revoke API key");
     }
   };
 
@@ -362,6 +408,122 @@ function AdminDashboard() {
                 </span>
               </button>
             ))}
+          </div>
+        </section>
+
+        <section className="section-panel overflow-hidden">
+          <div className="border-b border-outline-variant p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold">Workspace API keys</h2>
+                <p className="text-sm text-on-surface-variant">
+                  Authenticate server-to-server automations with the{" "}
+                  <code className="font-mono">X-API-Key</code> header.
+                </p>
+              </div>
+              <span className="material-symbols-outlined rounded-xl bg-primary/10 p-2.5 text-primary">
+                key
+              </span>
+            </div>
+            {newSecret && (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-xs font-bold text-amber-900">
+                  Copy this key now. It will never be shown again.
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <code className="min-w-0 flex-1 overflow-x-auto rounded-lg bg-white px-3 py-2 text-xs">
+                    {newSecret}
+                  </code>
+                  <button
+                    type="button"
+                    className="secondary-action"
+                    onClick={() => void navigator.clipboard.writeText(newSecret)}
+                  >
+                    Copy
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-button"
+                    onClick={() => setNewSecret(null)}
+                    aria-label="Hide API key"
+                  >
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_150px_auto]">
+              <input
+                className="control"
+                value={keyName}
+                onChange={(event) => setKeyName(event.target.value)}
+                maxLength={100}
+                placeholder="Key name, e.g. CRM sync"
+              />
+              <select
+                className="control"
+                value={keyDays}
+                onChange={(event) => setKeyDays(Number(event.target.value))}
+              >
+                <option value={30}>30 days</option>
+                <option value={90}>90 days</option>
+                <option value={180}>180 days</option>
+                <option value={365}>1 year</option>
+              </select>
+              <button
+                type="button"
+                className="primary-action"
+                disabled={!keyName.trim() || savingKey}
+                onClick={() => void createApiKey()}
+              >
+                {savingKey ? "Creating…" : "Create key"}
+              </button>
+            </div>
+          </div>
+          <div className="divide-y divide-outline-variant">
+            {apiKeys.length ? (
+              apiKeys.map((key) => (
+                <div
+                  key={key.id}
+                  className="flex flex-col justify-between gap-3 px-5 py-4 sm:flex-row sm:items-center"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold">{key.name}</p>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${key.revoked_at ? "bg-slate-100 text-slate-500" : new Date(key.expires_at) <= new Date() ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}
+                      >
+                        {key.revoked_at
+                          ? "Revoked"
+                          : new Date(key.expires_at) <= new Date()
+                            ? "Expired"
+                            : "Active"}
+                      </span>
+                    </div>
+                    <p className="mt-1 font-mono text-xs text-on-surface-variant">
+                      {key.key_prefix}••••••••
+                    </p>
+                    <p className="mt-1 text-[10px] text-on-surface-variant">
+                      Expires {new Date(key.expires_at).toLocaleDateString()} · Last used{" "}
+                      {key.last_used_at ? new Date(key.last_used_at).toLocaleString() : "Never"}
+                    </p>
+                  </div>
+                  {!key.revoked_at && (
+                    <button
+                      type="button"
+                      className="secondary-action text-red-600"
+                      onClick={() => void revokeApiKey(key)}
+                    >
+                      Revoke
+                    </button>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="p-8 text-center text-sm text-on-surface-variant">
+                No API keys have been created.
+              </p>
+            )}
           </div>
         </section>
 

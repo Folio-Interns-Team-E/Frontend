@@ -225,6 +225,16 @@ export type NotificationApi = {
   created_at: string;
 };
 
+export type WorkspaceApiKey = {
+  id: string;
+  name: string;
+  key_prefix: string;
+  last_used_at: string | null;
+  expires_at: string;
+  revoked_at: string | null;
+  created_at: string;
+};
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -295,6 +305,25 @@ export type ApiUserTeam = {
 };
 
 export const api = {
+  getWorkspaceApiKeys(accessToken: string, teamId: string) {
+    return request<{ data: WorkspaceApiKey[] }>("/admin/api-keys/", {}, accessToken, teamId);
+  },
+  createWorkspaceApiKey(name: string, expiresInDays: number, accessToken: string, teamId: string) {
+    return request<{ data: { key: string; api_key: WorkspaceApiKey } }>(
+      "/admin/api-keys/",
+      { method: "POST", body: JSON.stringify({ name, expires_in_days: expiresInDays }) },
+      accessToken,
+      teamId,
+    );
+  },
+  revokeWorkspaceApiKey(id: string, accessToken: string, teamId: string) {
+    return request<{ data: Record<string, never> }>(
+      `/admin/api-keys/${id}`,
+      { method: "DELETE" },
+      accessToken,
+      teamId,
+    );
+  },
   getNotifications(accessToken: string, teamId: string) {
     return request<{ data: NotificationApi[] }>("/notifications/", {}, accessToken, teamId);
   },
