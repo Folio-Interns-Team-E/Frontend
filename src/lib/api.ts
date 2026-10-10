@@ -288,6 +288,15 @@ export const api = {
   getAdminOverview(accessToken: string, teamId: string) {
     return request<{ data: AdminOverview }>("/admin/overview", {}, accessToken, teamId);
   },
+  getAuditEvents(accessToken: string, teamId: string, cursor?: string) {
+    const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+    return request<{ data: { events: AuditEventApi[]; next_cursor: string | null } }>(
+      `/audit/events${query}`,
+      {},
+      accessToken,
+      teamId,
+    );
+  },
   securityActivity(accessToken: string, cursor?: string) {
     const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
     return request<{ data: { events: SecurityEventApi[]; next_cursor: string | null } }>(
@@ -1257,4 +1266,13 @@ export type AdminOverview = {
     detail: string;
     timestamp: string;
   }>;
+};
+
+export type AuditEventApi = {
+  id: string;
+  actor_user_id: string | null;
+  action: string;
+  target_type: string;
+  target_id: string | null;
+  created_at: string;
 };

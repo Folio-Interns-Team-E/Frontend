@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import { api, AdminOverview } from "../lib/api";
+import { api, AdminOverview, AuditEventApi } from "../lib/api";
 import { useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_app/admin")({
@@ -15,6 +15,9 @@ function AdminDashboard() {
   const token = useAppSelector((state) => state.app.auth.accessToken);
   const team = useAppSelector((state) => state.app.team);
   const [data, setData] = useState<AdminOverview | null>(null);
+  const [auditEvents, setAuditEvents] = useState<AuditEventApi[]>([]);
+  const [auditCursor, setAuditCursor] = useState<string | null>(null);
+  const [loadingAudit, setLoadingAudit] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -24,8 +27,12 @@ function AdminDashboard() {
       return;
     }
     setLoading(true);
-    api.getAdminOverview(token, team.id)
-      .then((response) => setData(response.data))
+    Promise.all([api.getAdminOverview(token, team.id), api.getAuditEvents(token, team.id)])
+      .then(([overview, audit]) => {
+        setData(overview.data);
+        setAuditEvents(audit.data.events);
+        setAuditCursor(audit.data.next_cursor);
+      })
       .catch((reason) => setError(reason instanceof Error ? reason.message : "Could not load admin data"))
       .finally(() => setLoading(false));
   }, [token, team.id, team.currentUserRole]);
@@ -47,6 +54,19 @@ function AdminDashboard() {
   ] as const;
   const pipeline = ["New", "Analyzed", "Qualified", "Drafted", "Sent", "Replied", "Converted"];
   const maxStage = Math.max(1, ...pipeline.map((stage) => data.pipeline.by_status[stage] ?? 0));
+  const loadMoreAudit = async () => {
+    if (!token || !team.id || !auditCursor || loadingAudit) return;
+    setLoadingAudit(true);
+    try {
+      const response = await api.getAuditEvents(token, team.id, auditCursor);
+      setAuditEvents((current) => [...current, ...response.data.events]);
+      setAuditCursor(response.data.next_cursor);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not load more audit events");
+    } finally {
+      setLoadingAudit(false);
+    }
+  };
 
   return (
     <>
@@ -72,6 +92,23 @@ function AdminDashboard() {
         <section className="grid gap-5 xl:grid-cols-[1fr_0.45fr]">
           <div className="section-panel overflow-hidden"><div className="border-b border-outline-variant p-5"><h2 className="text-lg font-bold">Recent workspace activity</h2></div><div className="divide-y divide-outline-variant">{data.recent_activity.length ? data.recent_activity.map((item, index) => <div key={`${item.type}-${index}`} className="flex items-center gap-3 px-5 py-3.5"><span className="material-symbols-outlined rounded-lg bg-surface-container p-2 text-primary">{activityIcon[item.type]}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{item.label}</p><p className="text-xs text-on-surface-variant">{item.detail}</p></div><time className="text-xs text-on-surface-variant">{new Date(item.timestamp).toLocaleDateString()}</time></div>) : <p className="p-8 text-center text-sm text-on-surface-variant">No activity yet.</p>}</div></div>
           <div className="section-panel p-5"><p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Subscription</p><p className="mt-2 text-2xl font-black capitalize">{data.billing.tier}</p><p className="mt-1 text-sm capitalize text-on-surface-variant">{data.billing.status}</p>{data.billing.renews_or_ends_at && <p className="mt-3 text-xs text-on-surface-variant">Period ends {new Date(data.billing.renews_or_ends_at).toLocaleDateString()}</p>}<Link to="/billing" className="primary-action mt-5 inline-flex w-full justify-center">Manage billing</Link><Link to="/team" className="secondary-action mt-2 inline-flex w-full justify-center">Manage team access</Link></div>
+        </section>
+
+        <section className="section-panel overflow-hidden">
+          <div className="flex items-center justify-between border-b border-outline-variant p-5">
+            <div><h2 className="text-lg font-bold">Workspace audit trail</h2><p className="text-sm text-on-surface-variant">Administrative and automation changes recorded for security review</p></div>
+            <span className="material-symbols-outlined rounded-xl bg-primary/10 p-2.5 text-primary">policy</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="bg-surface-container text-xs uppercase tracking-wider text-on-surface-variant"><tr><th className="px-5 py-3">Action</th><th className="px-5 py-3">Resource</th><th className="px-5 py-3">Actor</th><th className="px-5 py-3">Time</th></tr></thead>
+              <tbody className="divide-y divide-outline-variant">
+                {auditEvents.map((event) => <tr key={event.id} className="hover:bg-surface-container/50"><td className="px-5 py-3.5 font-semibold">{event.action.replaceAll(".", " ")}</td><td className="px-5 py-3.5"><span className="capitalize">{event.target_type.replaceAll("_", " ")}</span>{event.target_id && <span className="ml-2 font-mono text-xs text-on-surface-variant">{event.target_id.slice(0, 8)}</span>}</td><td className="px-5 py-3.5 font-mono text-xs text-on-surface-variant">{event.actor_user_id?.slice(0, 8) ?? "System"}</td><td className="px-5 py-3.5 text-on-surface-variant">{new Date(event.created_at).toLocaleString()}</td></tr>)}
+              </tbody>
+            </table>
+            {!auditEvents.length && <p className="p-8 text-center text-sm text-on-surface-variant">No audited changes have been recorded yet.</p>}
+          </div>
+          {auditCursor && <div className="border-t border-outline-variant p-4 text-center"><button type="button" className="secondary-action" disabled={loadingAudit} onClick={loadMoreAudit}>{loadingAudit ? "Loading…" : "Load older events"}</button></div>}
         </section>
       </div>
     </>
