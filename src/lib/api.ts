@@ -44,7 +44,13 @@ export type AuthResponse = {
 
 export type SecurityEventApi = {
   id: string;
-  action: "password_login" | "password_reset" | "google_login" | "github_login" | "google_linked" | "github_linked";
+  action:
+    | "password_login"
+    | "password_reset"
+    | "google_login"
+    | "github_login"
+    | "google_linked"
+    | "github_linked";
   created_at: string;
 };
 
@@ -61,6 +67,52 @@ export type ApiTeam = {
   invite_code?: string | null;
   created_at: string;
   members: ApiMember[];
+};
+
+export type OpportunityStage =
+  "Prospecting" | "Qualification" | "Proposal" | "Negotiation" | "Closed Won" | "Closed Lost";
+
+export type OpportunityApi = {
+  id: string;
+  team_id: string;
+  lead_id: string | null;
+  owner_id: string | null;
+  owner_name: string | null;
+  name: string;
+  company_name: string;
+  stage: OpportunityStage;
+  amount: string;
+  currency: string;
+  probability: number;
+  expected_close_date: string | null;
+  loss_reason: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OpportunityPayload = {
+  name: string;
+  company_name: string;
+  lead_id?: string | null;
+  owner_id?: string | null;
+  stage?: OpportunityStage;
+  amount?: number;
+  currency?: string;
+  probability?: number;
+  expected_close_date?: string | null;
+  loss_reason?: string | null;
+  notes?: string | null;
+};
+
+export type OpportunitySummaryApi = {
+  total_count: number;
+  open_count: number;
+  won_count: number;
+  lost_count: number;
+  pipeline_value: string;
+  weighted_value: string;
+  won_value: string;
 };
 
 async function request<T>(
@@ -113,9 +165,10 @@ async function request<T>(
   }
 
   if (!response.ok) {
-    const data = (await response.json().catch(() => null)) as
-      | { detail?: string; error?: string }
-      | null;
+    const data = (await response.json().catch(() => null)) as {
+      detail?: string;
+      error?: string;
+    } | null;
     throw new Error(data?.error ?? data?.detail ?? `Request failed with status ${response.status}`);
   }
 
@@ -138,20 +191,27 @@ export const api = {
   securityActivity(accessToken: string, cursor?: string) {
     const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
     return request<{ data: { events: SecurityEventApi[]; next_cursor: string | null } }>(
-      `/auth/activity${query}`, {}, accessToken,
+      `/auth/activity${query}`,
+      {},
+      accessToken,
     );
   },
   socialSignIn(provider: "google" | "github", link = false) {
-    return request<{ data: { url: string } }>(`/auth/oauth/${provider}/${link ? "link" : "start"}`, { method: "POST" });
+    return request<{ data: { url: string } }>(
+      `/auth/oauth/${provider}/${link ? "link" : "start"}`,
+      { method: "POST" },
+    );
   },
   requestPasswordReset(email: string) {
     return request<{ message: string }>("/auth/password/request", {
-      method: "POST", body: JSON.stringify({ email }),
+      method: "POST",
+      body: JSON.stringify({ email }),
     });
   },
   resetPassword(token: string, password: string) {
     return request<{ message: string }>("/auth/password/reset", {
-      method: "POST", body: JSON.stringify({ token, password }),
+      method: "POST",
+      body: JSON.stringify({ token, password }),
     });
   },
   register(payload: { full_name: string; email: string; password: string }) {
@@ -257,6 +317,48 @@ export const api = {
     );
   },
 
+  // === Opportunities ===
+  getOpportunities(accessToken: string, teamId?: string | null) {
+    return request<{ data: OpportunityApi[] }>("/opportunities/", {}, accessToken, teamId);
+  },
+  getOpportunitySummary(accessToken: string, teamId?: string | null) {
+    return request<{ data: OpportunitySummaryApi }>(
+      "/opportunities/summary",
+      {},
+      accessToken,
+      teamId,
+    );
+  },
+  createOpportunity(payload: OpportunityPayload, accessToken: string, teamId?: string | null) {
+    return request<{ data: OpportunityApi }>(
+      "/opportunities/",
+      { method: "POST", body: JSON.stringify(payload) },
+      accessToken,
+      teamId,
+    );
+  },
+  updateOpportunity(
+    opportunityId: string,
+    payload: Partial<OpportunityPayload>,
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: OpportunityApi }>(
+      `/opportunities/${opportunityId}`,
+      { method: "PATCH", body: JSON.stringify(payload) },
+      accessToken,
+      teamId,
+    );
+  },
+  deleteOpportunity(opportunityId: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: Record<string, never> }>(
+      `/opportunities/${opportunityId}`,
+      { method: "DELETE" },
+      accessToken,
+      teamId,
+    );
+  },
+
   // === Leads ===
   getLeads(status: string | undefined, accessToken: string | null, teamId?: string | null) {
     const query = status ? `?status=${status}` : "";
@@ -276,14 +378,19 @@ export const api = {
   importLeads(file: File, accessToken: string, teamId?: string | null) {
     const body = new FormData();
     body.append("file", file);
-    return request<{ data: { created: number; skipped_duplicates: number; invalid_rows: number; leads: LeadApi[] } }>(
-      "/leads/import", { method: "POST", body }, accessToken, teamId,
-    );
+    return request<{
+      data: { created: number; skipped_duplicates: number; invalid_rows: number; leads: LeadApi[] };
+    }>("/leads/import", { method: "POST", body }, accessToken, teamId);
   },
   getLeadProvider(accessToken: string, teamId?: string | null) {
     return request<{ data: LeadProviderStatus }>("/leads/provider", {}, accessToken, teamId);
   },
-  configureLeadProvider(apiKey: string, monthlyLimit: number, accessToken: string, teamId?: string | null) {
+  configureLeadProvider(
+    apiKey: string,
+    monthlyLimit: number,
+    accessToken: string,
+    teamId?: string | null,
+  ) {
     return request<{ data: LeadProviderStatus }>(
       "/leads/provider",
       { method: "PUT", body: JSON.stringify({ api_key: apiKey, monthly_limit: monthlyLimit }) },
@@ -293,7 +400,10 @@ export const api = {
   },
   disconnectLeadProvider(accessToken: string, teamId?: string | null) {
     return request<{ data: Record<string, never> }>(
-      "/leads/provider", { method: "DELETE" }, accessToken, teamId,
+      "/leads/provider",
+      { method: "DELETE" },
+      accessToken,
+      teamId,
     );
   },
   createLead(
@@ -318,13 +428,28 @@ export const api = {
     );
   },
   qualifyLead(leadId: string, accessToken: string, teamId?: string | null) {
-    return request<{ data: LeadApi }>(`/leads/${leadId}/qualify`, { method: "POST" }, accessToken, teamId);
+    return request<{ data: LeadApi }>(
+      `/leads/${leadId}/qualify`,
+      { method: "POST" },
+      accessToken,
+      teamId,
+    );
   },
   discardLead(leadId: string, accessToken: string, teamId?: string | null) {
-    return request<{ data: LeadApi }>(`/leads/${leadId}/discard`, { method: "POST" }, accessToken, teamId);
+    return request<{ data: LeadApi }>(
+      `/leads/${leadId}/discard`,
+      { method: "POST" },
+      accessToken,
+      teamId,
+    );
   },
   deleteLead(leadId: string, accessToken: string, teamId?: string | null) {
-    return request<{ data: Record<string, never> }>(`/leads/${leadId}`, { method: "DELETE" }, accessToken, teamId);
+    return request<{ data: Record<string, never> }>(
+      `/leads/${leadId}`,
+      { method: "DELETE" },
+      accessToken,
+      teamId,
+    );
   },
 
   // === Emails ===
@@ -340,7 +465,11 @@ export const api = {
       teamId,
     );
   },
-  draftEmail(payload: { lead_id: string; subject: string; body: string }, accessToken: string, teamId?: string | null) {
+  draftEmail(
+    payload: { lead_id: string; subject: string; body: string },
+    accessToken: string,
+    teamId?: string | null,
+  ) {
     return request<{ data: EmailApi }>(
       "/emails/draft",
       { method: "POST", body: JSON.stringify(payload) },
@@ -352,7 +481,12 @@ export const api = {
     return request<{ data: EmailApi[] }>(`/emails/?lead_id=${leadId}`, {}, accessToken, teamId);
   },
   deleteEmail(emailId: string, accessToken: string, teamId?: string | null) {
-    return request<{ data: Record<string, never> }>(`/emails/${emailId}`, { method: "DELETE" }, accessToken, teamId);
+    return request<{ data: Record<string, never> }>(
+      `/emails/${emailId}`,
+      { method: "DELETE" },
+      accessToken,
+      teamId,
+    );
   },
 
   // === Meetings ===
@@ -460,7 +594,11 @@ export const api = {
   getProposalTemplate(accessToken: string, teamId?: string | null) {
     return request<{ data: ProposalTemplateApi }>("/proposals/template", {}, accessToken, teamId);
   },
-  uploadProposalTemplate(payload: { file: File; template_name: string }, accessToken: string, teamId?: string | null) {
+  uploadProposalTemplate(
+    payload: { file: File; template_name: string },
+    accessToken: string,
+    teamId?: string | null,
+  ) {
     const formData = new FormData();
     formData.append("file", payload.file);
     formData.append("template_name", payload.template_name);
@@ -472,7 +610,12 @@ export const api = {
     );
   },
   deleteProposalTemplate(accessToken: string, teamId?: string | null) {
-    return request<{ data: Record<string, never> }>("/proposals/template", { method: "DELETE" }, accessToken, teamId);
+    return request<{ data: Record<string, never> }>(
+      "/proposals/template",
+      { method: "DELETE" },
+      accessToken,
+      teamId,
+    );
   },
 
   // === Knowledge Base ===
@@ -528,7 +671,12 @@ export const api = {
     );
     return { data: "data" in response ? response.data : response };
   },
-  updateProposalStatus(proposalId: string, status: string, accessToken: string, teamId?: string | null) {
+  updateProposalStatus(
+    proposalId: string,
+    status: string,
+    accessToken: string,
+    teamId?: string | null,
+  ) {
     return request<{ data: ProposalApi }>(
       `/proposals/${proposalId}/status`,
       { method: "PATCH", body: JSON.stringify({ status }) },
@@ -536,7 +684,12 @@ export const api = {
       teamId,
     );
   },
-  updateProposalOutcome(proposalId: string, outcome: string, accessToken: string, teamId?: string | null) {
+  updateProposalOutcome(
+    proposalId: string,
+    outcome: string,
+    accessToken: string,
+    teamId?: string | null,
+  ) {
     return request<{ data: ProposalApi }>(
       `/proposals/${proposalId}/outcome`,
       { method: "PATCH", body: JSON.stringify({ outcome }) },
@@ -544,7 +697,11 @@ export const api = {
       teamId,
     );
   },
-  async createCheckoutSession(tier: "growth" | "enterprise", accessToken: string, teamId?: string | null) {
+  async createCheckoutSession(
+    tier: "growth" | "enterprise",
+    accessToken: string,
+    teamId?: string | null,
+  ) {
     const response = await request<{ checkout_url: string } | { data: { checkout_url: string } }>(
       `/billing/checkout/${tier}`,
       { method: "POST" },
@@ -584,19 +741,49 @@ export const api = {
     );
   },
   getCalcomStatus(accessToken: string, teamId: string) {
-    return request<{ data: { connected: boolean; event_type_id?: string | null } }>("/integrations/calcom/status", {}, accessToken, teamId);
+    return request<{ data: { connected: boolean; event_type_id?: string | null } }>(
+      "/integrations/calcom/status",
+      {},
+      accessToken,
+      teamId,
+    );
   },
   startCalcomOAuth(accessToken: string, teamId: string) {
-    return request<{ data: { url: string } }>("/integrations/calcom/oauth/start", { method: "POST" }, accessToken, teamId);
+    return request<{ data: { url: string } }>(
+      "/integrations/calcom/oauth/start",
+      { method: "POST" },
+      accessToken,
+      teamId,
+    );
   },
   configureCalcomEventType(eventTypeId: string, accessToken: string, teamId: string) {
-    return request<{ data: { connected: boolean; event_type_id: string; needs_event_type: boolean } }>("/integrations/calcom/event-type", { method: "PUT", body: JSON.stringify({ event_type_id: eventTypeId }) }, accessToken, teamId);
+    return request<{
+      data: { connected: boolean; event_type_id: string; needs_event_type: boolean };
+    }>(
+      "/integrations/calcom/event-type",
+      { method: "PUT", body: JSON.stringify({ event_type_id: eventTypeId }) },
+      accessToken,
+      teamId,
+    );
   },
   configureCalcom(apiKey: string, eventTypeId: string, accessToken: string, teamId: string) {
-    return request<{ data: { id: string; event_type_id: string } }>("/integrations/calcom", { method: "PUT", body: JSON.stringify({ cal_api_key: apiKey, cal_event_type_id: eventTypeId }) }, accessToken, teamId);
+    return request<{ data: { id: string; event_type_id: string } }>(
+      "/integrations/calcom",
+      {
+        method: "PUT",
+        body: JSON.stringify({ cal_api_key: apiKey, cal_event_type_id: eventTypeId }),
+      },
+      accessToken,
+      teamId,
+    );
   },
   disconnectCalcom(accessToken: string, teamId: string) {
-    return request<{ data: Record<string, never> }>("/integrations/calcom", { method: "DELETE" }, accessToken, teamId);
+    return request<{ data: Record<string, never> }>(
+      "/integrations/calcom",
+      { method: "DELETE" },
+      accessToken,
+      teamId,
+    );
   },
   sendChat(message: string, accessToken: string, teamId?: string | null, chatId?: string | null) {
     return request<{ data: { reply: string } }>(
@@ -607,7 +794,12 @@ export const api = {
     );
   },
   getChatMessages(accessToken: string, teamId?: string | null, chatId?: string | null) {
-    return request<{ data: ChatMessageApi[] }>(`/chat/chats/${chatId}/messages`, {}, accessToken, teamId);
+    return request<{ data: ChatMessageApi[] }>(
+      `/chat/chats/${chatId}/messages`,
+      {},
+      accessToken,
+      teamId,
+    );
   },
 
   // === Multi-Chat ===
@@ -641,16 +833,16 @@ export const api = {
 
   // === OTP Verification ===
   requestOtp(email: string) {
-    return request<{ data: Record<string, never> }>(
-      "/auth/otp/request",
-      { method: "POST", body: JSON.stringify({ email }) },
-    );
+    return request<{ data: Record<string, never> }>("/auth/otp/request", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
   },
   verifyOtp(email: string, otp: string) {
-    return request<{ data: Record<string, never> }>(
-      "/auth/otp/verify",
-      { method: "POST", body: JSON.stringify({ email, otp }) },
-    );
+    return request<{ data: Record<string, never> }>("/auth/otp/verify", {
+      method: "POST",
+      body: JSON.stringify({ email, otp }),
+    });
   },
 };
 
@@ -769,12 +961,28 @@ export type LeadProviderStatus = {
 export type AdminOverview = {
   workspace: { id: string; name: string; created_at: string; icp_configured: boolean };
   members: { total: number; by_role: Record<string, number> };
-  pipeline: { total_leads: number; by_status: Record<string, number>; average_score: number; qualification_rate: number };
+  pipeline: {
+    total_leads: number;
+    by_status: Record<string, number>;
+    average_score: number;
+    qualification_rate: number;
+  };
   outreach: { drafts: number; sent: number };
   meetings: { total: number; by_status: Record<string, number> };
   proposals: { total: number; by_outcome: Record<string, number>; win_rate: number };
   knowledge_base: { total: number; by_status: Record<string, number> };
-  integrations: { gmail_connected: boolean; calcom_connected: boolean; apollo_connected: boolean; apollo_used: number; apollo_limit: number };
+  integrations: {
+    gmail_connected: boolean;
+    calcom_connected: boolean;
+    apollo_connected: boolean;
+    apollo_used: number;
+    apollo_limit: number;
+  };
   billing: { tier: string; status: string; renews_or_ends_at: string | null };
-  recent_activity: Array<{ type: "lead" | "meeting" | "proposal"; label: string; detail: string; timestamp: string }>;
+  recent_activity: Array<{
+    type: "lead" | "meeting" | "proposal";
+    label: string;
+    detail: string;
+    timestamp: string;
+  }>;
 };

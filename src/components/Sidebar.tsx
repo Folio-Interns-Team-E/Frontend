@@ -17,6 +17,7 @@ const navigation = [
   {
     label: "Revenue",
     items: [
+      { to: "/deals", icon: "handshake", label: "Deals" },
       { to: "/meetings", icon: "calendar_month", label: "Meetings" },
       { to: "/proposals", icon: "request_quote", label: "Proposals" },
     ],

@@ -15,6 +15,7 @@ import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppBillingRouteImport } from './routes/_app.billing'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppDealsRouteImport } from './routes/_app.deals'
 import { Route as AppKnowledgeBaseRouteImport } from './routes/_app.knowledge-base'
 import { Route as AppLeadGenerationRouteImport } from './routes/_app.lead-generation'
 import { Route as AppMeetingsRouteImport } from './routes/_app.meetings'
@@ -59,6 +60,11 @@ const AppBillingRoute = AppBillingRouteImport.update({
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDealsRoute = AppDealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
   getParentRoute: () => AppRoute,
 } as any)
 const AppKnowledgeBaseRoute = AppKnowledgeBaseRouteImport.update({
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRoute
   '/billing': typeof AppBillingRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
+  '/deals': typeof AppDealsRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
   '/lead-generation': typeof AppLeadGenerationRoute
   '/meetings': typeof AppMeetingsRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRoute
   '/billing': typeof AppBillingRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
+  '/deals': typeof AppDealsRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
   '/lead-generation': typeof AppLeadGenerationRoute
   '/meetings': typeof AppMeetingsRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRoute
   '/_app/billing': typeof AppBillingRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/deals': typeof AppDealsRoute
   '/_app/knowledge-base': typeof AppKnowledgeBaseRoute
   '/_app/lead-generation': typeof AppLeadGenerationRoute
   '/_app/meetings': typeof AppMeetingsRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/billing'
     | '/dashboard'
+    | '/deals'
     | '/knowledge-base'
     | '/lead-generation'
     | '/meetings'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/billing'
     | '/dashboard'
+    | '/deals'
     | '/knowledge-base'
     | '/lead-generation'
     | '/meetings'
@@ -280,6 +291,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/billing'
     | '/_app/dashboard'
+    | '/_app/deals'
     | '/_app/knowledge-base'
     | '/_app/lead-generation'
     | '/_app/meetings'
@@ -348,6 +360,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/deals': {
+      id: '/_app/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof AppDealsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/knowledge-base': {
@@ -495,6 +514,7 @@ interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppBillingRoute: typeof AppBillingRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDealsRoute: typeof AppDealsRoute
   AppKnowledgeBaseRoute: typeof AppKnowledgeBaseRoute
   AppLeadGenerationRoute: typeof AppLeadGenerationRoute
   AppMeetingsRoute: typeof AppMeetingsRoute
@@ -512,6 +532,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppBillingRoute: AppBillingRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
+  AppDealsRoute: AppDealsRoute,
   AppKnowledgeBaseRoute: AppKnowledgeBaseRoute,
   AppLeadGenerationRoute: AppLeadGenerationRoute,
   AppMeetingsRoute: AppMeetingsRoute,
