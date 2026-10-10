@@ -21,6 +21,7 @@ function SequencesPage() {
   const [suppressionOpen, setSuppressionOpen] = useState(false);
   const [suppressions, setSuppressions] = useState<EmailSuppressionApi[]>([]);
   const [suppressionEmail, setSuppressionEmail] = useState("");
+  const [deleting, setDeleting] = useState<SequenceApi | null>(null);
   const [name, setName] = useState("");
   const [limit, setLimit] = useState(40);
   const [steps, setSteps] = useState([{ position: 0, delay_days: 0, subject: "", body: "" }]);
@@ -57,6 +58,16 @@ function SequencesPage() {
     if (!token || !team.id) return;
     await api.updateSequenceStatus(item.id, next, token, team.id);
     await load();
+  }
+  async function deleteSequence() {
+    if (!deleting || !token || !team.id) return;
+    try {
+      await api.deleteSequence(deleting.id, token, team.id);
+      setDeleting(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not delete sequence");
+    }
   }
   async function enrollLeads() {
     if (!enroll || !token || !team.id) return;
@@ -154,6 +165,13 @@ function SequencesPage() {
                     </p>
                   </div>
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => setDeleting(item)}
+                      className="icon-button text-red-500 hover:bg-red-50"
+                      title="Delete sequence"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
                     <button
                       onClick={() => {
                         setEnroll(item);
@@ -371,6 +389,23 @@ function SequencesPage() {
                   <button onClick={() => void removeSuppression(item.id)} className="icon-button" title="Remove"><span className="material-symbols-outlined text-[17px]">delete</span></button>
                 </div>
               )) : <div className="empty-state py-10"><p className="text-xs">No suppressed addresses.</p></div>}
+            </div>
+          </div>
+        </div>
+      )}
+      {deleting && (
+        <div className="modal-backdrop">
+          <div className="modal-surface max-w-md p-6">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
+              <span className="material-symbols-outlined">delete_forever</span>
+            </div>
+            <h2 className="mt-4 text-lg font-black">Delete sequence?</h2>
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              <span className="font-bold text-slate-700">{deleting.name}</span> and its enrollment and delivery history will be permanently deleted. Your leads will not be deleted.
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button onClick={() => setDeleting(null)} className="secondary-action">Cancel</button>
+              <button onClick={() => void deleteSequence()} className="rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700">Delete sequence</button>
             </div>
           </div>
         </div>

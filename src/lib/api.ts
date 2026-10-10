@@ -533,6 +533,14 @@ export const api = {
       teamId,
     );
   },
+  deleteSequence(id: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: Record<string, never> }>(
+      `/sequences/${id}`,
+      { method: "DELETE" },
+      accessToken,
+      teamId,
+    );
+  },
   enrollSequence(id: string, leadIds: string[], accessToken: string, teamId?: string | null) {
     return request<{ data: { enrolled: number; skipped: number } }>(
       `/sequences/${id}/enroll`,
