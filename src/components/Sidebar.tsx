@@ -12,7 +12,8 @@ const navigation = [
       { to: "/crm", icon: "domain", label: "CRM records" },
       { to: "/lead-generation", icon: "person_search", label: "Prospects" },
       { to: "/qualification", icon: "verified", label: "Qualification" },
-      { to: "/outreach", icon: "outgoing_mail", label: "Sequences" },
+      { to: "/sequences", icon: "conversion_path", label: "Sequences" },
+      { to: "/outreach", icon: "outgoing_mail", label: "Email studio" },
     ],
   },
   {

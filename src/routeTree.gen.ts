@@ -24,6 +24,7 @@ import { Route as AppOnboardingRouteImport } from './routes/_app.onboarding'
 import { Route as AppOutreachRouteImport } from './routes/_app.outreach'
 import { Route as AppProposalsRouteImport } from './routes/_app.proposals'
 import { Route as AppQualificationRouteImport } from './routes/_app.qualification'
+import { Route as AppSequencesRouteImport } from './routes/_app.sequences'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppSuccessRouteImport } from './routes/_app.success'
 import { Route as AppTeamRouteImport } from './routes/_app.team'
@@ -108,6 +109,11 @@ const AppQualificationRoute = AppQualificationRouteImport.update({
   path: '/qualification',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSequencesRoute = AppSequencesRouteImport.update({
+  id: '/sequences',
+  path: '/sequences',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/outreach': typeof AppOutreachRoute
   '/proposals': typeof AppProposalsRoute
   '/qualification': typeof AppQualificationRoute
+  '/sequences': typeof AppSequencesRoute
   '/settings': typeof AppSettingsRoute
   '/success': typeof AppSuccessRoute
   '/team': typeof AppTeamRoute
@@ -203,6 +210,7 @@ export interface FileRoutesByTo {
   '/outreach': typeof AppOutreachRoute
   '/proposals': typeof AppProposalsRoute
   '/qualification': typeof AppQualificationRoute
+  '/sequences': typeof AppSequencesRoute
   '/settings': typeof AppSettingsRoute
   '/success': typeof AppSuccessRoute
   '/team': typeof AppTeamRoute
@@ -231,6 +239,7 @@ export interface FileRoutesById {
   '/_app/outreach': typeof AppOutreachRoute
   '/_app/proposals': typeof AppProposalsRoute
   '/_app/qualification': typeof AppQualificationRoute
+  '/_app/sequences': typeof AppSequencesRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/success': typeof AppSuccessRoute
   '/_app/team': typeof AppTeamRoute
@@ -259,6 +268,7 @@ export interface FileRouteTypes {
     | '/outreach'
     | '/proposals'
     | '/qualification'
+    | '/sequences'
     | '/settings'
     | '/success'
     | '/team'
@@ -284,6 +294,7 @@ export interface FileRouteTypes {
     | '/outreach'
     | '/proposals'
     | '/qualification'
+    | '/sequences'
     | '/settings'
     | '/success'
     | '/team'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/_app/outreach'
     | '/_app/proposals'
     | '/_app/qualification'
+    | '/_app/sequences'
     | '/_app/settings'
     | '/_app/success'
     | '/_app/team'
@@ -437,6 +449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppQualificationRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/sequences': {
+      id: '/_app/sequences'
+      path: '/sequences'
+      fullPath: '/sequences'
+      preLoaderRoute: typeof AppSequencesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
@@ -542,6 +561,7 @@ interface AppRouteChildren {
   AppOutreachRoute: typeof AppOutreachRoute
   AppProposalsRoute: typeof AppProposalsRoute
   AppQualificationRoute: typeof AppQualificationRoute
+  AppSequencesRoute: typeof AppSequencesRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSuccessRoute: typeof AppSuccessRoute
   AppTeamRoute: typeof AppTeamRoute
@@ -561,6 +581,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOutreachRoute: AppOutreachRoute,
   AppProposalsRoute: AppProposalsRoute,
   AppQualificationRoute: AppQualificationRoute,
+  AppSequencesRoute: AppSequencesRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSuccessRoute: AppSuccessRoute,
   AppTeamRoute: AppTeamRoute,

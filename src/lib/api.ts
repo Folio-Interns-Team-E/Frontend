@@ -168,6 +168,20 @@ export type SearchResultApi = {
   subtitle: string;
   url: string;
 };
+export type SequenceApi = {
+  id: string;
+  team_id: string;
+  owner_id: string;
+  name: string;
+  status: "Draft" | "Active" | "Paused" | "Archived";
+  timezone: string;
+  daily_limit: number;
+  stop_on_reply: boolean;
+  active_enrollments: number;
+  steps: { id: string; position: number; delay_days: number; subject: string; body: string }[];
+  created_at: string;
+  updated_at: string;
+};
 
 async function request<T>(
   path: string,
@@ -476,6 +490,43 @@ export const api = {
     return request<{ data: SearchResultApi[] }>(
       `/crm/search?q=${encodeURIComponent(query)}`,
       {},
+      accessToken,
+      teamId,
+    );
+  },
+  getSequences(accessToken: string, teamId?: string | null) {
+    return request<{ data: SequenceApi[] }>("/sequences/", {}, accessToken, teamId);
+  },
+  createSequence(
+    payload: {
+      name: string;
+      timezone: string;
+      daily_limit: number;
+      stop_on_reply: boolean;
+      steps: { position: number; delay_days: number; subject: string; body: string }[];
+    },
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: SequenceApi }>(
+      "/sequences/",
+      { method: "POST", body: JSON.stringify(payload) },
+      accessToken,
+      teamId,
+    );
+  },
+  updateSequenceStatus(id: string, status: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: SequenceApi }>(
+      `/sequences/${id}/status`,
+      { method: "PATCH", body: JSON.stringify({ status }) },
+      accessToken,
+      teamId,
+    );
+  },
+  enrollSequence(id: string, leadIds: string[], accessToken: string, teamId?: string | null) {
+    return request<{ data: { enrolled: number; skipped: number } }>(
+      `/sequences/${id}/enroll`,
+      { method: "POST", body: JSON.stringify({ lead_ids: leadIds }) },
       accessToken,
       teamId,
     );
