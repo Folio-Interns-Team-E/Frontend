@@ -34,28 +34,41 @@ function AdminDashboard() {
   const [savingKey, setSavingKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [workerHealthy, setWorkerHealthy] = useState<boolean | null>(null);
 
   useEffect(() => {
+    let active = true;
     if (!token || !team.id || team.currentUserRole !== "admin") {
       setLoading(false);
-      return;
+      return () => { active = false; };
     }
     setLoading(true);
+    setData(null);
+    setWorkerHealthy(null);
     Promise.all([
       api.getAdminOverview(token, team.id),
       api.getAuditEvents(token, team.id),
       api.getWorkspaceApiKeys(token, team.id),
     ])
       .then(([overview, audit, keys]) => {
+        if (!active) return;
         setData(overview.data);
         setAuditEvents(audit.data.events);
         setAuditCursor(audit.data.next_cursor);
         setApiKeys(keys.data);
       })
-      .catch((reason) =>
-        setError(reason instanceof Error ? reason.message : "Could not load admin data"),
-      )
-      .finally(() => setLoading(false));
+      .catch((reason) => {
+        if (active) setError(reason instanceof Error ? reason.message : "Could not load admin data");
+      })
+      .finally(() => { if (active) setLoading(false); });
+    const checkWorker = () => {
+      api.getSequenceWorkerStatus()
+        .then((response) => { if (active) setWorkerHealthy(response.data.sequence_worker); })
+        .catch(() => { if (active) setWorkerHealthy(false); });
+    };
+    checkWorker();
+    const timer = window.setInterval(checkWorker, 60_000);
+    return () => { active = false; window.clearInterval(timer); };
   }, [token, team.id, team.currentUserRole]);
 
   if (team.currentUserRole !== "admin") {
@@ -291,6 +304,7 @@ function AdminDashboard() {
           <div className="section-panel p-5">
             <h2 className="text-lg font-bold">System readiness</h2>
             <div className="mt-4 space-y-3">
+              <Readiness label="Sequence worker" good={workerHealthy === true} />
               <Readiness label="Gmail outreach" good={data.integrations.gmail_connected} />
               <Readiness label="Cal.com scheduling" good={data.integrations.calcom_connected} />
               <Readiness label="Apollo sourcing" good={data.integrations.apollo_connected} />

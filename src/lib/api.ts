@@ -356,6 +356,9 @@ export const api = {
   getAdminOverview(accessToken: string, teamId: string) {
     return request<{ data: AdminOverview }>("/admin/overview", {}, accessToken, teamId);
   },
+  getSequenceWorkerStatus() {
+    return request<{ data: { sequence_worker: boolean } }>("/ready/sequence-worker");
+  },
   getAuditEvents(accessToken: string, teamId: string, cursor?: string) {
     const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
     return request<{ data: { events: AuditEventApi[]; next_cursor: string | null } }>(
