@@ -66,6 +66,7 @@ export type ApiTeam = {
   id: string;
   name: string;
   invite_code?: string | null;
+  invite_code_expires_at?: string | null;
   created_at: string;
   members: ApiMember[];
 };
@@ -301,6 +302,7 @@ export type ApiUserTeam = {
   id: string;
   name: string;
   invite_code?: string | null;
+  invite_code_expires_at?: string | null;
   created_at: string;
   role: "admin" | "manager" | "rep";
 };

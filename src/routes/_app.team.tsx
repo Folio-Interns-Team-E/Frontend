@@ -35,6 +35,7 @@ function TeamManagement() {
   const [rotateError, setRotateError] = useState("");
   const isAdmin = team.currentUserRole === "admin";
   const canManageMembers = team.currentUserRole === "admin" || team.currentUserRole === "manager";
+  const inviteExpired = Boolean(team.inviteCodeExpiresAt && new Date(team.inviteCodeExpiresAt).getTime() <= Date.now());
 
   const accessToken = auth.accessToken;
 
@@ -82,7 +83,7 @@ function TeamManagement() {
   }
 
   function copyInviteCode() {
-    if (!team.inviteCode) return;
+    if (!team.inviteCode || inviteExpired) return;
     void navigator.clipboard?.writeText(team.inviteCode);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1500);
@@ -228,6 +229,7 @@ function TeamManagement() {
                   </p>
                   <button
                     onClick={copyInviteCode}
+                    disabled={inviteExpired}
                     className="flex max-w-full items-center gap-3 overflow-hidden rounded-lg border border-white/12 bg-white/8 px-4 py-2.5 font-mono text-sm font-bold transition hover:bg-white/12"
                   >
                     {team.inviteCode}
@@ -235,6 +237,11 @@ function TeamManagement() {
                       {copied ? "check" : "content_copy"}
                     </span>
                   </button>
+                  {team.inviteCodeExpiresAt && (
+                    <p className="mt-2 text-xs text-slate-300">
+                      {inviteExpired ? "Expired" : "Expires"} {new Date(team.inviteCodeExpiresAt).toLocaleString()}
+                    </p>
+                  )}
                   <button type="button" className="mt-2 text-xs font-semibold text-[#72e1e3] underline-offset-2 hover:underline" onClick={() => setRotateOpen(true)}>
                     Rotate invite code
                   </button>
@@ -249,6 +256,7 @@ function TeamManagement() {
                   <p className="mt-1 text-xs text-on-surface-variant">
                     Send an email invitation with a link to join your team.
                   </p>
+                  {inviteExpired && <p className="mt-2 text-xs text-error">Invite code expired. Ask a workspace admin to rotate it before sending invitations.</p>}
                 </div>
                 <form onSubmit={invite} className="flex flex-col gap-3 md:flex-row">
                   <input
@@ -260,7 +268,7 @@ function TeamManagement() {
                     className="control h-11 flex-1 px-4 text-sm outline-none"
                   />
                   <button
-                    disabled={team.status === "loading"}
+                    disabled={team.status === "loading" || inviteExpired}
                     className="primary-action h-11 disabled:opacity-60"
                   >
                     {team.status === "loading" ? "Sending..." : "Send invite"}

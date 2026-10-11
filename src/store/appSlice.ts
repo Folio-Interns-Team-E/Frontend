@@ -166,6 +166,7 @@ type AppState = {
     id: string | null;
     name: string | null;
     inviteCode: string | null;
+    inviteCodeExpiresAt: string | null;
     currentUserRole: TeamRole | null;
     members: TeamMember[];
     status: "idle" | "loading" | "succeeded" | "failed";
@@ -240,6 +241,7 @@ export const initialState: AppState = {
     id: null,
     name: null,
     inviteCode: null,
+    inviteCodeExpiresAt: null,
     currentUserRole: null,
     members: [],
     status: "idle",
@@ -291,6 +293,8 @@ const appSlice = createSlice({
       state.team.id = action.payload.id;
       state.team.name = action.payload.name;
       state.team.currentUserRole = action.payload.role;
+      state.team.inviteCode = null;
+      state.team.inviteCodeExpiresAt = null;
       state.auth.teamChoiceCompleted = true;
       state.teamSwitching = true;
       state.leads = [];
@@ -435,6 +439,7 @@ const appSlice = createSlice({
         .replace(/[^a-z0-9]/gi, "")
         .slice(0, 5)
         .toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+      state.team.inviteCodeExpiresAt = null;
       state.team.currentUserRole = "admin";
       state.team.status = "succeeded";
       state.team.error = null;
@@ -464,6 +469,7 @@ const appSlice = createSlice({
       state.team.id = `joined-${action.payload.inviteCode.toLowerCase()}`;
       state.team.name = "Joined Demo Team";
       state.team.inviteCode = action.payload.inviteCode.toUpperCase();
+      state.team.inviteCodeExpiresAt = null;
       state.team.currentUserRole = "rep";
       state.team.status = "succeeded";
       state.team.error = null;
@@ -536,6 +542,7 @@ const appSlice = createSlice({
         state.team.id = `notification-${notification.inviteCode.toLowerCase()}`;
         state.team.name = "Notification Invite Team";
         state.team.inviteCode = notification.inviteCode;
+        state.team.inviteCodeExpiresAt = null;
         state.team.currentUserRole = "rep";
         state.team.message = "Accepted invitation from notifications.";
         notification.unread = false;
@@ -651,12 +658,14 @@ const appSlice = createSlice({
         id: string;
         name: string;
         invite_code?: string | null;
+        invite_code_expires_at?: string | null;
         members: { id: string; full_name: string; email: string; role: TeamRole }[];
       },
     ) => {
       state.team.id = team.id;
       state.team.name = team.name;
       state.team.inviteCode = team.invite_code ?? null;
+      state.team.inviteCodeExpiresAt = team.invite_code_expires_at ?? null;
       state.team.members = team.members.map((member) => ({
         id: member.id,
         name: member.full_name,
