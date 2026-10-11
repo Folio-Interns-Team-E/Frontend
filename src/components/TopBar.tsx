@@ -10,12 +10,17 @@ export function TopBar({ title }: { title: string }) {
   const dispatch = useAppDispatch();
   const profile = useAppSelector((state) => state.app.profile);
   const team = useAppSelector((state) => state.app.team);
-  const [notifications, setNotifications] = useState<NotificationApi[]>([]);
+  const [notificationState, setNotificationState] = useState<{ scope: string; items: NotificationApi[] }>({ scope: "", items: [] });
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchResultApi[]>([]);
+  const [searchState, setSearchState] = useState<{ scope: string; query: string; items: SearchResultApi[] }>({ scope: "", query: "", items: [] });
   const accessToken = useAppSelector((state) => state.app.auth.accessToken);
+  const userId = useAppSelector((state) => state.app.auth.userId);
+  const scope = `${userId ?? ""}:${team.id ?? ""}`;
+  const notifications = userId && team.id && notificationState.scope === scope ? notificationState.items : [];
+  const searchResults = userId && team.id && searchState.scope === scope && searchState.query === search.trim()
+    ? searchState.items : [];
   const unreadCount = notifications.filter((notification) => !notification.is_read).length;
   const sidebarOpen = useAppSelector((state) => state.app.sidebarOpen);
 
@@ -54,46 +59,50 @@ export function TopBar({ title }: { title: string }) {
   }, [notificationsOpen, helpOpen]);
 
   useEffect(() => {
+    let active = true;
     if (search.trim().length < 2 || !accessToken || !team.id) {
-      setSearchResults([]);
-      return;
+      return () => { active = false; };
     }
+    const query = search.trim();
     const timer = window.setTimeout(() => {
       api
-        .searchWorkspace(search.trim(), accessToken, team.id)
-        .then((result) => setSearchResults(result.data))
-        .catch(() => setSearchResults([]));
+        .searchWorkspace(query, accessToken, team.id)
+        .then((result) => { if (active) setSearchState({ scope, query, items: result.data }); })
+        .catch(() => { if (active) setSearchState({ scope, query, items: [] }); });
     }, 250);
-    return () => window.clearTimeout(timer);
-  }, [search, accessToken, team.id]);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [search, accessToken, team.id, scope]);
 
   useEffect(() => {
+    let active = true;
     if (!accessToken || !team.id) {
-      setNotifications([]);
-      return;
+      return () => { active = false; };
     }
     const loadNotifications = () => {
       api
         .getNotifications(accessToken, team.id!)
-        .then((response) => setNotifications(response.data))
+        .then((response) => { if (active) setNotificationState({ scope, items: response.data }); })
         .catch(() => {});
     };
     loadNotifications();
     const timer = window.setInterval(loadNotifications, 60_000);
-    return () => window.clearInterval(timer);
-  }, [accessToken, team.id]);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [accessToken, team.id, scope]);
 
   async function openNotifications() {
     const opening = !notificationsOpen;
     setNotificationsOpen(opening);
     setHelpOpen(false);
     if (opening && unreadCount && accessToken && team.id) {
-      setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
+      const currentScope = scope;
+      setNotificationState((current) => current.scope === currentScope
+        ? { ...current, items: current.items.map((item) => ({ ...item, is_read: true })) }
+        : current);
       try {
         await api.markAllNotificationsRead(accessToken, team.id);
       } catch {
         const response = await api.getNotifications(accessToken, team.id).catch(() => null);
-        if (response) setNotifications(response.data);
+        if (response) setNotificationState({ scope: currentScope, items: response.data });
       }
     }
   }
