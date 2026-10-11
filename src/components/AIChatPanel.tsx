@@ -151,7 +151,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
       <div className="flex h-16 items-center justify-between border-b border-outline-variant/40 px-4">
         <div className="flex items-center gap-3">
           <div>
-            <h3 className="text-sm font-extrabold text-on-surface">Salsy AI</h3>
+            <h3 className="text-sm font-extrabold text-on-surface">SalesSync Assistant</h3>
             <p className="text-[10px] font-medium text-on-surface-variant">{activeChatName}</p>
           </div>
         </div>
@@ -282,7 +282,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                 item.author === "user" ? "text-on-surface-variant" : "text-primary"
               }`}
             >
-              {item.author === "user" ? item.userName: `Salsy`}
+              {item.author === "user" ? item.userName: "SalesSync Assistant"}
             </p>
             {item.body === "Thinking..." ? (
   <div className="max-w-[92%] rounded-2xl rounded-tl-md border border-primary/16 bg-primary/[0.065] p-3 shadow-sm">
