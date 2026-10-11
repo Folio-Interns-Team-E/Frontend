@@ -114,7 +114,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient; stor
       },
     ],
     links: [
-      { rel: "icon", type: "image/png", href: "/logo-white.png?v=3" },
+      { rel: "icon", type: "image/png", href: "/logo-blue.png?v=4" },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
