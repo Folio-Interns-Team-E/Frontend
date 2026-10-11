@@ -912,13 +912,12 @@ export const api = {
   },
   createMeeting(
     payload: {
-      lead_id?: string;
-      client: string;
-      company?: string;
+      lead_id: string;
       date: string;
       time: string;
-      duration?: string;
-      agenda?: string[];
+      timezone: string;
+      duration_minutes: number;
+      agenda?: string;
     },
     accessToken: string,
     teamId?: string | null,
@@ -1157,6 +1156,12 @@ export const api = {
       accessToken,
     );
   },
+  getGoogleCalendarAuthUrl(accessToken: string) {
+    return request<{ data: { url: string } }>("/integrations/google-calendar/auth-url", {}, accessToken);
+  },
+  getGoogleCalendarStatus(accessToken: string) {
+    return request<{ data: { connected: boolean; email?: string } }>("/integrations/google-calendar/status", {}, accessToken);
+  },
   getCalcomStatus(accessToken: string, teamId: string) {
     return request<{ data: { connected: boolean; event_type_id?: string | null; needs_event_type: boolean } }>(
       "/integrations/calcom/status",
@@ -1305,6 +1310,9 @@ export type EmailApi = {
 export type MeetingApi = {
   id: string;
   lead_id?: string;
+  meet_url?: string | null;
+  calendar_provider?: string | null;
+  duration_minutes?: number | null;
   client?: string;
   company?: string;
   date: string;

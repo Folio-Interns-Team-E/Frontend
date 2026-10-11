@@ -30,6 +30,10 @@ function Settings() {
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailEmail, setGmailEmail] = useState<string | null>(null);
   const [gmailLoading, setGmailLoading] = useState(true);
+  const [calendarConnected, setCalendarConnected] = useState(false);
+  const [calendarEmail, setCalendarEmail] = useState<string | null>(null);
+  const [calendarLoading, setCalendarLoading] = useState(true);
+  const [calendarError, setCalendarError] = useState("");
 
   const [calendlyModalOpen, setCalendlyModalOpen] = useState(false);
   const [calendlyEventTypeId, setCalendlyEventTypeId] = useState("");
@@ -65,6 +69,17 @@ function Settings() {
       })
       .catch(() => {})
       .finally(() => setGmailLoading(false));
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    api.getGoogleCalendarStatus(token)
+      .then((res) => {
+        setCalendarConnected(res.data.connected);
+        setCalendarEmail(res.data.email ?? null);
+      })
+      .catch(() => setCalendarError("Could not check Google Calendar connection"))
+      .finally(() => setCalendarLoading(false));
   }, [token]);
 
   useEffect(() => {
@@ -106,6 +121,17 @@ function Settings() {
       window.location.href = res.data.url;
     } catch {
       // handled
+    }
+  };
+
+  const connectGoogleCalendar = async () => {
+    if (!token) return;
+    setCalendarError("");
+    try {
+      const res = await api.getGoogleCalendarAuthUrl(token);
+      window.location.href = res.data.url;
+    } catch (error) {
+      setCalendarError(error instanceof Error ? error.message : "Could not connect Google Calendar");
     }
   };
 
@@ -287,6 +313,15 @@ function Settings() {
               loading={gmailLoading}
               onToggle={connectGmail}
             />
+            <Integration
+              icon="calendar_month"
+              name="Google Calendar"
+              description={calendarEmail ? `Connected as ${calendarEmail}. Create meetings with Google Meet links.` : "Create meetings and Google Meet links from SalesSync."}
+              connected={calendarConnected}
+              loading={calendarLoading}
+              onToggle={connectGoogleCalendar}
+            />
+            {calendarError && <p role="alert" className="py-2 text-sm text-error">{calendarError}</p>}
             <Integration
               icon="calendar_month"
               name="Cal.com"

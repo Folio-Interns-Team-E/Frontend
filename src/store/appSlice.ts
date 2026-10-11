@@ -65,13 +65,15 @@ export type Lead = {
 export type Meeting = {
   id: string;
   leadId: string;
+  meetUrl?: string;
+  calendarProvider?: string;
   client: string;
   company: string;
   date: string;
   time: string;
   duration: string;
   agenda: string[];
-  status: "Upcoming" | "Live" | "Completed";
+  status: "Scheduled" | "Upcoming" | "Live" | "Completed" | "Cancelled" | "No-Show";
   transcript: string[];
   notes?: string;
   createdAt: string;
@@ -1065,17 +1067,19 @@ const appSlice = createSlice({
         state.meetings = action.payload.map((m) => ({
           id: m.id,
           leadId: m.lead_id ?? "",
+          meetUrl: m.meet_url ?? undefined,
+          calendarProvider: m.calendar_provider ?? undefined,
           client: m.client || "",
           company: m.company || "",
           date: m.date,
           time: m.time,
-          duration: m.duration || "30 min",
+          duration: m.duration_minutes ? `${m.duration_minutes} min` : m.duration || "30 min",
           agenda: Array.isArray(m.agenda)
             ? m.agenda
             : m.agenda
               ? [m.agenda]
               : [],
-          status: m.status as "Upcoming" | "Live" | "Completed",
+          status: m.status as Meeting["status"],
           transcript: m.transcript ?? [],
           notes: m.notes,
           createdAt: m.created_at,
