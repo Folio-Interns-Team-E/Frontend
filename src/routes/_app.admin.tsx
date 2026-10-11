@@ -10,6 +10,14 @@ export const Route = createFileRoute("/_app/admin")({
 });
 
 const activityIcon = { lead: "person_add", meeting: "event", proposal: "description" } as const;
+const membershipAuditLabels: Record<string, string> = {
+  "workspace.invitation_sent": "Invitation sent",
+  "workspace.member_joined": "Member joined",
+  "workspace.member_role_changed": "Member role changed",
+  "workspace.member_removed": "Member removed",
+  "workspace.renamed": "Workspace renamed",
+  "workspace.invite_code_rotated": "Invite code rotated",
+};
 
 function AdminDashboard() {
   const token = useAppSelector((state) => state.app.auth.accessToken);
@@ -553,7 +561,7 @@ function AdminDashboard() {
                 {auditEvents.map((event) => (
                   <tr key={event.id} className="hover:bg-surface-container/50">
                     <td className="px-5 py-3.5 font-semibold">
-                      {event.action.replaceAll(".", " ")}
+                      {membershipAuditLabels[event.action] ?? event.action.replaceAll(/[._]/g, " ")}
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="capitalize">{event.target_type.replaceAll("_", " ")}</span>
