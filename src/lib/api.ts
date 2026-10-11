@@ -42,6 +42,13 @@ export type AuthResponse = {
   needs_verification?: boolean;
 };
 
+export type UserProfileApi = {
+  full_name: string;
+  email: string;
+  company: string | null;
+  job_title: string | null;
+};
+
 export type SecurityEventApi = {
   id: string;
   action:
@@ -435,6 +442,16 @@ export const api = {
   },
   logoutAll(accessToken: string) {
     return request<void>("/auth/logout-all", { method: "POST" }, accessToken);
+  },
+  getProfile(accessToken: string) {
+    return request<{ data: UserProfileApi }>("/auth/profile", {}, accessToken);
+  },
+  saveProfile(profile: { full_name: string; company: string; job_title: string }, accessToken: string) {
+    return request<{ data: UserProfileApi }>(
+      "/auth/profile",
+      { method: "PATCH", body: JSON.stringify(profile) },
+      accessToken,
+    );
   },
   createTeam(name: string, accessToken: string) {
     return request<{ data: ApiTeam }>(
@@ -1253,6 +1270,7 @@ export type LeadApi = {
   score?: number | null;
   status: string;
   reasoning?: string;
+  evaluation_justification?: string | null;
   created_at: string;
 };
 

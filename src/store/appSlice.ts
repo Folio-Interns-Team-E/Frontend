@@ -370,6 +370,7 @@ const appSlice = createSlice({
       state.auth.loggedIn = false;
       state.auth.accessToken = null;
       state.auth.userId = null;
+      state.profile = { ...initialState.profile };
     },
     clearApiFeedback(state) {
       state.auth.error = null;
@@ -757,6 +758,10 @@ const appSlice = createSlice({
         }
       })
       .addCase(loginAccount.fulfilled, (state, action) => {
+        if (state.auth.userId !== action.payload.user_id) {
+          state.profile.company = "";
+          state.profile.role = "";
+        }
         state.auth.status = "succeeded";
         state.auth.loggedIn = true;
         state.auth.accessToken = action.payload.access_token;
@@ -766,6 +771,10 @@ const appSlice = createSlice({
         // backend doesn't return teamChoiceCompleted; keep existing value
       })
       .addCase(refreshSession.fulfilled, (state, action) => {
+        if (state.auth.userId !== action.payload.user_id) {
+          state.profile.company = "";
+          state.profile.role = "";
+        }
         state.auth.status = "succeeded";
         state.auth.loggedIn = true;
         state.auth.accessToken = action.payload.access_token;

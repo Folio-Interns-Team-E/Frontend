@@ -45,7 +45,8 @@ function migrateState(savedState: unknown) {
           return appInitialState.onboarding.icp;
         })(),
       },
-      profile: { ...appInitialState.profile, ...savedApp.profile },
+      // Profile data belongs to the authenticated account, never to this browser.
+      profile: { ...appInitialState.profile },
       integrations: { ...appInitialState.integrations, ...savedIntegrations },
       team: { ...appInitialState.team, ...savedApp.team, status: "idle" as const },
       assistantMessages: [],

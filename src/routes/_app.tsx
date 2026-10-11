@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { AIChatPanel } from "../components/AIChatPanel";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { closeSidebar, setActiveTeam, completeTeamSwitch, setIntegration } from "../store/appSlice";
+import { closeSidebar, setActiveTeam, completeTeamSwitch, setIntegration, updateProfile } from "../store/appSlice";
 import {
   fetchMyTeams,
   fetchOnboardingStatus,
@@ -81,6 +81,22 @@ function AppLayout() {
   }, [accessToken, auth.userTeamsStatus, dispatch]);
 
   useEffect(() => {
+    if (!accessToken || !auth.userId) return;
+    let active = true;
+    api.getProfile(accessToken).then((response) => {
+      if (!active) return;
+      const user = response.data;
+      dispatch(updateProfile({
+        name: user.full_name,
+        email: user.email,
+        company: user.company ?? "",
+        role: user.job_title ?? "",
+      }));
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [accessToken, auth.userId, dispatch]);
+
+  useEffect(() => {
     if (teamId) {
       dispatch(fetchOnboardingStatus());
       dispatch(fetchLeads());
@@ -88,12 +104,14 @@ function AppLayout() {
       dispatch(fetchProposals());
       dispatch(fetchKnowledgeAssets());
       dispatch(fetchChats());
-      api
-        .getGmailStatus(accessToken)
-        .then((res) => {
-          dispatch(setIntegration({ integration: "gmail", value: res.data.connected }));
-        })
-        .catch(() => {});
+      if (accessToken) {
+        api
+          .getGmailStatus(accessToken)
+          .then((res) => {
+            dispatch(setIntegration({ integration: "gmail", value: res.data.connected }));
+          })
+          .catch(() => {});
+      }
     }
   }, [teamId, dispatch]);
 

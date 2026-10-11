@@ -21,6 +21,8 @@ function Settings() {
   const integrations = useAppSelector((state) => state.app.integrations);
   const [draft, setDraft] = useState(profile);
   const [saved, setSaved] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState("");
   const [logoutAllOpen, setLogoutAllOpen] = useState(false);
   const [logoutAllBusy, setLogoutAllBusy] = useState(false);
   const [logoutAllError, setLogoutAllError] = useState("");
@@ -47,6 +49,10 @@ function Settings() {
   const [apolloError, setApolloError] = useState("");
 
   const token = auth.accessToken;
+
+  useEffect(() => {
+    setDraft(profile);
+  }, [profile]);
 
   useEffect(() => {
     if (!token) return;
@@ -187,10 +193,31 @@ function Settings() {
     }
   };
 
-  function saveProfile(event: FormEvent) {
+  async function saveProfile(event: FormEvent) {
     event.preventDefault();
-    dispatch(updateProfile(draft));
-    setSaved(true);
+    if (!token) return;
+    setProfileSaving(true);
+    setProfileError("");
+    setSaved(false);
+    try {
+      const response = await api.saveProfile({
+        full_name: draft.name,
+        company: draft.company,
+        job_title: draft.role,
+      }, token);
+      const user = response.data;
+      dispatch(updateProfile({
+        name: user.full_name,
+        email: user.email,
+        company: user.company ?? "",
+        role: user.job_title ?? "",
+      }));
+      setSaved(true);
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : "Could not save profile");
+    } finally {
+      setProfileSaving(false);
+    }
   }
 
   async function signOutAllDevices() {
@@ -222,17 +249,22 @@ function Settings() {
           <form onSubmit={saveProfile} className="grid gap-4 md:grid-cols-2">
             {(Object.keys(draft) as (keyof typeof draft)[]).map((key) => (
               <label key={key} className="text-sm font-semibold capitalize">
-                {key}
+                {key === "role" ? "Job title" : key === "email" ? "Email (read-only)" : key}
                 <input
                   className="control mt-2 w-full px-4 py-2.5 font-normal outline-none"
                   value={draft[key]}
-                  onChange={(event) => setDraft({ ...draft, [key]: event.target.value })}
+                  readOnly={key === "email"}
+                  onChange={(event) => {
+                    setDraft({ ...draft, [key]: event.target.value });
+                    setSaved(false);
+                  }}
                 />
               </label>
             ))}
             <div className="flex items-center gap-3 md:col-span-2">
-              <button className="primary-action">Save profile</button>
+              <button className="primary-action" disabled={profileSaving || !token}>{profileSaving ? "Saving..." : "Save profile"}</button>
               {saved && <span className="text-sm font-semibold text-green-700">Changes saved</span>}
+              {profileError && <span role="alert" className="text-sm text-error">{profileError}</span>}
             </div>
           </form>
         </section>
