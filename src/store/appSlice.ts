@@ -290,6 +290,21 @@ const appSlice = createSlice({
       state,
       action: PayloadAction<{ id: string; name: string; role: "admin" | "manager" | "rep" }>,
     ) {
+      if (state.team.id !== action.payload.id) {
+        state.onboarding = { ...initialState.onboarding };
+        state.integrations = { ...initialState.integrations };
+        state.team.members = [];
+        state.leadsStatus = "idle";
+        state.meetingsStatus = "idle";
+        state.proposalsStatus = "idle";
+        state.knowledgeAssetsStatus = "idle";
+        state.outreachLeadsStatus = "idle";
+        state.notifications = [];
+        state.selectedMeetingId = null;
+        state.proposalTemplate = { ...initialState.proposalTemplate };
+        state.leadDraftEmails = {};
+        state.selectedEmailId = null;
+      }
       state.team.id = action.payload.id;
       state.team.name = action.payload.name;
       state.team.currentUserRole = action.payload.role;
@@ -367,10 +382,7 @@ const appSlice = createSlice({
       });
     },
     demoLogout(state) {
-      state.auth.loggedIn = false;
-      state.auth.accessToken = null;
-      state.auth.userId = null;
-      state.profile = { ...initialState.profile };
+      return { ...initialState, sidebarOpen: state.sidebarOpen };
     },
     clearApiFeedback(state) {
       state.auth.error = null;
@@ -758,9 +770,14 @@ const appSlice = createSlice({
         }
       })
       .addCase(loginAccount.fulfilled, (state, action) => {
-        if (state.auth.userId !== action.payload.user_id) {
-          state.profile.company = "";
-          state.profile.role = "";
+        if (state.auth.userId && state.auth.userId !== action.payload.user_id) {
+          return {
+            ...initialState,
+            sidebarOpen: state.sidebarOpen,
+            auth: { ...initialState.auth, status: "succeeded" as const, loggedIn: true,
+              accessToken: action.payload.access_token, userId: action.payload.user_id },
+            profile: { ...initialState.profile, name: action.payload.full_name, email: action.payload.email },
+          };
         }
         state.auth.status = "succeeded";
         state.auth.loggedIn = true;
@@ -771,6 +788,15 @@ const appSlice = createSlice({
         // backend doesn't return teamChoiceCompleted; keep existing value
       })
       .addCase(refreshSession.fulfilled, (state, action) => {
+        if (state.auth.userId && state.auth.userId !== action.payload.user_id) {
+          return {
+            ...initialState,
+            sidebarOpen: state.sidebarOpen,
+            auth: { ...initialState.auth, status: "succeeded" as const, loggedIn: true,
+              accessToken: action.payload.access_token, userId: action.payload.user_id },
+            profile: { ...initialState.profile, name: action.payload.full_name, email: action.payload.email },
+          };
+        }
         if (state.auth.userId !== action.payload.user_id) {
           state.profile.company = "";
           state.profile.role = "";
@@ -783,14 +809,10 @@ const appSlice = createSlice({
         state.profile.email = action.payload.email;
       })
       .addCase(refreshSession.rejected, (state) => {
-        state.auth.loggedIn = false;
-        state.auth.accessToken = null;
-        state.auth.userId = null;
+        return { ...initialState, sidebarOpen: state.sidebarOpen };
       })
       .addCase(logoutAccount.fulfilled, (state) => {
-        state.auth.loggedIn = false;
-        state.auth.accessToken = null;
-        state.auth.userId = null;
+        return { ...initialState, sidebarOpen: state.sidebarOpen };
       })
       .addCase(createTeamRemote.pending, teamPending)
       .addCase(createTeamRemote.rejected, teamRejected)
