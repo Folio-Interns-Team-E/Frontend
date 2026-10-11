@@ -206,6 +206,7 @@ type AppState = {
   sendingEmail: boolean;
   sidebarOpen: boolean;
   teamSwitching: boolean;
+  workspaceRequestIds: Record<"onboarding" | "leads" | "meetings" | "proposals" | "knowledge" | "chats", string | null>;
 };
 
 export const initialState: AppState = {
@@ -277,6 +278,7 @@ export const initialState: AppState = {
   sendingEmail: false,
   sidebarOpen: true,
   teamSwitching: false,
+  workspaceRequestIds: { onboarding: null, leads: null, meetings: null, proposals: null, knowledge: null, chats: null },
 };
 
 const appSlice = createSlice({
@@ -291,6 +293,7 @@ const appSlice = createSlice({
       action: PayloadAction<{ id: string; name: string; role: "admin" | "manager" | "rep" }>,
     ) {
       if (state.team.id !== action.payload.id) {
+        state.workspaceRequestIds = { ...initialState.workspaceRequestIds };
         state.onboarding = { ...initialState.onboarding };
         state.integrations = { ...initialState.integrations };
         state.team.members = [];
@@ -854,7 +857,17 @@ const appSlice = createSlice({
       })
 
       // === Onboarding ===
+      .addCase(fetchOnboardingStatus.pending, (state, action) => {
+        state.workspaceRequestIds.onboarding = action.meta.requestId;
+      })
+      .addCase(fetchOnboardingStatus.rejected, (state, action) => {
+        if (state.workspaceRequestIds.onboarding === action.meta.requestId) {
+          state.workspaceRequestIds.onboarding = null;
+        }
+      })
       .addCase(fetchOnboardingStatus.fulfilled, (state, action) => {
+        if (state.workspaceRequestIds.onboarding !== action.meta.requestId) return;
+        state.workspaceRequestIds.onboarding = null;
         const icp = action.payload.icp || "";
         try {
           const data = JSON.parse(icp);
@@ -876,13 +889,18 @@ const appSlice = createSlice({
       })
 
       // === Leads ===
-      .addCase(fetchLeads.pending, (state) => {
+      .addCase(fetchLeads.pending, (state, action) => {
+        state.workspaceRequestIds.leads = action.meta.requestId;
         state.leadsStatus = "loading";
       })
-      .addCase(fetchLeads.rejected, (state) => {
+      .addCase(fetchLeads.rejected, (state, action) => {
+        if (state.workspaceRequestIds.leads !== action.meta.requestId) return;
+        state.workspaceRequestIds.leads = null;
         state.leadsStatus = "failed";
       })
       .addCase(fetchLeads.fulfilled, (state, action) => {
+        if (state.workspaceRequestIds.leads !== action.meta.requestId) return;
+        state.workspaceRequestIds.leads = null;
         state.leads = action.payload.map((lead) => ({
           id: lead.id,
           initials: (lead.name || "")
@@ -1032,13 +1050,18 @@ const appSlice = createSlice({
       })
 
       // === Meetings ===
-      .addCase(fetchMeetings.pending, (state) => {
+      .addCase(fetchMeetings.pending, (state, action) => {
+        state.workspaceRequestIds.meetings = action.meta.requestId;
         state.meetingsStatus = "loading";
       })
-      .addCase(fetchMeetings.rejected, (state) => {
+      .addCase(fetchMeetings.rejected, (state, action) => {
+        if (state.workspaceRequestIds.meetings !== action.meta.requestId) return;
+        state.workspaceRequestIds.meetings = null;
         state.meetingsStatus = "failed";
       })
       .addCase(fetchMeetings.fulfilled, (state, action) => {
+        if (state.workspaceRequestIds.meetings !== action.meta.requestId) return;
+        state.workspaceRequestIds.meetings = null;
         state.meetings = action.payload.map((m) => ({
           id: m.id,
           leadId: m.lead_id ?? "",
@@ -1061,13 +1084,18 @@ const appSlice = createSlice({
       })
 
       // === Proposals ===
-      .addCase(fetchProposals.pending, (state) => {
+      .addCase(fetchProposals.pending, (state, action) => {
+        state.workspaceRequestIds.proposals = action.meta.requestId;
         state.proposalsStatus = "loading";
       })
-      .addCase(fetchProposals.rejected, (state) => {
+      .addCase(fetchProposals.rejected, (state, action) => {
+        if (state.workspaceRequestIds.proposals !== action.meta.requestId) return;
+        state.workspaceRequestIds.proposals = null;
         state.proposalsStatus = "failed";
       })
       .addCase(fetchProposals.fulfilled, (state, action) => {
+        if (state.workspaceRequestIds.proposals !== action.meta.requestId) return;
+        state.workspaceRequestIds.proposals = null;
         state.proposals = action.payload.map(toProposal);
         state.proposalsStatus = "succeeded";
       })
@@ -1097,13 +1125,18 @@ const appSlice = createSlice({
       })
 
       // === Knowledge Base ===
-      .addCase(fetchKnowledgeAssets.pending, (state) => {
+      .addCase(fetchKnowledgeAssets.pending, (state, action) => {
+        state.workspaceRequestIds.knowledge = action.meta.requestId;
         state.knowledgeAssetsStatus = "loading";
       })
-      .addCase(fetchKnowledgeAssets.rejected, (state) => {
+      .addCase(fetchKnowledgeAssets.rejected, (state, action) => {
+        if (state.workspaceRequestIds.knowledge !== action.meta.requestId) return;
+        state.workspaceRequestIds.knowledge = null;
         state.knowledgeAssetsStatus = "failed";
       })
       .addCase(fetchKnowledgeAssets.fulfilled, (state, action) => {
+        if (state.workspaceRequestIds.knowledge !== action.meta.requestId) return;
+        state.workspaceRequestIds.knowledge = null;
         state.knowledgeAssets = action.payload.map((a) => ({
           id: a.id,
           title: a.title,
@@ -1130,7 +1163,17 @@ const appSlice = createSlice({
       })
 
       // === Chat ===
+      .addCase(fetchChats.pending, (state, action) => {
+        state.workspaceRequestIds.chats = action.meta.requestId;
+      })
+      .addCase(fetchChats.rejected, (state, action) => {
+        if (state.workspaceRequestIds.chats === action.meta.requestId) {
+          state.workspaceRequestIds.chats = null;
+        }
+      })
       .addCase(fetchChats.fulfilled, (state, action) => {
+        if (state.workspaceRequestIds.chats !== action.meta.requestId) return;
+        state.workspaceRequestIds.chats = null;
         state.chats = action.payload.map((c) => ({
           id: c.id,
           team_id: c.team_id,
