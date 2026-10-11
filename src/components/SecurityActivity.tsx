@@ -8,6 +8,7 @@ const labels: Record<SecurityEventApi["action"], string> = {
   github_login: "Signed in with GitHub",
   google_linked: "Google sign-in connected",
   github_linked: "GitHub sign-in connected",
+  logout_all: "Signed out of all devices",
 };
 
 export function SecurityActivity({ accessToken }: { accessToken: string }) {

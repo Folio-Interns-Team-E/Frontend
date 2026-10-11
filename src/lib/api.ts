@@ -50,7 +50,8 @@ export type SecurityEventApi = {
     | "google_login"
     | "github_login"
     | "google_linked"
-    | "github_linked";
+    | "github_linked"
+    | "logout_all";
   created_at: string;
 };
 
@@ -429,6 +430,9 @@ export const api = {
   },
   logout(accessToken: string) {
     return request<{ data: unknown }>("/auth/logout", { method: "POST" }, accessToken);
+  },
+  logoutAll(accessToken: string) {
+    return request<void>("/auth/logout-all", { method: "POST" }, accessToken);
   },
   createTeam(name: string, accessToken: string) {
     return request<{ data: ApiTeam }>(
@@ -1124,7 +1128,7 @@ export const api = {
     );
   },
   getCalcomStatus(accessToken: string, teamId: string) {
-    return request<{ data: { connected: boolean; event_type_id?: string | null } }>(
+    return request<{ data: { connected: boolean; event_type_id?: string | null; needs_event_type: boolean } }>(
       "/integrations/calcom/status",
       {},
       accessToken,

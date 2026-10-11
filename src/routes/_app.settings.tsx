@@ -4,7 +4,7 @@ import { TopBar } from "../components/TopBar";
 import { demoLogout, setIntegration, updateProfile } from "../store/appSlice";
 import { logoutAccount } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { api } from "../lib/api";
+import { api, setAccessToken } from "../lib/api";
 import { SocialSignIn } from "../components/SocialSignIn";
 import { SecurityActivity } from "../components/SecurityActivity";
 
@@ -21,6 +21,9 @@ function Settings() {
   const integrations = useAppSelector((state) => state.app.integrations);
   const [draft, setDraft] = useState(profile);
   const [saved, setSaved] = useState(false);
+  const [logoutAllOpen, setLogoutAllOpen] = useState(false);
+  const [logoutAllBusy, setLogoutAllBusy] = useState(false);
+  const [logoutAllError, setLogoutAllError] = useState("");
 
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailEmail, setGmailEmail] = useState<string | null>(null);
@@ -190,6 +193,21 @@ function Settings() {
     setSaved(true);
   }
 
+  async function signOutAllDevices() {
+    if (!token) return;
+    setLogoutAllBusy(true);
+    setLogoutAllError("");
+    try {
+      await api.logoutAll(token);
+      setAccessToken(null);
+      dispatch(demoLogout());
+      window.location.assign("/login");
+    } catch (error) {
+      setLogoutAllError(error instanceof Error ? error.message : "Could not sign out all devices. Please try again.");
+      setLogoutAllBusy(false);
+    }
+  }
+
   return (
     <>
       <TopBar title="Settings" />
@@ -276,19 +294,44 @@ function Settings() {
               Sign out of this browser session.
             </p>
           </div>
-          <Link
-            to="/login"
-            onClick={() => {
-              if (auth.accessToken) void dispatch(logoutAccount(auth.accessToken));
-              dispatch(demoLogout());
-            }}
-            className="secondary-action border-error/40 text-error hover:border-error hover:bg-error/5 hover:text-error"
-          >
-            Log out
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="secondary-action border-error/40 text-error hover:border-error hover:bg-error/5 hover:text-error"
+              onClick={() => setLogoutAllOpen(true)}
+            >
+              Sign out all devices
+            </button>
+            <Link
+              to="/login"
+              onClick={() => {
+                if (auth.accessToken) void dispatch(logoutAccount(auth.accessToken));
+                dispatch(demoLogout());
+              }}
+              className="secondary-action border-error/40 text-error hover:border-error hover:bg-error/5 hover:text-error"
+            >
+              Log out
+            </Link>
+          </div>
         </section>
         {token && <SecurityActivity key={auth.userId} accessToken={token} />}
       </div>
+
+      {logoutAllOpen && (
+        <div className="modal-backdrop" role="presentation">
+          <div className="modal-surface w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="logout-all-title">
+            <div className="space-y-3 p-5">
+              <h2 id="logout-all-title" className="text-lg font-bold">Sign out everywhere?</h2>
+              <p className="text-sm text-on-surface-variant">All current SalesSync sessions, including this one, will stop working. You will need to sign in again on every device. Workspace API keys are not affected.</p>
+              {logoutAllError && <p role="alert" className="text-sm text-error">{logoutAllError}</p>}
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" className="secondary-action" disabled={logoutAllBusy} onClick={() => setLogoutAllOpen(false)}>Cancel</button>
+                <button type="button" className="primary-action" disabled={logoutAllBusy} onClick={() => void signOutAllDevices()}>{logoutAllBusy ? "Signing out..." : "Sign out all devices"}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {calendlyModalOpen && (
         <div className="modal-backdrop">
