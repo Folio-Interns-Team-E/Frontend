@@ -488,6 +488,14 @@ export const api = {
       teamId,
     );
   },
+  rotateInviteCode(teamId: string, accessToken: string) {
+    return request<{ data: { invite_code: string } }>(
+      `/teams/${teamId}/invite-code/rotate`,
+      { method: "POST" },
+      accessToken,
+      teamId,
+    );
+  },
   getMyTeams(accessToken: string) {
     return request<{ data: ApiUserTeam[] }>("/teams/", {}, accessToken);
   },

@@ -14,6 +14,7 @@ import {
   updateMemberRoleRemote,
 } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { api } from "../lib/api";
 
 export const Route = createFileRoute("/_app/team")({
   head: () => ({ meta: [{ title: "Team management · SalesSync AI" }] }),
@@ -29,6 +30,9 @@ function TeamManagement() {
   const [inviteCode, setInviteCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState<{ id: string; name: string } | null>(null);
+  const [rotateOpen, setRotateOpen] = useState(false);
+  const [rotateBusy, setRotateBusy] = useState(false);
+  const [rotateError, setRotateError] = useState("");
   const isAdmin = team.currentUserRole === "admin";
   const canManageMembers = team.currentUserRole === "admin" || team.currentUserRole === "manager";
 
@@ -82,6 +86,22 @@ function TeamManagement() {
     void navigator.clipboard?.writeText(team.inviteCode);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1500);
+  }
+
+  async function rotateInviteCode() {
+    if (!team.id || !auth.accessToken || !isAdmin) return;
+    setRotateBusy(true);
+    setRotateError("");
+    try {
+      await api.rotateInviteCode(team.id, auth.accessToken);
+      await dispatch(fetchTeamRemote({ teamId: team.id, accessToken: auth.accessToken })).unwrap();
+      setCopied(false);
+      setRotateOpen(false);
+    } catch (error) {
+      setRotateError(error instanceof Error ? error.message : "Could not rotate the invite code.");
+    } finally {
+      setRotateBusy(false);
+    }
   }
 
   function confirmRemoveMember() {
@@ -202,7 +222,7 @@ function TeamManagement() {
                     </span>
                   </div>
                 </div>}
-                <div>
+                {isAdmin && team.inviteCode && <div>
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                     External invite code
                   </p>
@@ -215,7 +235,10 @@ function TeamManagement() {
                       {copied ? "check" : "content_copy"}
                     </span>
                   </button>
-                </div>
+                  <button type="button" className="mt-2 text-xs font-semibold text-[#72e1e3] underline-offset-2 hover:underline" onClick={() => setRotateOpen(true)}>
+                    Rotate invite code
+                  </button>
+                </div>}
               </div>
             </section>
 
@@ -319,6 +342,21 @@ function TeamManagement() {
           </>
         )}
       </div>
+      {rotateOpen && (
+        <div className="modal-backdrop" role="presentation">
+          <div className="modal-surface w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="rotate-invite-title">
+            <div className="space-y-3 p-5">
+              <h2 id="rotate-invite-title" className="text-lg font-bold">Rotate invite code?</h2>
+              <p className="text-sm text-on-surface-variant">The current code and all invitation links containing it will stop working. Team members already joined will keep access.</p>
+              {rotateError && <p role="alert" className="text-sm text-error">{rotateError}</p>}
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" className="secondary-action" disabled={rotateBusy} onClick={() => setRotateOpen(false)}>Cancel</button>
+                <button type="button" className="primary-action" disabled={rotateBusy} onClick={() => void rotateInviteCode()}>{rotateBusy ? "Rotating..." : "Rotate code"}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirmRemove && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
