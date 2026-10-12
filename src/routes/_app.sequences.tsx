@@ -56,28 +56,40 @@ function SequencesPage() {
       setError(e instanceof Error ? e.message : "Could not create sequence");
     }
   }
-  async function status(item: SequenceApi, next: string) {
+  async function status(item: SequenceApi, next: SequenceApi["status"]) {
     if (!token || !team.id) return;
-    await api.updateSequenceStatus(item.id, next, token, team.id);
-    await load();
+    setError("");
+    setItems((current) => current.map((x) => x.id === item.id ? { ...x, status: next } : x));
+    try {
+      await api.updateSequenceStatus(item.id, next, token, team.id);
+    } catch (e) {
+      setItems((current) => current.map((x) => x.id === item.id ? item : x));
+      setError(e instanceof Error ? e.message : "Could not update sequence");
+    }
   }
   async function deleteSequence() {
     if (!deleting || !token || !team.id) return;
+    const item = deleting;
+    setError("");
+    setDeleting(null);
+    setItems((current) => current.filter((x) => x.id !== item.id));
     try {
-      await api.deleteSequence(deleting.id, token, team.id);
-      setDeleting(null);
-      await load();
+      await api.deleteSequence(item.id, token, team.id);
     } catch (e) {
+      setItems((current) => current.some((x) => x.id === item.id) ? current : [...current, item]);
       setError(e instanceof Error ? e.message : "Could not delete sequence");
     }
   }
   async function enrollLeads() {
     if (!enroll || !token || !team.id) return;
+    const sequenceId = enroll.id;
+    const leadIds = [...selected];
+    setError("");
+    setEnroll(null);
+    setSelected([]);
     try {
-      await api.enrollSequence(enroll.id, selected, token, team.id);
-      setEnroll(null);
-      setSelected([]);
-      await load();
+      const result = await api.enrollSequence(sequenceId, leadIds, token, team.id);
+      setItems((current) => current.map((x) => x.id === sequenceId ? { ...x, active_enrollments: x.active_enrollments + result.data.enrolled } : x));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not enroll leads");
     }

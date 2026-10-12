@@ -134,13 +134,15 @@ function CrmPage() {
 
   async function toggleTask(task: SalesTaskApi) {
     if (!token || !team.id) return;
-    await api.updateSalesTask(
-      task.id,
-      { status: task.status === "Completed" ? "Open" : "Completed" },
-      token,
-      team.id,
-    );
-    await load();
+    const next = task.status === "Completed" ? "Open" : "Completed";
+    setError("");
+    setTasks((current) => current.map((x) => x.id === task.id ? { ...x, status: next } : x));
+    try {
+      await api.updateSalesTask(task.id, { status: next }, token, team.id);
+    } catch (err) {
+      setTasks((current) => current.map((x) => x.id === task.id ? task : x));
+      setError(err instanceof Error ? err.message : "Could not update task");
+    }
   }
 
   async function viewContact(contact: ContactApi) {
