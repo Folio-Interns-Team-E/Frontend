@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { api } from "../lib/api";
 import { TopBar } from "../components/TopBar";
 import {
   discardLeadRemote,
@@ -30,6 +32,9 @@ function LeadGeneration() {
   const dispatch = useAppDispatch();
   const leads = useAppSelector((state) => state.app.leads);
   const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
+  const token = useAppSelector((state) => state.app.auth.accessToken);
+  const teamId = useAppSelector((state) => state.app.team.id);
+  const [convertingId, setConvertingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -88,6 +93,21 @@ function LeadGeneration() {
         body: `Hi ${lead.name},\n\nI would like to discuss how SalesSync can support ${lead.company || "your team"}.`,
       }),
     );
+  };
+
+  const convertLead = async (leadId: string) => {
+    if (!token || !teamId || convertingId) return;
+    setConvertingId(leadId);
+    setGenerationError(null);
+    try {
+      const result = await api.convertProspect(leadId, token, teamId);
+      setGenerationMessage(result.data.already_converted ? "Prospect is already linked to CRM." : "Prospect converted to CRM. Its history remains linked.");
+      await dispatch(fetchLeads()).unwrap();
+    } catch (error) {
+      setGenerationError(error instanceof Error ? error.message : "Could not convert prospect");
+    } finally {
+      setConvertingId(null);
+    }
   };
 
   const filteredLeads = leads.filter((lead) => {
@@ -278,6 +298,13 @@ function LeadGeneration() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-1.5">
+                            {r.crmContactId ? (
+                              <Link to="/crm" className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary">View in CRM</Link>
+                            ) : ["Qualified", "Drafted", "Sent", "Replied"].includes(r.status) ? (
+                              <button type="button" onClick={() => void convertLead(r.id)} disabled={convertingId === r.id} className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary disabled:opacity-50">
+                                {convertingId === r.id ? "Converting…" : "Convert to CRM"}
+                              </button>
+                            ) : null}
                            
                           
                             <button

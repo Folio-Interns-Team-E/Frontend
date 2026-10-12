@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { AccountApi, api, ContactApi, SalesTaskApi } from "../lib/api";
+import { AccountApi, api, ContactApi, ContactContextApi, SalesTaskApi } from "../lib/api";
 import { TopBar } from "../components/TopBar";
 import { useAppSelector } from "../store/hooks";
 
@@ -22,6 +22,9 @@ function CrmPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [form, setForm] = useState<Record<string, string>>({});
+  const [selectedContact, setSelectedContact] = useState<ContactApi | null>(null);
+  const [contactContext, setContactContext] = useState<ContactContextApi | null>(null);
+  const [contextLoading, setContextLoading] = useState(false);
 
   const load = useCallback(async () => {
     if (!token || !team.id) return;
@@ -76,7 +79,7 @@ function CrmPage() {
               account_id: "",
               lifecycle_stage: "Lead",
             }
-          : { title: "", task_type: "Follow-up", priority: "Medium", due_at: "", description: "" },
+          : { title: "", task_type: "Follow-up", priority: "Medium", due_at: "", description: "", contact_id: "" },
     );
     setModal(true);
   }
@@ -116,6 +119,7 @@ function CrmPage() {
             task_type: form.task_type,
             priority: form.priority,
             due_at: form.due_at ? new Date(form.due_at).toISOString() : null,
+            contact_id: form.contact_id || null,
             description: form.description || null,
           },
           token,
@@ -139,6 +143,21 @@ function CrmPage() {
     await load();
   }
 
+  async function viewContact(contact: ContactApi) {
+    if (!token || !team.id) return;
+    setSelectedContact(contact);
+    setContactContext(null);
+    setContextLoading(true);
+    try {
+      const response = await api.getContactContext(contact.id, token, team.id);
+      setContactContext(response.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load contact history");
+    } finally {
+      setContextLoading(false);
+    }
+  }
+
   const overdue = tasks.filter(
     (task) => task.status !== "Completed" && task.due_at && new Date(task.due_at) < new Date(),
   ).length;
@@ -149,7 +168,7 @@ function CrmPage() {
         <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="section-heading">Customer operations</p>
-            <h1 className="mt-1 text-2xl font-black tracking-tight">CRM workspace</h1>
+            <h1 className="mt-1 text-2xl font-black tracking-tight">Accounts & Contacts</h1>
             <p className="mt-1 text-xs text-slate-500">
               Companies, people and the next actions required to move revenue.
             </p>
@@ -256,7 +275,7 @@ function CrmPage() {
                 </thead>
                 <tbody>
                   {(records as ContactApi[]).map((x) => (
-                    <tr key={x.id} className="border-t border-slate-100">
+                    <tr key={x.id} className="cursor-pointer border-t border-slate-100 hover:bg-slate-50" onClick={() => void viewContact(x)}>
                       <td className="px-5 py-3">
                         <p className="text-xs font-bold">
                           {x.first_name} {x.last_name}
@@ -308,6 +327,23 @@ function CrmPage() {
             </div>
           )}
         </section>
+        {selectedContact && (
+          <section className="section-panel p-5" aria-label="Contact history">
+            <div className="flex items-center justify-between gap-3">
+              <div><h2 className="text-lg font-bold">{selectedContact.first_name} {selectedContact.last_name}</h2><p className="text-sm text-slate-500">{selectedContact.account_name || "No account"} · {selectedContact.email || "No email"}</p></div>
+              <button type="button" className="secondary-action" onClick={() => setSelectedContact(null)}>Close</button>
+            </div>
+            {contextLoading ? <p className="mt-4 text-sm">Loading history…</p> : contactContext && (
+              <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <History title="Prospects" items={contactContext.leads.map((x) => `${x.name} · ${x.status}${x.score != null ? ` · Fit ${x.score}` : ""}`)} />
+                <History title="Emails" items={contactContext.emails.map((x) => `${x.subject} · ${x.status}`)} />
+                <History title="Meetings" items={contactContext.meetings.map((x) => `${x.date} ${x.time} · ${x.status}${x.meet_url ? ` · ${x.meet_url}` : ""}`)} />
+                <History title="Deals" items={contactContext.deals.map((x) => `${x.name} · ${x.stage} · ${x.amount}`)} />
+                <History title="Follow-up tasks" items={contactContext.tasks.map((x) => `${x.title} · ${x.status}`)} />
+              </div>
+            )}
+          </section>
+        )}
       </div>
       {modal && (
         <div className="modal-backdrop">
@@ -363,6 +399,12 @@ function CrmPage() {
               ) : (
                 <>
                   <Input label="Task title" name="title" form={form} setForm={setForm} required />
+                  <label className="text-[10px] font-bold uppercase text-slate-500">Contact
+                    <select value={form.contact_id || ""} onChange={(e) => setForm({ ...form, contact_id: e.target.value })} className="control mt-1.5 w-full px-3 text-sm">
+                      <option value="">No contact</option>
+                      {contacts.map((contact) => <option key={contact.id} value={contact.id}>{contact.first_name} {contact.last_name}</option>)}
+                    </select>
+                  </label>
                   <Input
                     label="Due date"
                     name="due_at"
@@ -407,6 +449,15 @@ function CrmPage() {
         </div>
       )}
     </>
+  );
+}
+
+function History({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="rounded-xl border border-slate-200 p-4">
+      <h3 className="text-sm font-bold">{title} <span className="text-slate-400">{items.length}</span></h3>
+      {items.length ? <ul className="mt-3 space-y-2">{items.map((item, index) => <li key={`${index}-${item}`} className="break-words text-xs text-slate-600">{item}</li>)}</ul> : <p className="mt-3 text-xs text-slate-400">No records yet</p>}
+    </div>
   );
 }
 

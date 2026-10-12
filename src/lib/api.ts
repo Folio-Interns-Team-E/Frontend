@@ -154,6 +154,13 @@ export type ContactApi = {
   created_at: string;
   updated_at: string;
 };
+export type ContactContextApi = {
+  leads: { id: string; name: string; status: string; score: number | null }[];
+  emails: { id: string; subject: string; status: string; sent_at: string | null }[];
+  meetings: { id: string; date: string; time: string; status: string; meet_url: string | null }[];
+  deals: { id: string; name: string; stage: string; amount: string }[];
+  tasks: { id: string; title: string; status: string; due_at: string | null }[];
+};
 export type SalesTaskApi = {
   id: string;
   team_id: string;
@@ -609,6 +616,14 @@ export const api = {
   },
   getContacts(accessToken: string, teamId?: string | null) {
     return request<{ data: ContactApi[] }>("/crm/contacts", {}, accessToken, teamId);
+  },
+  convertProspect(leadId: string, accessToken: string, teamId: string) {
+    return request<{ data: { contact_id: string; account_id: string | null; already_converted: boolean } }>(
+      `/crm/prospects/${leadId}/convert`, { method: "POST" }, accessToken, teamId,
+    );
+  },
+  getContactContext(contactId: string, accessToken: string, teamId: string) {
+    return request<{ data: ContactContextApi }>(`/crm/contacts/${contactId}/context`, {}, accessToken, teamId);
   },
   createContact(
     payload: Partial<ContactApi> & { first_name: string },
@@ -1232,6 +1247,7 @@ export type LeadApi = {
   source?: string;
   score?: number | null;
   status: string;
+  crm_contact_id?: string | null;
   reasoning?: string;
   evaluation_justification?: string | null;
   created_at: string;

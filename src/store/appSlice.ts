@@ -45,7 +45,8 @@ export type LeadStatus =
   | "Discarded"
   | "Drafted"
   | "Sent"
-  | "Replied";
+  | "Replied"
+  | "Converted";
 
 export type Lead = {
   id: string;
@@ -57,6 +58,7 @@ export type Lead = {
   source: string;
   score: number | null;
   status: LeadStatus;
+  crmContactId?: string | null;
   reasoning: string;
   evaluationJustification: string;
   createdAt: string;
@@ -918,6 +920,7 @@ const appSlice = createSlice({
           source: lead.source || "",
           score: lead.score ?? null,
           status: lead.status as LeadStatus,
+          crmContactId: lead.crm_contact_id ?? null,
           reasoning: lead.reasoning || "",
           evaluationJustification: lead.evaluation_justification || "",
           createdAt: lead.created_at,

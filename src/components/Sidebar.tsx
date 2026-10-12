@@ -9,7 +9,7 @@ const navigation = [
   {
     label: "Pipeline",
     items: [
-      { to: "/crm", icon: "domain", label: "CRM records" },
+      { to: "/crm", icon: "domain", label: "Accounts & Contacts" },
       { to: "/lead-generation", icon: "person_search", label: "Prospects" },
       { to: "/qualification", icon: "verified", label: "Qualification" },
       { to: "/sequences", icon: "conversion_path", label: "Sequences" },
