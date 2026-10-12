@@ -306,7 +306,7 @@ function AdminDashboard() {
             <div className="mt-4 space-y-3">
               <Readiness label="Sequence worker" good={workerHealthy === true} />
               <Readiness label="Gmail outreach" good={data.integrations.gmail_connected} />
-              <Readiness label="Cal.com scheduling" good={data.integrations.calcom_connected} />
+              <Readiness label="Google Calendar scheduling" good={data.integrations.calendar_connected} />
               <Readiness label="Apollo sourcing" good={data.integrations.apollo_connected} />
               <Readiness label="Ideal customer profile" good={data.workspace.icp_configured} />
               <Readiness

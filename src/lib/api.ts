@@ -1162,51 +1162,6 @@ export const api = {
   getGoogleCalendarStatus(accessToken: string) {
     return request<{ data: { connected: boolean; email?: string } }>("/integrations/google-calendar/status", {}, accessToken);
   },
-  getCalcomStatus(accessToken: string, teamId: string) {
-    return request<{ data: { connected: boolean; event_type_id?: string | null; needs_event_type: boolean } }>(
-      "/integrations/calcom/status",
-      {},
-      accessToken,
-      teamId,
-    );
-  },
-  startCalcomOAuth(accessToken: string, teamId: string) {
-    return request<{ data: { url: string } }>(
-      "/integrations/calcom/oauth/start",
-      { method: "POST" },
-      accessToken,
-      teamId,
-    );
-  },
-  configureCalcomEventType(eventTypeId: string, accessToken: string, teamId: string) {
-    return request<{
-      data: { connected: boolean; event_type_id: string; needs_event_type: boolean };
-    }>(
-      "/integrations/calcom/event-type",
-      { method: "PUT", body: JSON.stringify({ event_type_id: eventTypeId }) },
-      accessToken,
-      teamId,
-    );
-  },
-  configureCalcom(apiKey: string, eventTypeId: string, accessToken: string, teamId: string) {
-    return request<{ data: { id: string; event_type_id: string } }>(
-      "/integrations/calcom",
-      {
-        method: "PUT",
-        body: JSON.stringify({ cal_api_key: apiKey, cal_event_type_id: eventTypeId }),
-      },
-      accessToken,
-      teamId,
-    );
-  },
-  disconnectCalcom(accessToken: string, teamId: string) {
-    return request<{ data: Record<string, never> }>(
-      "/integrations/calcom",
-      { method: "DELETE" },
-      accessToken,
-      teamId,
-    );
-  },
   sendChat(message: string, accessToken: string, teamId?: string | null, chatId?: string | null) {
     return request<{ data: { reply: string } }>(
       `/chat/chats/${chatId}/messages`,
@@ -1399,7 +1354,7 @@ export type AdminOverview = {
   knowledge_base: { total: number; by_status: Record<string, number> };
   integrations: {
     gmail_connected: boolean;
-    calcom_connected: boolean;
+    calendar_connected: boolean;
     apollo_connected: boolean;
     apollo_used: number;
     apollo_limit: number;

@@ -29,7 +29,6 @@ function Meetings() {
   const [createError, setCreateError] = useState("");
   const [createdLink, setCreatedLink] = useState("");
   const selectedMeetingId = useAppSelector((state) => state.app.selectedMeetingId);
-  const calendarConnected = useAppSelector((state) => state.app.integrations.calendly);
   const selectedMeeting =
     meetings.find((meeting) => meeting.id === selectedMeetingId) ?? meetings[0];
 

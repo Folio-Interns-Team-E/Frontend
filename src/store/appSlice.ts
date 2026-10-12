@@ -161,7 +161,7 @@ type AppState = {
   };
   integrations: {
     gmail: boolean;
-    calendly: boolean;
+    calendar: boolean;
     apollo: boolean;
   };
   team: {
@@ -237,7 +237,7 @@ export const initialState: AppState = {
   },
   integrations: {
     gmail: false,
-    calendly: false,
+    calendar: false,
     apollo: false,
   },
   team: {
