@@ -838,6 +838,27 @@ export const api = {
       teamId,
     );
   },
+  getHunterProvider(accessToken: string, teamId?: string | null) {
+    return request<{ data: LeadProviderStatus }>("/leads/hunter/provider", {}, accessToken, teamId);
+  },
+  configureHunterProvider(apiKey: string, monthlyLimit: number, accessToken: string, teamId?: string | null) {
+    return request<{ data: LeadProviderStatus }>("/leads/hunter/provider", {
+      method: "PUT", body: JSON.stringify({ api_key: apiKey, monthly_limit: monthlyLimit }),
+    }, accessToken, teamId);
+  },
+  disconnectHunterProvider(accessToken: string, teamId?: string | null) {
+    return request<{ data: Record<string, never> }>("/leads/hunter/provider", { method: "DELETE" }, accessToken, teamId);
+  },
+  discoverHunter(query: string, accessToken: string, teamId?: string | null) {
+    return request<{ data: { domain: string; name: string; email_count: number }[] }>("/leads/hunter/discover", {
+      method: "POST", body: JSON.stringify({ query }),
+    }, accessToken, teamId);
+  },
+  revealHunter(domains: string[], accessToken: string, teamId?: string | null) {
+    return request<{ data: { created: number; skipped_duplicates: number; leads: LeadApi[] } }>("/leads/hunter/reveal", {
+      method: "POST", body: JSON.stringify({ domains }),
+    }, accessToken, teamId);
+  },
   createLead(
     payload: {
       name: string;

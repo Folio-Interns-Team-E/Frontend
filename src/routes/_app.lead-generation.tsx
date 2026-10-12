@@ -34,6 +34,7 @@ function LeadGeneration() {
   const leadsStatus = useAppSelector((state) => state.app.leadsStatus);
   const token = useAppSelector((state) => state.app.auth.accessToken);
   const teamId = useAppSelector((state) => state.app.team.id);
+  const icp = useAppSelector((state) => state.app.onboarding.icp);
   const [convertingId, setConvertingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -44,6 +45,12 @@ function LeadGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [generationMessage, setGenerationMessage] = useState<string | null>(null);
+  const [hunterOpen, setHunterOpen] = useState(false);
+  const [hunterQuery, setHunterQuery] = useState("");
+  const [hunterCompanies, setHunterCompanies] = useState<{ domain: string; name: string; email_count: number }[]>([]);
+  const [hunterSelected, setHunterSelected] = useState<string[]>([]);
+  const [hunterBusy, setHunterBusy] = useState(false);
+  const [hunterError, setHunterError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const generateLeads = async () => {
@@ -82,6 +89,39 @@ function LeadGeneration() {
     } finally {
       setIsGenerating(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const discoverHunter = async () => {
+    if (!token || !teamId || hunterQuery.trim().length < 3) return;
+    setHunterBusy(true);
+    setHunterError("");
+    setHunterCompanies([]);
+    setHunterSelected([]);
+    try {
+      const result = await api.discoverHunter(hunterQuery.trim(), token, teamId);
+      setHunterCompanies(result.data);
+    } catch (error) {
+      setHunterError(error instanceof Error ? error.message : "Hunter discovery failed");
+    } finally {
+      setHunterBusy(false);
+    }
+  };
+
+  const revealHunter = async () => {
+    if (!token || !teamId || !hunterSelected.length || hunterBusy) return;
+    if (!window.confirm(`Look up at most one contact from each of ${hunterSelected.length} selected companies? Hunter may charge credits for found emails.`)) return;
+    setHunterBusy(true);
+    setHunterError("");
+    try {
+      const result = await api.revealHunter(hunterSelected, token, teamId);
+      setGenerationMessage(`Imported ${result.data.created} Hunter contacts; skipped ${result.data.skipped_duplicates} duplicates.`);
+      setHunterOpen(false);
+      await dispatch(fetchLeads()).unwrap();
+    } catch (error) {
+      setHunterError(error instanceof Error ? error.message : "Hunter contact lookup failed");
+    } finally {
+      setHunterBusy(false);
     }
   };
 
@@ -160,6 +200,9 @@ function LeadGeneration() {
             <span className="material-symbols-outlined text-[18px]">bolt</span>
             {isGenerating ? "Generating..." : "Generate with Apollo"}
           </button>
+          <button type="button" onClick={() => { setHunterQuery((current) => current || icp); setHunterOpen(true); }} className="secondary-action w-full sm:w-auto">
+            <span className="material-symbols-outlined text-[18px]">travel_explore</span>Discover with Hunter
+          </button>
           <input
             ref={fileInputRef}
             type="file"
@@ -187,6 +230,32 @@ function LeadGeneration() {
           <p className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
             {generationMessage}
           </p>
+        )}
+        {hunterOpen && (
+          <div className="modal-backdrop">
+            <div className="modal-surface w-full max-w-2xl p-5">
+              <h2 className="text-lg font-bold">Discover companies with Hunter</h2>
+              <p className="mt-1 text-sm text-on-surface-variant">Company search uses no email credits, but Hunter may limit AI searches. Contact lookup may use credits and happens only after your confirmation.</p>
+              <div className="mt-4 flex gap-2">
+                <input className="control min-w-0 flex-1 px-3" placeholder="e.g. restaurants in Karachi with 10–50 employees" value={hunterQuery} onChange={(e) => setHunterQuery(e.target.value)} />
+                <button className="primary-action" disabled={hunterBusy || hunterQuery.trim().length < 3} onClick={() => void discoverHunter()}>{hunterBusy ? "Searching..." : "Search"}</button>
+              </div>
+              {hunterError && <p role="alert" className="mt-3 text-sm text-error">{hunterError}</p>}
+              <div className="mt-4 max-h-80 overflow-y-auto divide-y divide-outline-variant">
+                {hunterCompanies.map((company) => (
+                  <label key={company.domain} className="flex items-center gap-3 py-2 text-sm">
+                    <input type="checkbox" checked={hunterSelected.includes(company.domain)} disabled={!hunterSelected.includes(company.domain) && hunterSelected.length >= 3} onChange={(e) => setHunterSelected(e.target.checked ? [...hunterSelected, company.domain] : hunterSelected.filter((domain) => domain !== company.domain))} />
+                    <span className="min-w-0 flex-1"><span className="block font-semibold">{company.name}</span><span className="text-xs text-on-surface-variant">{company.domain} · {company.email_count} listed contacts</span></span>
+                  </label>
+                ))}
+                {!hunterBusy && !hunterCompanies.length && <p className="py-4 text-sm text-on-surface-variant">Search to preview matching companies.</p>}
+              </div>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <span className="text-xs text-on-surface-variant">Select up to 3 companies. At most 1 personal contact per company.</span>
+                <div className="flex gap-2"><button className="secondary-action" onClick={() => setHunterOpen(false)}>Close</button><button className="primary-action" disabled={hunterBusy || !hunterSelected.length} onClick={() => void revealHunter()}>Find contacts</button></div>
+              </div>
+            </div>
+          </div>
         )}
 
         {leadsStatus === "loading" ? (

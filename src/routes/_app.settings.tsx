@@ -44,6 +44,13 @@ function Settings() {
   const [apolloLoading, setApolloLoading] = useState(true);
   const [apolloSaving, setApolloSaving] = useState(false);
   const [apolloError, setApolloError] = useState("");
+  const [hunterOpen, setHunterOpen] = useState(false);
+  const [hunterKey, setHunterKey] = useState("");
+  const [hunterLimit, setHunterLimit] = useState(50);
+  const [hunterUsed, setHunterUsed] = useState(0);
+  const [hunterConnected, setHunterConnected] = useState(false);
+  const [hunterBusy, setHunterBusy] = useState(false);
+  const [hunterError, setHunterError] = useState("");
 
   const token = auth.accessToken;
 
@@ -89,6 +96,48 @@ function Settings() {
       .catch(() => {})
       .finally(() => setApolloLoading(false));
   }, [token, team.id, dispatch]);
+
+  useEffect(() => {
+    if (!token || !team.id) return;
+    api.getHunterProvider(token, team.id).then((res) => {
+      setHunterConnected(res.data.connected);
+      setHunterLimit(res.data.monthly_limit);
+      setHunterUsed(res.data.used_this_month);
+    }).catch(() => setHunterError("Could not check Hunter connection"));
+  }, [token, team.id]);
+
+  const saveHunter = async () => {
+    if (!token || !team.id || !hunterKey) return;
+    setHunterBusy(true);
+    setHunterError("");
+    try {
+      const res = await api.configureHunterProvider(hunterKey, hunterLimit, token, team.id);
+      setHunterConnected(true);
+      setHunterUsed(res.data.used_this_month);
+      setHunterKey("");
+      setHunterOpen(false);
+    } catch (error) {
+      setHunterError(error instanceof Error ? error.message : "Could not save Hunter key");
+    } finally {
+      setHunterBusy(false);
+    }
+  };
+
+  const disconnectHunter = async () => {
+    if (!token || !team.id) return;
+    setHunterBusy(true);
+    setHunterError("");
+    try {
+      await api.disconnectHunterProvider(token, team.id);
+      setHunterConnected(false);
+      setHunterUsed(0);
+      setHunterOpen(false);
+    } catch (error) {
+      setHunterError(error instanceof Error ? error.message : "Could not disconnect Hunter");
+    } finally {
+      setHunterBusy(false);
+    }
+  };
 
   const connectGmail = async () => {
     if (!token) return;
@@ -262,6 +311,14 @@ function Settings() {
               loading={apolloLoading}
               onToggle={() => setApolloModalOpen(true)}
             />
+            <Integration
+              icon="travel_explore"
+              name="Hunter"
+              description={hunterConnected ? `${hunterUsed} of ${hunterLimit} workspace lookup attempts used this month` : "Discover companies and reveal contacts with your Hunter API key."}
+              connected={hunterConnected}
+              loading={false}
+              onToggle={() => setHunterOpen(true)}
+            />
           </div>
         </section>
 
@@ -381,6 +438,27 @@ function Settings() {
               >
                 {apolloSaving ? "Saving…" : "Save securely"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {hunterOpen && (
+        <div className="modal-backdrop">
+          <div className="modal-surface w-full max-w-md p-5">
+            <h3 className="text-lg font-bold">Connect Hunter</h3>
+            <p className="mt-2 text-sm text-on-surface-variant">The key is stored encrypted for this workspace. Company previews do not reveal emails.</p>
+            <label className="mt-4 block text-sm font-semibold">API key
+              <input type="password" autoComplete="off" className="control mt-2 w-full px-4 py-2.5" value={hunterKey} onChange={(e) => setHunterKey(e.target.value)} />
+            </label>
+            <label className="mt-4 block text-sm font-semibold">Monthly workspace lookup cap
+              <input type="number" min={1} max={1000} className="control mt-2 w-full px-4 py-2.5" value={hunterLimit} onChange={(e) => setHunterLimit(Number(e.target.value))} />
+            </label>
+            <p className="mt-2 text-xs text-on-surface-variant">This is a local safety cap, not Hunter's actual credit balance. Each selected domain triggers at most one contact lookup.</p>
+            {hunterError && <p role="alert" className="mt-3 text-sm text-error">{hunterError}</p>}
+            <div className="mt-5 flex justify-end gap-2">
+              {hunterConnected && <button className="secondary-action mr-auto" disabled={hunterBusy} onClick={() => void disconnectHunter()}>Disconnect</button>}
+              <button className="secondary-action" onClick={() => setHunterOpen(false)}>Cancel</button>
+              <button className="primary-action" disabled={hunterBusy || hunterKey.length < 8 || hunterLimit < 1} onClick={() => void saveHunter()}>{hunterBusy ? "Saving..." : "Save securely"}</button>
             </div>
           </div>
         </div>
