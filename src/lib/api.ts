@@ -1309,6 +1309,7 @@ export type MeetingApi = {
   company?: string;
   date: string;
   time: string;
+  timezone?: string;
   duration?: string;
   agenda: string[] | string | null;
   transcript?: string[];

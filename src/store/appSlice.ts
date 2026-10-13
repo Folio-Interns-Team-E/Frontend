@@ -73,6 +73,8 @@ export type Meeting = {
   company: string;
   date: string;
   time: string;
+  timezone: string;
+  durationMinutes: number;
   duration: string;
   agenda: string[];
   status: "Scheduled" | "Upcoming" | "Live" | "Completed" | "Cancelled" | "No-Show";
@@ -1076,6 +1078,8 @@ const appSlice = createSlice({
           company: m.company || "",
           date: m.date,
           time: m.time,
+          timezone: m.timezone || "UTC",
+          durationMinutes: m.duration_minutes ?? 30,
           duration: m.duration_minutes ? `${m.duration_minutes} min` : m.duration || "30 min",
           agenda: Array.isArray(m.agenda)
             ? m.agenda

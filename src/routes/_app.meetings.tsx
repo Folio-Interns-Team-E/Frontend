@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { TopBar } from "../components/TopBar";
-import { selectMeeting } from "../store/appSlice";
+import { selectMeeting, type Meeting } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { SkeletonList } from "../components/ui/skeleton";
 import { fetchLeads, fetchMeetings } from "../store/apiThunks";
@@ -11,6 +11,25 @@ export const Route = createFileRoute("/_app/meetings")({
   head: () => ({ meta: [{ title: "Meetings - SalesSync AI" }] }),
   component: Meetings,
 });
+
+function meetingDisplayStatus(meeting: Meeting, now: Date): string {
+  if (meeting.status !== "Scheduled" && meeting.status !== "Upcoming") return meeting.status;
+  try {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: meeting.timezone,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    }).formatToParts(now);
+    const values = Object.fromEntries(parts.map(({ type, value }) => [type, Number(value)]));
+    const localNow = Date.UTC(values.year, values.month - 1, values.day, values.hour, values.minute);
+    const [year, month, day] = meeting.date.split("-").map(Number);
+    const [hour, minute] = meeting.time.split(":").map(Number);
+    const end = Date.UTC(year, month - 1, day, hour, minute) + meeting.durationMinutes * 60_000;
+    return Number.isFinite(end) && localNow >= end ? "Time passed" : meeting.status;
+  } catch {
+    return meeting.status;
+  }
+}
 
 function Meetings() {
   const dispatch = useAppDispatch();
@@ -28,6 +47,7 @@ function Meetings() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [createdLink, setCreatedLink] = useState("");
+  const [now, setNow] = useState(() => new Date());
   const selectedMeetingId = useAppSelector((state) => state.app.selectedMeetingId);
   const selectedMeeting =
     meetings.find((meeting) => meeting.id === selectedMeetingId) ?? meetings[0];
@@ -36,6 +56,11 @@ function Meetings() {
     dispatch(fetchMeetings());
     dispatch(fetchLeads());
   }, [dispatch]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const createMeeting = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -143,11 +168,11 @@ function Meetings() {
                         {meeting.company || meeting.client || "Sales meeting"}
                       </span>
                       <span className="mt-0.5 block truncate text-sm text-on-surface-variant">
-                        {meeting.client} - {meeting.date} at {meeting.time}
+                        {meeting.client} - {meeting.date} at {meeting.time} ({meeting.timezone})
                       </span>
                     </span>
-                    <span className="hidden rounded-full bg-surface-container px-2.5 py-1 text-xs font-semibold sm:inline-flex">
-                      {meeting.status}
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${meetingDisplayStatus(meeting, now) === "Time passed" ? "bg-amber-100 text-amber-800" : "bg-surface-container"}`}>
+                      {meetingDisplayStatus(meeting, now)}
                     </span>
                   </button>
                 ))}
@@ -163,12 +188,17 @@ function Meetings() {
                   {selectedMeeting.company || selectedMeeting.client || "Sales meeting"}
                 </h3>
                 <p className="mt-1 text-sm text-on-surface-variant">
-                  {selectedMeeting.client} - {selectedMeeting.date} at {selectedMeeting.time} -{" "}
+                  {selectedMeeting.client} - {selectedMeeting.date} at {selectedMeeting.time} ({selectedMeeting.timezone}) -{" "}
                   {selectedMeeting.duration}
                 </p>
-                <span className="mt-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-                  {selectedMeeting.status}
+                <span className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-bold ${meetingDisplayStatus(selectedMeeting, now) === "Time passed" ? "bg-amber-100 text-amber-800" : "bg-primary/10 text-primary"}`}>
+                  {meetingDisplayStatus(selectedMeeting, now)}
                 </span>
+                {meetingDisplayStatus(selectedMeeting, now) === "Time passed" && (
+                  <p className="mt-3 text-sm text-on-surface-variant">
+                    The scheduled time has passed. This does not confirm whether the meeting took place.
+                  </p>
+                )}
 
                 {selectedMeeting.meetUrl && (
                   <div className="mt-4 flex flex-wrap items-center gap-2">
