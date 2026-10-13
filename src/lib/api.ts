@@ -1,3 +1,5 @@
+import { reportApiFailure } from "./monitoring";
+
 export const API_URL = import.meta.env.DEV ? "/api" : (import.meta.env.VITE_API_URL ?? "/api");
 
 let currentAccessToken: string | null = null;
@@ -272,10 +274,16 @@ async function request<T>(
       headers,
       credentials: "include",
     });
-  } catch {
-    throw new Error(
+  } catch (cause) {
+    const error = new Error(
       `Could not reach the API at ${API_URL}. Make sure FastAPI is running and CORS allows this frontend origin.`,
     );
+    reportApiFailure({
+      method: options.method ?? "GET",
+      path,
+      error: cause instanceof Error ? cause : error,
+    });
+    throw error;
   }
 
   const canRefresh =
@@ -305,7 +313,18 @@ async function request<T>(
       detail?: string;
       error?: string;
     } | null;
-    throw new Error(data?.error ?? data?.detail ?? `Request failed with status ${response.status}`);
+    const error = new Error(
+      data?.error ?? data?.detail ?? `Request failed with status ${response.status}`,
+    );
+    if (response.status >= 500) {
+      reportApiFailure({
+        method: options.method ?? "GET",
+        path,
+        status: response.status,
+        requestId: response.headers.get("X-Request-ID"),
+      });
+    }
+    throw error;
   }
 
   if (response.status === 204) return undefined as T;
@@ -456,7 +475,10 @@ export const api = {
   getProfile(accessToken: string) {
     return request<{ data: UserProfileApi }>("/auth/profile", {}, accessToken);
   },
-  saveProfile(profile: { full_name: string; company: string; job_title: string }, accessToken: string) {
+  saveProfile(
+    profile: { full_name: string; company: string; job_title: string },
+    accessToken: string,
+  ) {
     return request<{ data: UserProfileApi }>(
       "/auth/profile",
       { method: "PATCH", body: JSON.stringify(profile) },
@@ -618,12 +640,17 @@ export const api = {
     return request<{ data: ContactApi[] }>("/crm/contacts", {}, accessToken, teamId);
   },
   convertProspect(leadId: string, accessToken: string, teamId: string) {
-    return request<{ data: { contact_id: string; account_id: string | null; already_converted: boolean } }>(
-      `/crm/prospects/${leadId}/convert`, { method: "POST" }, accessToken, teamId,
-    );
+    return request<{
+      data: { contact_id: string; account_id: string | null; already_converted: boolean };
+    }>(`/crm/prospects/${leadId}/convert`, { method: "POST" }, accessToken, teamId);
   },
   getContactContext(contactId: string, accessToken: string, teamId: string) {
-    return request<{ data: ContactContextApi }>(`/crm/contacts/${contactId}/context`, {}, accessToken, teamId);
+    return request<{ data: ContactContextApi }>(
+      `/crm/contacts/${contactId}/context`,
+      {},
+      accessToken,
+      teamId,
+    );
   },
   createContact(
     payload: Partial<ContactApi> & { first_name: string },
@@ -841,23 +868,51 @@ export const api = {
   getHunterProvider(accessToken: string, teamId?: string | null) {
     return request<{ data: LeadProviderStatus }>("/leads/hunter/provider", {}, accessToken, teamId);
   },
-  configureHunterProvider(apiKey: string, monthlyLimit: number, accessToken: string, teamId?: string | null) {
-    return request<{ data: LeadProviderStatus }>("/leads/hunter/provider", {
-      method: "PUT", body: JSON.stringify({ api_key: apiKey, monthly_limit: monthlyLimit }),
-    }, accessToken, teamId);
+  configureHunterProvider(
+    apiKey: string,
+    monthlyLimit: number,
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: LeadProviderStatus }>(
+      "/leads/hunter/provider",
+      {
+        method: "PUT",
+        body: JSON.stringify({ api_key: apiKey, monthly_limit: monthlyLimit }),
+      },
+      accessToken,
+      teamId,
+    );
   },
   disconnectHunterProvider(accessToken: string, teamId?: string | null) {
-    return request<{ data: Record<string, never> }>("/leads/hunter/provider", { method: "DELETE" }, accessToken, teamId);
+    return request<{ data: Record<string, never> }>(
+      "/leads/hunter/provider",
+      { method: "DELETE" },
+      accessToken,
+      teamId,
+    );
   },
   discoverHunter(query: string, accessToken: string, teamId?: string | null) {
-    return request<{ data: { domain: string; name: string; email_count: number }[] }>("/leads/hunter/discover", {
-      method: "POST", body: JSON.stringify({ query }),
-    }, accessToken, teamId);
+    return request<{ data: { domain: string; name: string; email_count: number }[] }>(
+      "/leads/hunter/discover",
+      {
+        method: "POST",
+        body: JSON.stringify({ query }),
+      },
+      accessToken,
+      teamId,
+    );
   },
   revealHunter(domains: string[], accessToken: string, teamId?: string | null) {
-    return request<{ data: { created: number; skipped_duplicates: number; leads: LeadApi[] } }>("/leads/hunter/reveal", {
-      method: "POST", body: JSON.stringify({ domains }),
-    }, accessToken, teamId);
+    return request<{ data: { created: number; skipped_duplicates: number; leads: LeadApi[] } }>(
+      "/leads/hunter/reveal",
+      {
+        method: "POST",
+        body: JSON.stringify({ domains }),
+      },
+      accessToken,
+      teamId,
+    );
   },
   createLead(
     payload: {
@@ -1193,10 +1248,18 @@ export const api = {
     );
   },
   getGoogleCalendarAuthUrl(accessToken: string) {
-    return request<{ data: { url: string } }>("/integrations/google-calendar/auth-url", {}, accessToken);
+    return request<{ data: { url: string } }>(
+      "/integrations/google-calendar/auth-url",
+      {},
+      accessToken,
+    );
   },
   getGoogleCalendarStatus(accessToken: string) {
-    return request<{ data: { connected: boolean; email?: string } }>("/integrations/google-calendar/status", {}, accessToken);
+    return request<{ data: { connected: boolean; email?: string } }>(
+      "/integrations/google-calendar/status",
+      {},
+      accessToken,
+    );
   },
   sendChat(message: string, accessToken: string, teamId?: string | null, chatId?: string | null) {
     return request<{ data: { reply: string } }>(

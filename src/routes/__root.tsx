@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { initializeMonitoring } from "../lib/monitoring";
 import type { AppStore } from "../store";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
@@ -150,6 +151,10 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient, store } = Route.useRouteContext();
+
+  useEffect(() => {
+    initializeMonitoring();
+  }, []);
 
   return (
     <Provider store={store}>

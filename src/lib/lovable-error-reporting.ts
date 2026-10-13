@@ -1,3 +1,5 @@
+import { captureMonitoringException } from "./monitoring";
+
 type LovableErrorOptions = {
   mechanism?: "manual" | "onerror" | "unhandledrejection" | "react_error_boundary";
   handled?: boolean;
@@ -20,6 +22,11 @@ declare global {
 
 export function reportLovableError(error: unknown, context: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;
+  captureMonitoringException(error, {
+    source: "react_error_boundary",
+    route: window.location.pathname,
+    ...context,
+  });
   window.__lovableEvents?.captureException?.(
     error,
     {
