@@ -33,6 +33,8 @@ function TeamManagement() {
   const [rotateOpen, setRotateOpen] = useState(false);
   const [rotateBusy, setRotateBusy] = useState(false);
   const [rotateError, setRotateError] = useState("");
+  const [roleError, setRoleError] = useState("");
+  const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
   const isAdmin = team.currentUserRole === "admin";
   const canManageMembers = team.currentUserRole === "admin" || team.currentUserRole === "manager";
   const inviteExpired = Boolean(team.inviteCodeExpiresAt && new Date(team.inviteCodeExpiresAt).getTime() <= Date.now());
@@ -105,6 +107,20 @@ function TeamManagement() {
     }
   }
 
+  async function changeRole(userId: string, role: TeamRole) {
+    if (!isAdmin || !team.id || !auth.accessToken) return;
+    setUpdatingRoleId(userId);
+    setRoleError("");
+    try {
+      await dispatch(updateMemberRoleRemote({ teamId: team.id, userId, role, accessToken: auth.accessToken })).unwrap();
+      await dispatch(fetchTeamRemote({ teamId: team.id, accessToken: auth.accessToken })).unwrap();
+    } catch (error) {
+      setRoleError(typeof error === "string" ? error : "Could not update member role");
+    } finally {
+      setUpdatingRoleId(null);
+    }
+  }
+
   function confirmRemoveMember() {
     if (!confirmRemove) return;
     if (!team.id || !auth.accessToken) return;
@@ -159,7 +175,7 @@ function TeamManagement() {
                       )}
                     </div>
                     <p className="mt-0.5 text-xs capitalize text-on-surface-variant">
-                      Role: {t.role ==="admin" ? t.role : "member"}
+                      Role: {t.role}
                     </p>
                   </div>
                   <span className="material-symbols-outlined text-on-surface-variant">
@@ -293,6 +309,7 @@ function TeamManagement() {
                 <p className="mt-1 text-xs text-on-surface-variant">
                   Admins can update roles or remove members from the workspace.
                 </p>
+                {roleError && <p role="alert" className="mt-2 text-xs text-error">{roleError}</p>}
               </div>
               <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
                 {team.members.map((member) => (
@@ -326,14 +343,22 @@ function TeamManagement() {
                       </div>
                     </div>
                     <div className="relative mt-4 flex items-center gap-2">
-                      <div
-                        
-                        className="h-9 flex justify-left items-center flex-1 px-3 text-xs font-semibold capitalize control "
-                      >
-                        {member.role === "admin"?   member.role: "member" }
-                        
-                      </div>
-                      {canManageMembers && member.id !== auth.userId && (
+                      {isAdmin && member.id !== auth.userId ? (
+                        <select
+                          aria-label={`Role for ${member.name}`}
+                          className="control h-9 flex-1 px-3 text-xs font-semibold capitalize"
+                          value={member.role}
+                          disabled={updatingRoleId === member.id}
+                          onChange={(event) => void changeRole(member.id, event.target.value as TeamRole)}
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="manager">Manager</option>
+                          <option value="rep">Rep</option>
+                        </select>
+                      ) : (
+                        <div className="control flex h-9 flex-1 items-center px-3 text-xs font-semibold capitalize">{member.role}</div>
+                      )}
+                      {canManageMembers && member.id !== auth.userId && (isAdmin || member.role === "rep") && (
                         <button
                           onClick={() => setConfirmRemove({ id: member.id, name: member.name })}
                           className="icon-button text-error hover:bg-error/5 hover:text-error"

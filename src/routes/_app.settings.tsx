@@ -446,7 +446,7 @@ function Settings() {
         <div className="modal-backdrop">
           <div className="modal-surface w-full max-w-md p-5">
             <h3 className="text-lg font-bold">Connect Hunter</h3>
-            <p className="mt-2 text-sm text-on-surface-variant">The key is stored encrypted for this workspace. Company previews do not reveal emails.</p>
+            <p className="mt-2 text-sm text-on-surface-variant">The key is stored encrypted and shared by this workspace. Any member can replace or disconnect it, which affects everyone. Company previews do not reveal emails.</p>
             <label className="mt-4 block text-sm font-semibold">API key
               <input type="password" autoComplete="off" className="control mt-2 w-full px-4 py-2.5" value={hunterKey} onChange={(e) => setHunterKey(e.target.value)} />
             </label>
