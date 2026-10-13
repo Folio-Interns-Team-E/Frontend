@@ -49,25 +49,25 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
   }, [messages, stepIdx]);
 
   useEffect(() => {
-  if (!isSending) {
+    if (!isSending) {
+      setStepIdx(0);
+      return;
+    }
+
     setStepIdx(0);
-    return;
-  }
 
-  setStepIdx(0);
+    const interval = setInterval(() => {
+      setStepIdx((prev) => {
+        if (prev < THINKING_MESSAGES.length - 1) {
+          return prev + 1;
+        }
+        clearInterval(interval);
+        return prev;
+      });
+    }, 1200); // Adjusted to 1.2s for a snappier feel
 
-  const interval = setInterval(() => {
-    setStepIdx((prev) => {
-      if (prev < THINKING_MESSAGES.length - 1) {
-        return prev + 1;
-      }
-      clearInterval(interval);
-      return prev;
-    });
-  }, 1200); // Adjusted to 1.2s for a snappier feel
-
-  return () => clearInterval(interval);
-}, [isSending]);
+    return () => clearInterval(interval);
+  }, [isSending]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -146,12 +146,12 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
   const activeChatName = chats.find((c) => c.id === activeChatId)?.chat_name || "New Chat";
 
   return (
-    <aside className="fixed right-0 top-0 z-40 flex h-full w-full max-w-[380px] flex-col border-l border-outline-variant/45 bg-white shadow-[-16px_0_40px_rgba(15,23,42,0.08)] xl:z-20 xl:w-[var(--spacing-ai_panel_width)]">
+    <aside className="fixed right-0 top-0 z-40 flex h-full w-full max-w-[380px] flex-col border-l border-slate-200 bg-white xl:z-20 xl:w-[var(--spacing-ai_panel_width)]">
       {/* Header */}
-      <div className="flex h-16 items-center justify-between border-b border-outline-variant/40 px-4">
+      <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
         <div className="flex items-center gap-3">
           <div>
-            <h3 className="text-sm font-extrabold text-on-surface">SalesSync Assistant</h3>
+            <h3 className="text-sm font-semibold text-on-surface">SalesSync Assistant</h3>
             <p className="text-[10px] font-medium text-on-surface-variant">{activeChatName}</p>
           </div>
         </div>
@@ -169,12 +169,12 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
 
           {/* Chat dropdown */}
           {showDropdown && (
-            <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-outline-variant/40 bg-white shadow-xl z-50 overflow-hidden">
+            <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg">
               <div className="flex items-center justify-between border-b border-outline-variant/20 px-3 py-2">
                 <span className="text-xs font-bold text-on-surface">Your chats</span>
                 <button
                   onClick={handleNewChat}
-                  className="flex items-center gap-1 rounded-lg bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary transition hover:bg-primary/20"
+                  className="tertiary-action !min-h-0 !px-2 !py-1 text-[10px] text-primary"
                 >
                   <span className="material-symbols-outlined text-[12px]">add</span>
                   New
@@ -242,15 +242,13 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Messages */}
-      <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto bg-[#f8fafc] p-4">
+      <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto bg-slate-50 p-4">
         {chatMessagesStatus === "loading" && (
           <div className="space-y-4 animate-pulse">
             {[1, 2, 3].map((i) => (
               <div key={i} className={`flex flex-col ${i % 2 === 0 ? "items-end" : "items-start"}`}>
                 <div className="mb-1 h-2.5 w-16 rounded bg-outline-variant/40" />
-                <div
-                  className={`rounded-2xl p-3 ${i % 2 === 0 ? "rounded-tr-md" : "rounded-tl-md"}`}
-                >
+                <div className="rounded-md p-3">
                   <div className="space-y-1.5">
                     <div className="h-2.5 w-48 rounded bg-outline-variant/30" />
                     <div className="h-2.5 w-32 rounded bg-outline-variant/20" />
@@ -263,7 +261,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
         )}
         {chatMessagesStatus !== "loading" && messages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/15 bg-white text-primary shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white text-primary">
               <span className="material-symbols-outlined">forum</span>
             </div>
             <p className="mt-4 text-sm font-extrabold">Start a conversation</p>
@@ -282,31 +280,31 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                 item.author === "user" ? "text-on-surface-variant" : "text-primary"
               }`}
             >
-              {item.author === "user" ? item.userName: "SalesSync Assistant"}
+              {item.author === "user" ? item.userName : "SalesSync Assistant"}
             </p>
             {item.body === "Thinking..." ? (
-  <div className="max-w-[92%] rounded-2xl rounded-tl-md border border-primary/16 bg-primary/[0.065] p-3 shadow-sm">
-    <div className="flex items-center gap-2.5">
-      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0" />
-      <span
-        key={stepIdx}
-        className="text-xs font-medium text-primary animate-in fade-in duration-200"
-      >
-        {THINKING_MESSAGES[stepIdx]}
-      </span>
-    </div>
-  </div>
-) : (
-  <div
-    className={`max-w-[92%] rounded-2xl p-3 shadow-sm ${
-      item.author === "user"
-        ? "rounded-tr-md border border-outline-variant/55 bg-white"
-        : "rounded-tl-md border border-primary/16 bg-primary/[0.065]"
-    }`}
-  >
-    <p className="whitespace-pre-line font-body-sm text-body-sm">{item.body}</p>
-  </div>
-)}
+              <div className="max-w-[92%] rounded-md border border-blue-200 bg-blue-50 p-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0" />
+                  <span
+                    key={stepIdx}
+                    className="text-xs font-medium text-primary animate-in fade-in duration-200"
+                  >
+                    {THINKING_MESSAGES[stepIdx]}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div
+                className={`max-w-[92%] rounded-md border p-3 ${
+                  item.author === "user"
+                    ? "border-slate-200 bg-white"
+                    : "border-blue-200 bg-blue-50"
+                }`}
+              >
+                <p className="whitespace-pre-line font-body-sm text-body-sm">{item.body}</p>
+              </div>
+            )}
             {item.body !== "Thinking..." && (
               <span className="text-[10px] text-outline mt-1 px-1">{item.time}</span>
             )}
@@ -319,7 +317,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
       <div className="border-t border-outline-variant/45 bg-white p-4">
         <form className="relative flex items-center" onSubmit={handleSubmit}>
           <textarea
-            className="custom-scrollbar w-full resize-none rounded-xl border border-outline-variant/65 bg-slate-50 py-3 pl-4 pr-12 text-[12px] outline-none transition focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="control custom-scrollbar w-full resize-none bg-white py-2.5 pl-3 pr-12 text-xs outline-none disabled:cursor-not-allowed disabled:opacity-50"
             placeholder={isSending ? "Waiting for reply..." : "Ask the agent anything..."}
             rows={1}
             style={{ height: 42, overflowY: "hidden" }}
@@ -331,7 +329,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
           <button
             type="submit"
             disabled={isSending || !message.trim()}
-            className="absolute right-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-[#0d2d39] text-white shadow-sm transition hover:bg-primary disabled:opacity-40 disabled:cursor-not-allowed"
+            className="absolute right-1.5 flex h-8 w-8 items-center justify-center rounded bg-primary text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <span className="material-symbols-outlined text-[20px]">send</span>
           </button>

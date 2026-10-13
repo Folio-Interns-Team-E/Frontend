@@ -69,20 +69,6 @@ function PricingPage() {
 
   return (
     <div className="min-h-screen relative isolate overflow-hidden selection:bg-primary/20">
-      {/* Structural Background Glows */}
-      <div
-        className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
-        aria-hidden="true"
-      >
-        <div
-          className="relative left-[calc(50%-13rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-[#16a3a9] opacity-15 sm:left-[calc(50%-36rem)] sm:w-[72.187rem]"
-          style={{
-            clipPath:
-              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-          }}
-        />
-      </div>
-
       {/* Navigation Header */}
 
       {/* Main Container Header */}
@@ -90,10 +76,7 @@ function PricingPage() {
         <div className="mx-auto max-w-3xl text-center mb-12">
           <h2 className="section-heading">Predictable Investment</h2>
           <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-[#131b2e] sm:text-5xl lg:text-6xl !leading-[1.15]">
-            Transparent pricing for{" "}
-            <span className="text-primary bg-gradient-to-r from-primary to-[#16a3a9] bg-clip-text text-transparent">
-              unbounded growth
-            </span>
+            Transparent pricing for <span className="text-primary">unbounded growth</span>
           </h1>
           <p className="mt-4 text-base leading-relaxed text-[#505f76] max-w-xl mx-auto">
             Choose an automated workspace plan calculated to align with your monthly outbound
@@ -138,13 +121,13 @@ function PricingPage() {
                 key={tier.id}
                 className={`app-card p-8 flex flex-col justify-between relative transition-all duration-300 ${
                   tier.mostPopular
-                    ? "border-primary ring-2 ring-primary/20 bg-white scale-105 z-10 shadow-xl md:translate-y-[-10px]"
+                    ? "border-primary ring-1 ring-primary/20 bg-white z-10"
                     : "bg-white/90 hover:border-outline-variant"
                 }`}
               >
                 {/* Most Popular Badge Banner */}
                 {tier.mostPopular && (
-                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center rounded-full bg-primary px-4 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md">
+                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center rounded-md bg-primary px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
                     Most Popular Hub
                   </span>
                 )}
@@ -189,8 +172,8 @@ function PricingPage() {
                     to="/register"
                     className={`w-full text-center ${
                       tier.mostPopular
-                        ? "primary-action !w-full !py-3.5 shadow-lg shadow-primary/20 text-sm font-bold"
-                        : "inline-flex w-full items-center justify-center rounded-xl border border-outline px-4 py-3 text-xs font-bold text-[#131b2e] bg-white hover:bg-[#f4f7fb] hover:border-primary transition duration-150"
+                        ? "primary-action !w-full !py-3 text-sm font-bold"
+                        : "secondary-action !w-full !py-3 text-xs font-bold"
                     }`}
                   >
                     {tier.cta}

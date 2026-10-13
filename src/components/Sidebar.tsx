@@ -43,9 +43,8 @@ export function Sidebar({ onClose }: SidebarProps) {
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-50 flex h-full w-[280px] flex-col overflow-hidden border-r border-white/8 bg-[#081722] text-white shadow-2xl shadow-slate-950/25 md:z-30 md:w-[var(--spacing-sidebar_width)]">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
-      <div className="relative px-4 pb-3 pt-5">
+    <aside className="fixed left-0 top-0 z-50 flex h-full w-[280px] flex-col overflow-hidden border-r border-slate-800 bg-[#111827] text-white md:z-30 md:w-[var(--spacing-sidebar_width)]">
+      <div className="relative border-b border-slate-800 px-4 pb-4 pt-5">
         <div className="flex items-center justify-between gap-3">
           <Link to="/dashboard" onClick={handleNavigate}>
             <img src="/logo-white.png" alt="SalesSync AI" className="h-10 w-auto object-contain" />
@@ -61,16 +60,16 @@ export function Sidebar({ onClose }: SidebarProps) {
         <Link
           to="/team"
           onClick={handleNavigate}
-          className="mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.045] p-2.5 transition hover:border-cyan-300/25 hover:bg-white/[0.07]"
+          className="mt-4 flex items-center gap-3 rounded-md border border-slate-700 bg-slate-800/60 p-2.5 transition-colors hover:border-slate-600 hover:bg-slate-800"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#168a94] to-[#0b5965] text-[11px] font-black">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-blue-600 text-[11px] font-semibold">
             {(team.name || "SS").slice(0, 2).toUpperCase()}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[11px] font-bold text-slate-100">
+            <span className="block truncate text-xs font-semibold text-slate-100">
               {team.name || "SalesSync workspace"}
             </span>
-            <span className="block text-[9px] capitalize text-slate-500">
+            <span className="block text-[10px] capitalize text-slate-400">
               {team.currentUserRole || "member"} workspace
             </span>
           </span>
@@ -81,7 +80,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       <nav className="custom-scrollbar relative flex-1 overflow-y-auto px-2.5 pb-4">
         {isAdmin && (
           <div className="mb-3">
-            <p className="px-3 pb-1.5 pt-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-600">
+            <p className="px-3 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
               Administration
             </p>
             <NavItem
@@ -94,7 +93,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         )}
         {navigation.map((group) => (
           <div key={group.label} className="mb-3">
-            <p className="px-3 pb-1.5 pt-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-600">
+            <p className="px-3 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
               {group.label}
             </p>
             <div className="space-y-0.5">
@@ -123,8 +122,8 @@ export function Sidebar({ onClose }: SidebarProps) {
             <span className="material-symbols-outlined text-[17px]">settings</span>Settings
           </Link>
         </div>
-        <div className="flex items-center gap-2 rounded-lg bg-emerald-400/[0.06] px-3 py-2 text-[9px] font-semibold text-emerald-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.8)]" />
+        <div className="flex items-center gap-2 rounded border border-slate-700 bg-slate-800/50 px-3 py-2 text-[10px] font-medium text-slate-300">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
           Automation engine operational
         </div>
       </div>
@@ -148,13 +147,13 @@ function NavItem({
       to={to}
       onClick={onNavigate}
       activeOptions={{ exact: to === "/dashboard" }}
-      className="group relative flex items-center gap-3 rounded-lg px-3 py-2 text-[11px] font-medium text-slate-400 transition-all hover:bg-white/[0.055] hover:text-white"
+      className="group relative flex items-center gap-3 rounded px-3 py-2 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
       activeProps={{
         className:
-          "group relative flex items-center gap-3 rounded-lg bg-cyan-300/[0.09] px-3 py-2 text-[11px] font-bold text-white ring-1 ring-inset ring-cyan-200/10 before:absolute before:bottom-2 before:left-0 before:top-2 before:w-0.5 before:rounded-full before:bg-cyan-300",
+          "group relative flex items-center gap-3 rounded bg-slate-800 px-3 py-2 text-xs font-semibold text-white before:absolute before:bottom-1.5 before:left-0 before:top-1.5 before:w-0.5 before:bg-blue-500",
       }}
     >
-      <span className="material-symbols-outlined text-[18px] text-slate-500 transition-colors group-hover:text-cyan-300 group-aria-[current=page]:text-cyan-300">
+      <span className="material-symbols-outlined text-[18px] text-slate-500 transition-colors group-hover:text-blue-400 group-aria-[current=page]:text-blue-400">
         {icon}
       </span>
       <span>{label}</span>

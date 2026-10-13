@@ -1,10 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useEffect, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import {
-  setActiveTeam,
-  type TeamRole,
-} from "../store/appSlice";
+import { setActiveTeam, type TeamRole } from "../store/appSlice";
 import {
   fetchMyTeams,
   fetchTeamRemote,
@@ -37,7 +34,9 @@ function TeamManagement() {
   const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
   const isAdmin = team.currentUserRole === "admin";
   const canManageMembers = team.currentUserRole === "admin" || team.currentUserRole === "manager";
-  const inviteExpired = Boolean(team.inviteCodeExpiresAt && new Date(team.inviteCodeExpiresAt).getTime() <= Date.now());
+  const inviteExpired = Boolean(
+    team.inviteCodeExpiresAt && new Date(team.inviteCodeExpiresAt).getTime() <= Date.now(),
+  );
 
   const accessToken = auth.accessToken;
 
@@ -56,9 +55,7 @@ function TeamManagement() {
   async function invite(event: FormEvent) {
     event.preventDefault();
     if (!auth.accessToken) return;
-    const result = await dispatch(
-      inviteMemberRemote({ email, accessToken: auth.accessToken }),
-    );
+    const result = await dispatch(inviteMemberRemote({ email, accessToken: auth.accessToken }));
     if (inviteMemberRemote.fulfilled.match(result)) {
       setEmail("");
     }
@@ -67,9 +64,7 @@ function TeamManagement() {
   async function joinTeam(event: FormEvent) {
     event.preventDefault();
     if (!auth.accessToken) return;
-    const result = await dispatch(
-      joinTeamRemote({ inviteCode, accessToken: auth.accessToken }),
-    );
+    const result = await dispatch(joinTeamRemote({ inviteCode, accessToken: auth.accessToken }));
     if (joinTeamRemote.fulfilled.match(result)) {
       setInviteCode("");
       dispatch(fetchMyTeams(auth.accessToken));
@@ -112,7 +107,9 @@ function TeamManagement() {
     setUpdatingRoleId(userId);
     setRoleError("");
     try {
-      await dispatch(updateMemberRoleRemote({ teamId: team.id, userId, role, accessToken: auth.accessToken })).unwrap();
+      await dispatch(
+        updateMemberRoleRemote({ teamId: team.id, userId, role, accessToken: auth.accessToken }),
+      ).unwrap();
       await dispatch(fetchTeamRemote({ teamId: team.id, accessToken: auth.accessToken })).unwrap();
     } catch (error) {
       setRoleError(typeof error === "string" ? error : "Could not update member role");
@@ -152,12 +149,10 @@ function TeamManagement() {
                   key={t.id}
                   onClick={() => switchTeam(t.id, t.name, t.role)}
                   className={`app-card app-card-hover flex items-center gap-4 p-4 text-left transition ${
-                    team.id === t.id
-                      ? "border-primary ring-2 ring-primary/10"
-                      : ""
+                    team.id === t.id ? "border-primary ring-2 ring-primary/10" : ""
                   }`}
                 >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-800 to-primary text-xs font-bold text-white shadow-md">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-800 text-xs font-semibold text-white">
                     {t.name
                       .split(/[\s._-]+/)
                       .map((part) => part[0])
@@ -218,50 +213,60 @@ function TeamManagement() {
 
         {team.id && (
           <>
-            <section className="subtle-grid relative overflow-hidden rounded-2xl bg-[#102b38] p-5 text-white shadow-xl sm:p-6">
-              <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-primary/18 to-transparent" />
+            <section className="relative overflow-hidden rounded-lg border border-slate-800 bg-slate-900 p-5 text-white sm:p-6">
               <div className="relative flex flex-col justify-between gap-5 md:flex-row md:items-end">
-                {isAdmin && team.inviteCode && <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#72e1e3]">
-                    Team workspace
-                  </p>
-                  <h1 className="mt-2 text-2xl font-black">{team.name}</h1>
-                  <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-300">
-                    <span>
-                      Team ID: <strong className="font-mono text-white">{team.id}</strong>
-                    </span>
-                    <span>
-                      Your role:{" "}
-                      <strong className="capitalize text-white">{team.currentUserRole === "admin" ? team.currentUserRole : "member"}</strong>
-                    </span>
-                    <span>
-                      Members: <strong className="text-white">{team.members.length}</strong>
-                    </span>
-                  </div>
-                </div>}
-                {isAdmin && team.inviteCode && <div>
-                  <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    External invite code
-                  </p>
-                  <button
-                    onClick={copyInviteCode}
-                    disabled={inviteExpired}
-                    className="flex max-w-full items-center gap-3 overflow-hidden rounded-lg border border-white/12 bg-white/8 px-4 py-2.5 font-mono text-sm font-bold transition hover:bg-white/12"
-                  >
-                    {team.inviteCode}
-                    <span className="material-symbols-outlined text-[17px]">
-                      {copied ? "check" : "content_copy"}
-                    </span>
-                  </button>
-                  {team.inviteCodeExpiresAt && (
-                    <p className="mt-2 text-xs text-slate-300">
-                      {inviteExpired ? "Expired" : "Expires"} {new Date(team.inviteCodeExpiresAt).toLocaleString()}
+                {isAdmin && team.inviteCode && (
+                  <div>
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#72e1e3]">
+                      Team workspace
                     </p>
-                  )}
-                  <button type="button" className="mt-2 text-xs font-semibold text-[#72e1e3] underline-offset-2 hover:underline" onClick={() => setRotateOpen(true)}>
-                    Rotate invite code
-                  </button>
-                </div>}
+                    <h1 className="mt-2 text-2xl font-black">{team.name}</h1>
+                    <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-300">
+                      <span>
+                        Team ID: <strong className="font-mono text-white">{team.id}</strong>
+                      </span>
+                      <span>
+                        Your role:{" "}
+                        <strong className="capitalize text-white">
+                          {team.currentUserRole === "admin" ? team.currentUserRole : "member"}
+                        </strong>
+                      </span>
+                      <span>
+                        Members: <strong className="text-white">{team.members.length}</strong>
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {isAdmin && team.inviteCode && (
+                  <div>
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                      External invite code
+                    </p>
+                    <button
+                      onClick={copyInviteCode}
+                      disabled={inviteExpired}
+                      className="flex max-w-full items-center gap-3 overflow-hidden rounded-lg border border-white/12 bg-white/8 px-4 py-2.5 font-mono text-sm font-bold transition hover:bg-white/12"
+                    >
+                      {team.inviteCode}
+                      <span className="material-symbols-outlined text-[17px]">
+                        {copied ? "check" : "content_copy"}
+                      </span>
+                    </button>
+                    {team.inviteCodeExpiresAt && (
+                      <p className="mt-2 text-xs text-slate-300">
+                        {inviteExpired ? "Expired" : "Expires"}{" "}
+                        {new Date(team.inviteCodeExpiresAt).toLocaleString()}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      className="mt-2 text-xs font-semibold text-[#72e1e3] underline-offset-2 hover:underline"
+                      onClick={() => setRotateOpen(true)}
+                    >
+                      Rotate invite code
+                    </button>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -272,7 +277,12 @@ function TeamManagement() {
                   <p className="mt-1 text-xs text-on-surface-variant">
                     Send an email invitation with a link to join your team.
                   </p>
-                  {inviteExpired && <p className="mt-2 text-xs text-error">Invite code expired. Ask a workspace admin to rotate it before sending invitations.</p>}
+                  {inviteExpired && (
+                    <p className="mt-2 text-xs text-error">
+                      Invite code expired. Ask a workspace admin to rotate it before sending
+                      invitations.
+                    </p>
+                  )}
                 </div>
                 <form onSubmit={invite} className="flex flex-col gap-3 md:flex-row">
                   <input
@@ -309,17 +319,20 @@ function TeamManagement() {
                 <p className="mt-1 text-xs text-on-surface-variant">
                   Admins can update roles or remove members from the workspace.
                 </p>
-                {roleError && <p role="alert" className="mt-2 text-xs text-error">{roleError}</p>}
+                {roleError && (
+                  <p role="alert" className="mt-2 text-xs text-error">
+                    {roleError}
+                  </p>
+                )}
               </div>
               <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
                 {team.members.map((member) => (
                   <div
                     key={member.id}
-                    className="soft-panel group relative overflow-hidden p-4 transition hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg"
+                    className="soft-panel group relative overflow-hidden p-4 transition-colors hover:border-slate-400"
                   >
-                    <div className="absolute right-[-30px] top-[-36px] h-24 w-24 rounded-full bg-primary/8 blur-2xl" />
                     <div className="relative flex items-start gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-800 to-primary text-xs font-bold text-white shadow-md shadow-primary/15">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-800 text-xs font-semibold text-white">
                         {member.name
                           .split(/[\s._-]+/)
                           .map((part) => part[0])
@@ -349,24 +362,32 @@ function TeamManagement() {
                           className="control h-9 flex-1 px-3 text-xs font-semibold capitalize"
                           value={member.role}
                           disabled={updatingRoleId === member.id}
-                          onChange={(event) => void changeRole(member.id, event.target.value as TeamRole)}
+                          onChange={(event) =>
+                            void changeRole(member.id, event.target.value as TeamRole)
+                          }
                         >
                           <option value="admin">Admin</option>
                           <option value="manager">Manager</option>
                           <option value="rep">Rep</option>
                         </select>
                       ) : (
-                        <div className="control flex h-9 flex-1 items-center px-3 text-xs font-semibold capitalize">{member.role}</div>
+                        <div className="control flex h-9 flex-1 items-center px-3 text-xs font-semibold capitalize">
+                          {member.role}
+                        </div>
                       )}
-                      {canManageMembers && member.id !== auth.userId && (isAdmin || member.role === "rep") && (
-                        <button
-                          onClick={() => setConfirmRemove({ id: member.id, name: member.name })}
-                          className="icon-button text-error hover:bg-error/5 hover:text-error"
-                          aria-label={`Remove ${member.name}`}
-                        >
-                          <span className="material-symbols-outlined text-[19px]">person_remove</span>
-                        </button>
-                      )}
+                      {canManageMembers &&
+                        member.id !== auth.userId &&
+                        (isAdmin || member.role === "rep") && (
+                          <button
+                            onClick={() => setConfirmRemove({ id: member.id, name: member.name })}
+                            className="icon-button text-error hover:bg-error/5 hover:text-error"
+                            aria-label={`Remove ${member.name}`}
+                          >
+                            <span className="material-symbols-outlined text-[19px]">
+                              person_remove
+                            </span>
+                          </button>
+                        )}
                     </div>
                   </div>
                 ))}
@@ -377,14 +398,42 @@ function TeamManagement() {
       </div>
       {rotateOpen && (
         <div className="modal-backdrop" role="presentation">
-          <div className="modal-surface w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="rotate-invite-title">
+          <div
+            className="modal-surface w-full max-w-md"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rotate-invite-title"
+          >
             <div className="space-y-3 p-5">
-              <h2 id="rotate-invite-title" className="text-lg font-bold">Rotate invite code?</h2>
-              <p className="text-sm text-on-surface-variant">The current code and all invitation links containing it will stop working. Team members already joined will keep access.</p>
-              {rotateError && <p role="alert" className="text-sm text-error">{rotateError}</p>}
+              <h2 id="rotate-invite-title" className="text-lg font-bold">
+                Rotate invite code?
+              </h2>
+              <p className="text-sm text-on-surface-variant">
+                The current code and all invitation links containing it will stop working. Team
+                members already joined will keep access.
+              </p>
+              {rotateError && (
+                <p role="alert" className="text-sm text-error">
+                  {rotateError}
+                </p>
+              )}
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" className="secondary-action" disabled={rotateBusy} onClick={() => setRotateOpen(false)}>Cancel</button>
-                <button type="button" className="primary-action" disabled={rotateBusy} onClick={() => void rotateInviteCode()}>{rotateBusy ? "Rotating..." : "Rotate code"}</button>
+                <button
+                  type="button"
+                  className="secondary-action"
+                  disabled={rotateBusy}
+                  onClick={() => setRotateOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="primary-action"
+                  disabled={rotateBusy}
+                  onClick={() => void rotateInviteCode()}
+                >
+                  {rotateBusy ? "Rotating..." : "Rotate code"}
+                </button>
               </div>
             </div>
           </div>
@@ -393,7 +442,7 @@ function TeamManagement() {
 
       {confirmRemove && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-slate-200 bg-white p-6 shadow-lg">
             <h3 className="text-base font-black text-slate-900">Remove member</h3>
             <p className="mt-2 text-sm text-slate-600">
               Are you sure you want to remove <strong>{confirmRemove.name}</strong> from this team?

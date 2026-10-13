@@ -103,7 +103,9 @@ function VerifyOtp() {
           {otp.map((digit, i) => (
             <input
               key={i}
-              ref={(el) => { inputRefs.current[i] = el; }}
+              ref={(el) => {
+                inputRefs.current[i] = el;
+              }}
               type="text"
               inputMode="numeric"
               maxLength={1}
@@ -117,7 +119,7 @@ function VerifyOtp() {
 
         <button
           disabled={auth.status === "loading" || otp.some((d) => d === "")}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0d2d39] to-primary text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:brightness-110 disabled:opacity-60"
+          className="primary-action h-11 w-full text-sm"
         >
           {auth.status === "loading" ? "Verifying..." : "Verify email"}
           <span className="material-symbols-outlined text-[17px]">arrow_forward</span>

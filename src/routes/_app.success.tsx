@@ -69,7 +69,7 @@ function BillingSuccess() {
             <p className="mt-3 text-sm text-slate-500">{error}</p>
             <button
               onClick={() => navigate({ to: "/billing" })}
-              className="mt-6 rounded-lg bg-[#0d2d39] px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary"
+              className="primary-action mt-6 px-6 text-sm"
             >
               Go to Billing
             </button>
@@ -77,15 +77,19 @@ function BillingSuccess() {
         ) : (
           <>
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <span className="material-symbols-outlined text-3xl text-green-600">check_circle</span>
+              <span className="material-symbols-outlined text-3xl text-green-600">
+                check_circle
+              </span>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Welcome to {billing ? tierLabel(billing.tier) : "your new plan"}!</h1>
+            <h1 className="text-2xl font-bold text-slate-900">
+              Welcome to {billing ? tierLabel(billing.tier) : "your new plan"}!
+            </h1>
             <p className="mt-3 text-sm text-slate-500">
               Your subscription is now active. Redirecting to billing in 3 seconds...
             </p>
             <button
               onClick={() => navigate({ to: "/billing" })}
-              className="mt-6 rounded-lg bg-[#0d2d39] px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary"
+              className="primary-action mt-6 px-6 text-sm"
             >
               Go to Billing
             </button>

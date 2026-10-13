@@ -29,7 +29,6 @@ function Login() {
     if (auth.error) dispatch(clearApiFeedback());
   }
 
-
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
@@ -46,8 +45,9 @@ function Login() {
       title="Log in to your workspace"
       description="Pick up where your sales agents left off."
     >
-
-      <div className="mb-5"><SocialSignIn /></div>
+      <div className="mb-5">
+        <SocialSignIn />
+      </div>
       <form className="space-y-5" onSubmit={handleSubmit}>
         {auth.error && (
           <div className="rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-xs text-error">
@@ -59,7 +59,10 @@ function Login() {
           type="email"
           placeholder="you@company.com"
           value={email}
-          onChange={(v) => { clearError(); setEmail(v); }}
+          onChange={(v) => {
+            clearError();
+            setEmail(v);
+          }}
           autoComplete="email"
         />
         <AuthField
@@ -67,7 +70,10 @@ function Login() {
           type={showPassword ? "text" : "password"}
           placeholder="Enter your password"
           value={password}
-          onChange={(v) => { clearError(); setPassword(v); }}
+          onChange={(v) => {
+            clearError();
+            setPassword(v);
+          }}
           autoComplete="current-password"
           action={
             <button
@@ -93,10 +99,7 @@ function Login() {
           </Link>
         </div>
 
-        <button
-          disabled={auth.status === "loading"}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0d2d39] to-primary text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:brightness-110 disabled:opacity-60"
-        >
+        <button disabled={auth.status === "loading"} className="primary-action h-11 w-full text-sm">
           {auth.status === "loading" ? "Logging in..." : "Log in"}
           <span className="material-symbols-outlined text-[17px]">arrow_forward</span>
         </button>

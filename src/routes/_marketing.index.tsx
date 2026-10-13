@@ -53,20 +53,6 @@ function LandingPage() {
 
   return (
     <div className="min-h-screen relative isolate overflow-hidden selection:bg-primary/20">
-      {/* Decorative Background Glows */}
-      <div
-        className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
-        aria-hidden="true"
-      >
-        <div
-          className="relative left-[calc(50%-13rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-[#16a3a9] opacity-15 sm:left-[calc(50%-36rem)] sm:w-[72.187rem]"
-          style={{
-            clipPath:
-              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-          }}
-        />
-      </div>
-
       {/* Navigation Header */}
 
       {/* Hero Body Section */}
@@ -81,10 +67,7 @@ function LandingPage() {
           </div>
 
           <h1 className="text-4xl font-extrabold tracking-tight text-[#131b2e] sm:text-6xl lg:text-7xl !leading-[1.15]">
-            Automate your sales pipeline from{" "}
-            <span className="text-primary bg-gradient-to-r from-primary to-[#16a3a9] bg-clip-text text-transparent">
-              end to end
-            </span>
+            Automate your sales pipeline from <span className="text-primary">end to end</span>
           </h1>
 
           <p className="mt-6 text-base sm:text-lg leading-relaxed text-[#505f76] max-w-2xl mx-auto">
@@ -93,7 +76,7 @@ function LandingPage() {
           </p>
 
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Link to="/register" className="primary-action !px-8 !py-4.5 !text-sm shadow-xl">
+            <Link to="/register" className="primary-action !px-8 !py-3 !text-sm">
               <span className="material-symbols-outlined !text-base">auto_awesome</span>
               Start Free Trial
             </Link>
@@ -107,8 +90,8 @@ function LandingPage() {
         </div>
 
         {/* Dynamic App Dashboard Mockup Preview */}
-        <div className="mt-20 sm:mt-24 lg:mt-32 soft-panel p-3 sm:p-4 bg-white/40 backdrop-blur-md">
-          <div className="rounded-xl border border-outline-variant/40 overflow-hidden bg-white shadow-2xl flex flex-col md:flex-row h-[480px]">
+        <div className="mt-20 sm:mt-24 lg:mt-32 soft-panel p-3 sm:p-4 bg-white">
+          <div className="rounded-lg border border-outline-variant overflow-hidden bg-white shadow-sm flex flex-col md:flex-row h-[480px]">
             {/* Interactive Sidebar Mock */}
             <div className="w-full md:w-[210px] bg-[#f2f3ff] border-r border-outline-variant/30 p-4 flex flex-col gap-1 shrink-0">
               <div className="flex items-center gap-2 px-2 pb-4 mb-2 border-b border-outline-variant/20">
@@ -192,7 +175,7 @@ function LandingPage() {
 
         {/* Bottom CTA Section */}
         <div className="mt-24 sm:mt-32 mb-16">
-          <div className="relative isolate overflow-hidden bg-[#0d2d39] px-6 py-16 shadow-2xl rounded-2xl sm:px-16 md:py-24 text-center border border-primary/20">
+          <div className="relative isolate overflow-hidden bg-slate-900 px-6 py-16 rounded-lg sm:px-16 md:py-24 text-center border border-slate-800">
             <h2 className="mx-auto max-w-2xl text-3xl font-black tracking-tight text-white sm:text-4xl">
               Ready to hand off your cold sales cycle?
             </h2>
@@ -201,10 +184,7 @@ function LandingPage() {
               today. Risk-free trial.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Link
-                to="/register"
-                className="rounded-xl bg-primary px-6 py-3.5 text-xs font-bold text-white shadow-md hover:bg-primary/90 transition"
-              >
+              <Link to="/register" className="primary-action px-6 py-3 text-xs">
                 Launch Workspace
               </Link>
               <Link
@@ -214,8 +194,6 @@ function LandingPage() {
                 Speak with Sales &rarr;
               </Link>
             </div>
-            {/* Background Accent Mesh */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary/20 rounded-full blur-3xl -z-10" />
           </div>
         </div>
       </main>

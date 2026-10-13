@@ -10,17 +10,27 @@ export function TopBar({ title }: { title: string }) {
   const dispatch = useAppDispatch();
   const profile = useAppSelector((state) => state.app.profile);
   const team = useAppSelector((state) => state.app.team);
-  const [notificationState, setNotificationState] = useState<{ scope: string; items: NotificationApi[] }>({ scope: "", items: [] });
+  const [notificationState, setNotificationState] = useState<{
+    scope: string;
+    items: NotificationApi[];
+  }>({ scope: "", items: [] });
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [searchState, setSearchState] = useState<{ scope: string; query: string; items: SearchResultApi[] }>({ scope: "", query: "", items: [] });
+  const [searchState, setSearchState] = useState<{
+    scope: string;
+    query: string;
+    items: SearchResultApi[];
+  }>({ scope: "", query: "", items: [] });
   const accessToken = useAppSelector((state) => state.app.auth.accessToken);
   const userId = useAppSelector((state) => state.app.auth.userId);
   const scope = `${userId ?? ""}:${team.id ?? ""}`;
-  const notifications = userId && team.id && notificationState.scope === scope ? notificationState.items : [];
-  const searchResults = userId && team.id && searchState.scope === scope && searchState.query === search.trim()
-    ? searchState.items : [];
+  const notifications =
+    userId && team.id && notificationState.scope === scope ? notificationState.items : [];
+  const searchResults =
+    userId && team.id && searchState.scope === scope && searchState.query === search.trim()
+      ? searchState.items
+      : [];
   const unreadCount = notifications.filter((notification) => !notification.is_read).length;
   const sidebarOpen = useAppSelector((state) => state.app.sidebarOpen);
 
@@ -61,32 +71,48 @@ export function TopBar({ title }: { title: string }) {
   useEffect(() => {
     let active = true;
     if (search.trim().length < 2 || !accessToken || !team.id) {
-      return () => { active = false; };
+      return () => {
+        active = false;
+      };
     }
     const query = search.trim();
     const timer = window.setTimeout(() => {
       api
         .searchWorkspace(query, accessToken, team.id)
-        .then((result) => { if (active) setSearchState({ scope, query, items: result.data }); })
-        .catch(() => { if (active) setSearchState({ scope, query, items: [] }); });
+        .then((result) => {
+          if (active) setSearchState({ scope, query, items: result.data });
+        })
+        .catch(() => {
+          if (active) setSearchState({ scope, query, items: [] });
+        });
     }, 250);
-    return () => { active = false; window.clearTimeout(timer); };
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
   }, [search, accessToken, team.id, scope]);
 
   useEffect(() => {
     let active = true;
     if (!accessToken || !team.id) {
-      return () => { active = false; };
+      return () => {
+        active = false;
+      };
     }
     const loadNotifications = () => {
       api
         .getNotifications(accessToken, team.id!)
-        .then((response) => { if (active) setNotificationState({ scope, items: response.data }); })
+        .then((response) => {
+          if (active) setNotificationState({ scope, items: response.data });
+        })
         .catch(() => {});
     };
     loadNotifications();
     const timer = window.setInterval(loadNotifications, 60_000);
-    return () => { active = false; window.clearInterval(timer); };
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, [accessToken, team.id, scope]);
 
   async function openNotifications() {
@@ -95,9 +121,11 @@ export function TopBar({ title }: { title: string }) {
     setHelpOpen(false);
     if (opening && unreadCount && accessToken && team.id) {
       const currentScope = scope;
-      setNotificationState((current) => current.scope === currentScope
-        ? { ...current, items: current.items.map((item) => ({ ...item, is_read: true })) }
-        : current);
+      setNotificationState((current) =>
+        current.scope === currentScope
+          ? { ...current, items: current.items.map((item) => ({ ...item, is_read: true })) }
+          : current,
+      );
       try {
         await api.markAllNotificationsRead(accessToken, team.id);
       } catch {
@@ -108,7 +136,7 @@ export function TopBar({ title }: { title: string }) {
   }
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-outline-variant/35 bg-white/95 px-4 shadow-[0_1px_8px_rgba(15,23,42,0.025)] backdrop-blur-xl sm:px-6">
+    <header className="sticky top-0 z-20 flex h-14 w-full items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6">
       <div className="flex min-w-0 items-center gap-1">
         <button
           onClick={() => dispatch(toggleSidebar())}
@@ -123,10 +151,10 @@ export function TopBar({ title }: { title: string }) {
         </button>
 
         <div className="min-w-0 border-l border-outline-variant/45 pl-3">
-          <p className="hidden text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:block">
+          <p className="hidden text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 sm:block">
             Workspace
           </p>
-          <h2 className="truncate text-[17px] font-extrabold tracking-[-0.02em] text-on-surface sm:text-[18px]">
+          <h2 className="truncate text-base font-semibold tracking-[-0.01em] text-on-surface sm:text-[17px]">
             {title}
           </h2>
         </div>
@@ -147,7 +175,7 @@ export function TopBar({ title }: { title: string }) {
             ⌘ K
           </kbd>
           {search.trim().length >= 2 && (
-            <div className="absolute left-0 top-11 z-50 w-[320px] overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-2xl">
+            <div className="absolute left-0 top-11 z-50 w-[320px] overflow-hidden rounded-md border border-slate-200 bg-white text-left shadow-lg">
               {searchResults.length ? (
                 searchResults.map((result) => (
                   <button
@@ -159,7 +187,7 @@ export function TopBar({ title }: { title: string }) {
                     }}
                     className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 last:border-0 hover:bg-slate-50"
                   >
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/8 text-[9px] font-black text-primary">
+                    <span className="flex h-8 w-8 items-center justify-center rounded bg-blue-50 text-[9px] font-semibold text-primary">
                       {result.type.slice(0, 2).toUpperCase()}
                     </span>
                     <span className="min-w-0">
@@ -182,7 +210,7 @@ export function TopBar({ title }: { title: string }) {
         </label>
         <Link
           to="/lead-generation"
-          className="hidden h-9 items-center gap-1.5 rounded-lg bg-[#0d2d39] px-3 text-[11px] font-bold text-white shadow-sm transition hover:bg-primary sm:flex"
+          className="primary-action hidden h-9 min-h-0 items-center gap-1.5 px-3 sm:flex"
         >
           <span className="material-symbols-outlined text-[16px]">add</span>
           New prospect
@@ -203,7 +231,7 @@ export function TopBar({ title }: { title: string }) {
         {notificationsOpen && (
           <div
             ref={notificationsRef}
-            className="absolute right-3 top-[58px] w-[calc(100vw-1.5rem)] max-w-[360px] overflow-hidden rounded-xl border border-outline-variant/55 bg-white shadow-2xl shadow-slate-900/15 sm:right-20"
+            className="absolute right-3 top-[52px] w-[calc(100vw-1.5rem)] max-w-[360px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg sm:right-20"
           >
             <div className="border-b border-outline-variant/50 px-5 py-4">
               <p className="text-sm font-extrabold">Notifications</p>
@@ -228,7 +256,7 @@ export function TopBar({ title }: { title: string }) {
                     className="block px-5 py-4 hover:bg-slate-50"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded bg-blue-50 text-primary">
                         <span className="material-symbols-outlined text-[17px]">
                           {!notification.is_read ? "notifications_active" : "task_alt"}
                         </span>
@@ -255,7 +283,7 @@ export function TopBar({ title }: { title: string }) {
           className="ml-1 hidden items-center gap-2 border-l border-outline-variant/45 pl-3 sm:flex"
           aria-label="Open profile settings"
         >
-          <span className="flex h-8 w-8 items-center pt-[3px] justify-center rounded-lg bg-[#0d2d39] text-[10px] font-extrabold text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded bg-slate-800 text-[10px] font-semibold text-white">
             {(profile.name || "User")
               .split(" ")
               .map((part) => part[0])

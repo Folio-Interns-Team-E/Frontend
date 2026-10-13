@@ -26,7 +26,7 @@ function BillingCancel() {
         </p>
         <button
           onClick={() => navigate({ to: "/billing" })}
-          className="mt-6 rounded-lg bg-[#0d2d39] px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary"
+          className="primary-action mt-6 px-6 text-sm"
         >
           Go to Billing
         </button>

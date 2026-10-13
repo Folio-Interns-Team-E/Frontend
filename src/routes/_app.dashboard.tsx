@@ -290,8 +290,7 @@ function Index() {
     <>
       <TopBar title="Dashboard" />
       <div className="page-shell space-y-5 sm:space-y-6">
-        <section className="subtle-grid relative overflow-hidden rounded-2xl border border-white/8 bg-[#0d2935] px-5 py-5 text-white shadow-xl shadow-slate-900/10 sm:px-7 sm:py-6">
-          <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-primary/18 to-transparent" />
+        <section className="relative overflow-hidden rounded-lg border border-slate-800 bg-slate-900 px-5 py-5 text-white sm:px-7 sm:py-6">
           <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div>
               <div className="mb-2 flex items-center gap-2">
@@ -317,10 +316,7 @@ function Index() {
                 <span className="material-symbols-outlined text-[18px]">person_search</span>
                 Find leads
               </Link>
-              <Link
-                to="/proposals"
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-primary/20 transition hover:bg-[#16a3a9]"
-              >
+              <Link to="/proposals" className="primary-action px-4">
                 <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
                 Draft proposal
               </Link>
@@ -616,8 +612,7 @@ function Index() {
             </div>
           </div>
 
-          <div className="app-card relative overflow-hidden bg-gradient-to-br from-[#102b38] to-[#123e49] p-5 text-white">
-            <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary/35 blur-3xl" />
+          <div className="app-card relative overflow-hidden !border-slate-800 !bg-slate-900 p-5 text-white">
             <div className="relative">
               <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
                 <span className="material-symbols-outlined text-[#72e1e3]">insights</span>
@@ -634,7 +629,7 @@ function Index() {
               </p>
               <Link
                 to="/qualification"
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-[#102b38] shadow-lg transition hover:translate-x-0.5"
+                className="mt-6 inline-flex items-center gap-2 rounded-md border border-slate-600 bg-white px-4 py-2.5 text-xs font-semibold text-slate-900 transition-colors hover:bg-slate-100"
               >
                 Review high-fit leads
                 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -646,7 +641,7 @@ function Index() {
 
       {leadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-lg">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-900">Add lead</h2>
               <button
@@ -720,7 +715,7 @@ function Index() {
                 <button
                   type="submit"
                   disabled={leadSaving || !leadForm.name.trim() || !leadForm.email.trim()}
-                  className="rounded-lg bg-[#0d2d39] px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
+                  className="primary-action px-5 text-sm"
                 >
                   {leadSaving ? "Adding..." : "Add lead"}
                 </button>

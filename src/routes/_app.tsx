@@ -1,14 +1,15 @@
-import {
-  createFileRoute,
-  Outlet,
-  useNavigate,
-  useLocation,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { AIChatPanel } from "../components/AIChatPanel";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { closeSidebar, setActiveTeam, completeTeamSwitch, setIntegration, updateProfile } from "../store/appSlice";
+import {
+  closeSidebar,
+  setActiveTeam,
+  completeTeamSwitch,
+  setIntegration,
+  updateProfile,
+} from "../store/appSlice";
 import {
   fetchMyTeams,
   fetchOnboardingStatus,
@@ -83,17 +84,24 @@ function AppLayout() {
   useEffect(() => {
     if (!accessToken || !auth.userId) return;
     let active = true;
-    api.getProfile(accessToken).then((response) => {
-      if (!active) return;
-      const user = response.data;
-      dispatch(updateProfile({
-        name: user.full_name,
-        email: user.email,
-        company: user.company ?? "",
-        role: user.job_title ?? "",
-      }));
-    }).catch(() => {});
-    return () => { active = false; };
+    api
+      .getProfile(accessToken)
+      .then((response) => {
+        if (!active) return;
+        const user = response.data;
+        dispatch(
+          updateProfile({
+            name: user.full_name,
+            email: user.email,
+            company: user.company ?? "",
+            role: user.job_title ?? "",
+          }),
+        );
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, [accessToken, auth.userId, dispatch]);
 
   useEffect(() => {
@@ -135,7 +143,14 @@ function AppLayout() {
     ) {
       dispatch(completeTeamSwitch());
     }
-  }, [teamSwitching, leadsStatus, meetingsStatus, proposalsStatus, knowledgeAssetsStatus, dispatch]);
+  }, [
+    teamSwitching,
+    leadsStatus,
+    meetingsStatus,
+    proposalsStatus,
+    knowledgeAssetsStatus,
+    dispatch,
+  ]);
 
   useEffect(() => {
     if (auth.userTeamsStatus !== "succeeded") return;
@@ -184,7 +199,7 @@ function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-transparent text-on-surface">
+    <div className="flex h-screen overflow-hidden bg-background text-on-surface">
       {sidebarOpen && (
         <>
           <button
@@ -198,7 +213,7 @@ function AppLayout() {
       )}
 
       <main
-        className={`min-w-0 flex-1 overflow-y-auto bg-transparent transition-[margin] duration-200 ${
+        className={`min-w-0 flex-1 overflow-y-auto bg-background transition-[margin] duration-200 ${
           sidebarOpen ? "md:ml-[var(--spacing-sidebar_width)]" : "ml-0"
         } ${aiPanelOpen ? "xl:mr-[var(--spacing-ai_panel_width)]" : "mr-0"}`}
       >
@@ -210,7 +225,7 @@ function AppLayout() {
       ) : (
         <button
           onClick={() => setAiPanelOpen(true)}
-          className="fixed bottom-5 right-5 z-30 flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-[#0d2d39] text-xs font-black text-white shadow-xl shadow-slate-900/20 transition hover:-translate-y-1 hover:bg-primary"
+          className="fixed bottom-5 right-5 z-30 flex h-11 w-11 items-center justify-center rounded-md border border-blue-700 bg-primary text-xs font-semibold text-white shadow-md transition-colors hover:bg-blue-700"
           aria-label="Open sales copilot"
         >
           <img src="/robot.png" alt="" className="h-7 w-7 object-contain" />
@@ -219,5 +234,3 @@ function AppLayout() {
     </div>
   );
 }
-
-

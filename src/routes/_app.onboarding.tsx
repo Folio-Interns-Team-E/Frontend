@@ -28,7 +28,7 @@ function Onboarding() {
     <>
       <TopBar title="Set up your AI sales team" />
       <div className="page-shell max-w-4xl">
-        <div className="subtle-grid mb-6 rounded-2xl bg-[#0d2935] px-5 py-6 text-white sm:mb-8 sm:px-8 sm:py-7">
+        <div className="mb-6 rounded-lg border border-slate-800 bg-slate-900 px-5 py-6 text-white sm:mb-8 sm:px-8 sm:py-7">
           <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary-fixed">
             Step 1 of 1
           </span>

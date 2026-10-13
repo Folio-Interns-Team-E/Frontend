@@ -13,27 +13,18 @@ export function AuthLayout({
   children: ReactNode;
 }) {
   return (
-    <main className="grid min-h-screen bg-[#f4f7fb] lg:grid-cols-[1fr_0.92fr]">
-      <section className="relative hidden min-h-screen overflow-hidden bg-[#0b1724] p-10 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute -left-20 -top-24 h-96 w-96 rounded-full bg-primary/25 blur-[100px]" />
-        <div className="absolute -bottom-32 right-[-80px] h-[28rem] w-[28rem] rounded-full bg-cyan-400/15 blur-[110px]" />
-        <div className="absolute right-16 top-36 h-56 w-56 rounded-full border border-white/[0.06]" />
-        <div className="absolute right-28 top-48 h-32 w-32 rounded-full border border-white/[0.06]" />
-
+    <main className="grid min-h-screen bg-slate-50 lg:grid-cols-[1fr_0.92fr]">
+      <section className="relative hidden min-h-screen overflow-hidden border-r border-slate-800 bg-[#111827] p-10 text-white lg:flex lg:flex-col lg:justify-between">
         <Link to="/dashboard">
-          <img
-            src="/logo-white.png"
-            alt="SalesSync AI"
-            className="h-25 w-auto rounded-xl object-contain"
-          />
+          <img src="/logo-white.png" alt="SalesSync AI" className="h-20 w-auto object-contain" />
         </Link>
 
         <div className="relative max-w-xl">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#72e1e3]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#72e1e3]" />
+          <div className="mb-6 inline-flex items-center gap-2 rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-blue-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
             Multi-agent sales intelligence
           </div>
-          <h1 className="text-4xl font-black leading-[1.12] tracking-[-0.04em] xl:text-[46px]">
+          <h1 className="text-4xl font-semibold leading-[1.15] tracking-[-0.035em] xl:text-[44px]">
             Turn every sales conversation into momentum.
           </h1>
           <p className="mt-5 max-w-lg text-[15px] leading-7 text-slate-300">
@@ -47,11 +38,8 @@ export function AuthLayout({
               ["record_voice_over", "Meeting context"],
               ["description", "Grounded proposals"],
             ].map(([icon, label]) => (
-              <div
-                key={label}
-                className="rounded-2xl border border-white/[0.08] bg-white/[0.05] p-3.5 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.075]"
-              >
-                <span className="material-symbols-outlined text-[21px] text-[#72e1e3]">{icon}</span>
+              <div key={label} className="rounded-md border border-slate-700 bg-slate-800/60 p-3.5">
+                <span className="material-symbols-outlined text-[21px] text-blue-300">{icon}</span>
                 <p className="mt-3 text-[11px] font-semibold leading-4 text-slate-200">{label}</p>
               </div>
             ))}
@@ -65,19 +53,15 @@ export function AuthLayout({
         </div>
       </section>
 
-      <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-8 sm:px-10">
-        <div className="absolute right-[-120px] top-[-120px] h-80 w-80 rounded-full bg-primary/[0.07] blur-3xl" />
-        <div className="relative w-full max-w-[410px] rounded-[1.5rem] border border-white/70 bg-white/58 p-6 shadow-2xl shadow-slate-900/8 backdrop-blur-xl">
+      <section className="flex min-h-screen items-center justify-center px-5 py-8 sm:px-10">
+        <div className="w-full max-w-[410px] rounded-lg border border-slate-200 bg-white p-7 shadow-sm">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#0d1f2d] to-primary text-white">
-              <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
-            </div>
-            <span className="font-extrabold">SalesSync AI</span>
+            <img src="/logo-blue.png" alt="SalesSync" className="h-9 w-auto" />
           </div>
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-primary">
             {eyebrow}
           </p>
-          <h2 className="mt-2 text-[28px] font-black tracking-[-0.035em] text-on-surface">
+          <h2 className="mt-2 text-[28px] font-semibold tracking-[-0.03em] text-on-surface">
             {title}
           </h2>
           <p className="mt-2 text-sm leading-6 text-on-surface-variant">{description}</p>

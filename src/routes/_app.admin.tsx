@@ -40,7 +40,9 @@ function AdminDashboard() {
     let active = true;
     if (!token || !team.id || team.currentUserRole !== "admin") {
       setLoading(false);
-      return () => { active = false; };
+      return () => {
+        active = false;
+      };
     }
     setLoading(true);
     setData(null);
@@ -58,17 +60,28 @@ function AdminDashboard() {
         setApiKeys(keys.data);
       })
       .catch((reason) => {
-        if (active) setError(reason instanceof Error ? reason.message : "Could not load admin data");
+        if (active)
+          setError(reason instanceof Error ? reason.message : "Could not load admin data");
       })
-      .finally(() => { if (active) setLoading(false); });
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     const checkWorker = () => {
-      api.getSequenceWorkerStatus()
-        .then((response) => { if (active) setWorkerHealthy(response.data.sequence_worker); })
-        .catch(() => { if (active) setWorkerHealthy(false); });
+      api
+        .getSequenceWorkerStatus()
+        .then((response) => {
+          if (active) setWorkerHealthy(response.data.sequence_worker);
+        })
+        .catch(() => {
+          if (active) setWorkerHealthy(false);
+        });
     };
     checkWorker();
     const timer = window.setInterval(checkWorker, 60_000);
-    return () => { active = false; window.clearInterval(timer); };
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, [token, team.id, team.currentUserRole]);
 
   if (team.currentUserRole !== "admin") {
@@ -97,7 +110,7 @@ function AdminDashboard() {
         <TopBar title="Admin overview" />
         <div className="page-shell grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="h-32 animate-pulse rounded-2xl bg-slate-200" />
+            <div key={index} className="h-32 animate-pulse rounded-lg bg-slate-200" />
           ))}
         </div>
       </>
@@ -232,7 +245,7 @@ function AdminDashboard() {
             </button>
           </div>
         )}
-        <section className="overflow-hidden rounded-2xl bg-[#0d2935] p-6 text-white shadow-xl">
+        <section className="overflow-hidden rounded-lg border border-slate-800 bg-slate-900 p-6 text-white">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#72e1e3]">
@@ -286,7 +299,7 @@ function AdminDashboard() {
                     <span className="text-xs font-semibold">{stage}</span>
                     <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-primary to-cyan-400"
+                        className="h-full rounded-full bg-primary"
                         style={{ width: `${(count / maxStage) * 100}%` }}
                       />
                     </div>
@@ -306,7 +319,10 @@ function AdminDashboard() {
             <div className="mt-4 space-y-3">
               <Readiness label="Sequence worker" good={workerHealthy === true} />
               <Readiness label="Gmail outreach" good={data.integrations.gmail_connected} />
-              <Readiness label="Google Calendar scheduling" good={data.integrations.calendar_connected} />
+              <Readiness
+                label="Google Calendar scheduling"
+                good={data.integrations.calendar_connected}
+              />
               <Readiness label="Apollo sourcing" good={data.integrations.apollo_connected} />
               <Readiness label="Ideal customer profile" good={data.workspace.icp_configured} />
               <Readiness

@@ -70,9 +70,7 @@ function TeamSetup() {
   async function submitJoin(event: FormEvent) {
     event.preventDefault();
     if (!auth.accessToken) return;
-    const result = await dispatch(
-      joinTeamRemote({ inviteCode, accessToken: auth.accessToken }),
-    );
+    const result = await dispatch(joinTeamRemote({ inviteCode, accessToken: auth.accessToken }));
     if (joinTeamRemote.fulfilled.match(result)) {
       setToast({ message: "Joined team successfully!", type: "success" });
       setTimeout(() => continueToDashboard(), 1200);
@@ -99,7 +97,7 @@ function TeamSetup() {
       <div className="flex min-h-screen items-center justify-center bg-[#f4f7fb] p-5">
         <div className="w-full max-w-lg">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#0d1f2d] to-primary text-white shadow-lg">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-slate-800 text-white">
               <span className="material-symbols-outlined text-[24px]">groups</span>
             </div>
             <h1 className="text-2xl font-black tracking-[-0.03em] text-on-surface">
@@ -141,11 +139,10 @@ function TeamSetup() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#f4f7fb] px-4 py-6 sm:px-5 sm:py-8">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent" />
       <div className="relative mx-auto max-w-5xl">
         <header className="mb-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#0d1f2d] to-primary text-white shadow-lg">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-800 text-white">
               <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
             </div>
             <div>
@@ -200,7 +197,7 @@ function TeamSetup() {
 
         {toast && (
           <div
-            className={`mx-auto mt-6 flex max-w-2xl items-center gap-3 rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg transition-all ${
+            className={`mx-auto mt-6 flex max-w-2xl items-center gap-3 rounded-md border px-4 py-3 text-sm font-semibold shadow-sm transition-colors ${
               toast.type === "success"
                 ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                 : "border-error/20 bg-error/5 text-error"
@@ -307,7 +304,7 @@ function ChoiceCard({
           Recommended
         </span>
       )}
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-[#102b38]">
+      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-slate-100 text-slate-800">
         <span className="material-symbols-outlined">{icon}</span>
       </div>
       <h2 className="mt-6 text-lg font-extrabold">{title}</h2>

@@ -225,10 +225,10 @@ function Billing() {
                   <button
                     onClick={() => handleUpgrade(plan.tier)}
                     disabled={isCurrent || isLoading || loading}
-                    className={`mt-6 w-full rounded-lg py-2.5 text-sm font-bold transition ${
+                    className={`mt-6 w-full ${
                       isCurrent
-                        ? "cursor-not-allowed bg-slate-100 text-slate-400"
-                        : "bg-[#0d2d39] text-white hover:bg-primary"
+                        ? "secondary-action cursor-not-allowed text-slate-400"
+                        : "primary-action"
                     }`}
                   >
                     {isCurrent

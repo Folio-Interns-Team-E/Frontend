@@ -142,7 +142,10 @@ function Proposals() {
                 {template ? "Replace" : "Upload"}
               </button>
               {template && (
-                <button onClick={handleTemplateDelete} className="secondary-action text-red-600 hover:bg-red-50">
+                <button
+                  onClick={handleTemplateDelete}
+                  className="secondary-action text-red-600 hover:bg-red-50"
+                >
                   <span className="material-symbols-outlined text-[16px]">delete</span>
                   Delete
                 </button>
@@ -151,7 +154,9 @@ function Proposals() {
           </div>
           {template && (
             <div className="mt-3 flex items-center gap-3 rounded-lg border border-outline-variant/50 bg-surface-container-low/40 p-3">
-              <span className="material-symbols-outlined text-[28px] text-primary">description</span>
+              <span className="material-symbols-outlined text-[28px] text-primary">
+                description
+              </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{template.template_name}</p>
                 <p className="text-xs text-on-surface-variant">
@@ -171,9 +176,12 @@ function Proposals() {
         ) : (
           <div className="grid grid-cols-1 gap-6">
             {filteredProposals.map((proposal) => (
-              <div key={proposal.id} className="app-card app-card-hover overflow-hidden p-5 ring-1 ring-primary/10">
+              <div
+                key={proposal.id}
+                className="app-card app-card-hover overflow-hidden p-5 ring-1 ring-primary/10"
+              >
                 <ProposalHeader proposal={proposal} />
-                <div className="mb-5 rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/6 to-white p-5">
+                <div className="mb-5 rounded-md border border-blue-200 bg-blue-50/60 p-5">
                   <h4 className="mb-3 font-label-caps text-label-caps uppercase tracking-wider text-primary">
                     Executive Summary
                   </h4>
@@ -182,7 +190,7 @@ function Proposals() {
                   </p>
                 </div>
                 <div className="mb-5 grid gap-4 md:grid-cols-[1fr_260px]">
-                  <div className="overflow-hidden rounded-2xl border border-outline-variant/70 bg-white p-5">
+                  <div className="overflow-hidden rounded-md border border-outline-variant/70 bg-white p-5">
                     <p className="text-sm text-on-surface-variant">
                       Version <strong>{proposal.version}</strong>
                       {proposal.fileSize ? ` · ${(proposal.fileSize / 1024).toFixed(0)} KB` : ""}
@@ -288,9 +296,7 @@ function ProposalHeader({ proposal }: { proposal: Proposal }) {
     <div className="mb-5 flex items-start justify-between gap-4">
       <div>
         <div className="mb-1 flex flex-wrap items-center gap-2">
-          <h3 className="font-headline-md text-headline-md">
-            {proposal.title}
-          </h3>
+          <h3 className="font-headline-md text-headline-md">{proposal.title}</h3>
           <Badge label={proposal.status} />
           <Badge
             label={outcome}
@@ -334,9 +340,7 @@ function OutcomePanel({ proposal }: { proposal: Proposal }) {
   const outcome = getOutcome(proposal);
 
   return (
-    <div
-      className="rounded-xl border border-outline-variant bg-surface-container-low/40 p-4"
-    >
+    <div className="rounded-xl border border-outline-variant bg-surface-container-low/40 p-4">
       <p className="mb-3 text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant">
         Deal outcome
       </p>

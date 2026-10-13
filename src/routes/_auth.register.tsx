@@ -45,7 +45,6 @@ function Register() {
       title="Create your workspace"
       description="Set up your account, define your ICP, and put your AI sales team to work."
     >
-      
       <form className="space-y-4" onSubmit={handleSubmit}>
         {auth.error && <ApiError message={auth.error} />}
         {auth.accessToken?.startsWith("demo-token") && (
@@ -57,7 +56,10 @@ function Register() {
           label="Full name"
           placeholder="Alex Morgan"
           value={name}
-          onChange={(v) => { clearError(); setName(v); }}
+          onChange={(v) => {
+            clearError();
+            setName(v);
+          }}
           autoComplete="name"
         />
         <AuthField
@@ -65,7 +67,10 @@ function Register() {
           type="email"
           placeholder="you@company.com"
           value={email}
-          onChange={(v) => { clearError(); setEmail(v); }}
+          onChange={(v) => {
+            clearError();
+            setEmail(v);
+          }}
           autoComplete="email"
         />
         <div>
@@ -126,10 +131,7 @@ function Register() {
           </span>
         </label>
 
-        <button
-          disabled={auth.status === "loading"}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0d2d39] to-primary text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:brightness-110 disabled:opacity-60"
-        >
+        <button disabled={auth.status === "loading"} className="primary-action h-11 w-full text-sm">
           {auth.status === "loading" ? "Creating account..." : "Create account and continue"}
           <span className="material-symbols-outlined text-[17px]">arrow_forward</span>
         </button>

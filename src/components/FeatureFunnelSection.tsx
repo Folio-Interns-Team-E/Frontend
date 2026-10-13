@@ -1,4 +1,4 @@
-import { useState, useEffect, MouseEvent } from "react";
+import { useState, useEffect } from "react";
 
 interface FeatureItem {
   id: string;
@@ -9,7 +9,6 @@ interface FeatureItem {
 
 function FeatureFunnelSection({ features }: { features: FeatureItem[] }) {
   const [activeStage, setActiveStage] = useState<string>(features[0]?.id || "");
-  const [parallaxOffset, setParallaxOffset] = useState({ x: 0, y: 0 });
 
   // 1. Automatic Carousel Interval Flow (Advances every 3000ms)
   useEffect(() => {
@@ -26,27 +25,10 @@ function FeatureFunnelSection({ features }: { features: FeatureItem[] }) {
     return () => clearInterval(interval);
   }, [features]);
 
-  // Subtle mouse tracker for the glass background vector graphic
-  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    const { currentTarget, clientX, clientY } = e;
-    const { left, top, width, height } = currentTarget.getBoundingClientRect();
-    const x = ((clientX - left) / width - 0.5) * 15;
-    const y = ((clientY - top) / height - 0.5) * 15;
-    setParallaxOffset({ x, y });
-  };
-
   const activeFeature = features.find((f) => f.id === activeStage) || features[0];
 
   return (
-    <div className="mt-24 sm:mt-32 relative" onMouseMove={handleMouseMove}>
-      {/* Parallax Background Floating Vector Element */}
-      <div
-        className="absolute right-10 top-12 w-72 h-72 rounded-full bg-gradient-to-br from-primary/10 to-[#16a3a9]/5 blur-2xl pointer-events-none transition-transform duration-300 ease-out hidden lg:block"
-        style={{
-          transform: `translate(${parallaxOffset.x}px, ${parallaxOffset.y}px)`,
-        }}
-      />
-
+    <div className="mt-24 sm:mt-32 relative">
       <div className="text-center max-w-3xl mx-auto mb-16 px-4">
         <h2 className="section-heading">Full Funnel Control</h2>
         <p className="mt-3 text-3xl font-black tracking-tight text-[#131b2e] sm:text-4xl">
@@ -62,7 +44,7 @@ function FeatureFunnelSection({ features }: { features: FeatureItem[] }) {
         {/* Left Side: Process Sequence (7 Columns) */}
         <div className="lg:col-span-7 flex flex-col gap-4 relative">
           {/* Vertical Connecting Line Graphic */}
-          <div className="absolute left-[33px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-primary/40 via-outline-variant/30 to-transparent pointer-events-none hidden sm:block" />
+          <div className="absolute left-[33px] top-6 bottom-6 w-px bg-outline-variant pointer-events-none hidden sm:block" />
 
           {features.map((item, index) => {
             const isActive = activeStage === item.id;
@@ -79,7 +61,7 @@ function FeatureFunnelSection({ features }: { features: FeatureItem[] }) {
                 {/* Active Micro-loader Track Background (Fills over 3s when active) */}
                 {isActive && (
                   <div
-                    className="absolute bottom-0 left-0 h-[3px] bg-gradient-to-r from-primary to-[#16a3a9] animate-[linkProgress_3s_linear_infinite]"
+                    className="absolute bottom-0 left-0 h-0.5 bg-primary animate-[linkProgress_3s_linear_infinite]"
                     style={{ width: "100%" }}
                   />
                 )}
@@ -87,9 +69,7 @@ function FeatureFunnelSection({ features }: { features: FeatureItem[] }) {
                 {/* Step Indicator Pill */}
                 <div
                   className={`flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 shrink-0 z-10 ${
-                    isActive
-                      ? "bg-primary text-white shadow-lg shadow-primary/20"
-                      : "bg-[rgb(8_127_140_/_9%)] text-primary"
+                    isActive ? "bg-primary text-white" : "bg-primary/10 text-primary"
                   }`}
                 >
                   <span className="material-symbols-outlined font-semibold text-lg">
@@ -115,9 +95,8 @@ function FeatureFunnelSection({ features }: { features: FeatureItem[] }) {
         </div>
 
         {/* Right Side: Reactive Real-time Sandbox Display (5 Columns) */}
-        <div className="lg:col-span-5 sticky top-28 soft-panel p-4 bg-white/80 backdrop-blur-md border-primary/20 shadow-xl min-h-[360px] flex flex-col justify-between overflow-hidden">
-          {/* Scanner Line Glow Animation */}
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent animate-[pulse_2s_infinite]" />
+        <div className="lg:col-span-5 sticky top-28 soft-panel p-4 bg-white min-h-[360px] flex flex-col justify-between overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-0.5 bg-primary" />
 
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between border-b border-outline-variant/30 pb-3">
