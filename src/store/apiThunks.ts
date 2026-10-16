@@ -37,11 +37,26 @@ export const loginAccount = createAsyncThunk(
         return rejectWithValue({ needsVerification: true, email: payload.email });
       }
 
+      if (data.needs_mfa) return data;
+
       const access_token = data.access_token;
 
       setAccessToken(access_token && access_token !== "undefined" ? access_token : null);
 
       return data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const verifyMfaLogin = createAsyncThunk(
+  "app/verifyMfaLogin",
+  async (payload: { ticket: string; code: string }, { rejectWithValue }) => {
+    try {
+      const response = await api.verifyMfaLogin(payload.ticket, payload.code);
+      setAccessToken(response.data.access_token);
+      return response.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
     }
@@ -297,7 +312,10 @@ export const sendEmailRemote = createAsyncThunk(
 
 export const draftEmailRemote = createAsyncThunk(
   "app/draftEmailRemote",
-  async (payload: { leadId: string; subject: string; body: string }, { rejectWithValue, getState }) => {
+  async (
+    payload: { leadId: string; subject: string; body: string },
+    { rejectWithValue, getState },
+  ) => {
     try {
       const token = getToken();
       const state = getState() as RootState;

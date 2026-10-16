@@ -72,4 +72,41 @@ test.describe("authentication boundaries", () => {
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByText("Invalid email or password", { exact: true })).toBeVisible();
   });
+
+  test("an MFA account is challenged before a session is created", async ({ page }) => {
+    await page.route("**/api/auth/login", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: true,
+          data: { needs_mfa: true, mfa_ticket: "test-mfa-ticket", email: "person@example.com" },
+        }),
+      });
+    });
+    await page.route("**/api/auth/mfa/challenge", async (route) => {
+      expect(await route.request().postDataJSON()).toEqual({
+        ticket: "test-mfa-ticket",
+        code: "123456",
+      });
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Invalid authenticator or recovery code" }),
+      });
+    });
+
+    await page.goto("/login");
+    await waitForApplication(page);
+    await page.getByLabel("Work email").fill("person@example.com");
+    await page.getByLabel("Password").fill("valid-password");
+    await page.getByRole("button", { name: /log in/i }).click();
+
+    await expect(page.getByLabel("Authentication code")).toBeVisible();
+    await page.getByLabel("Authentication code").fill("123456");
+    await page.getByRole("button", { name: /verify and log in/i }).click();
+    await expect(
+      page.getByText("Invalid authenticator or recovery code", { exact: true }),
+    ).toBeVisible();
+  });
 });

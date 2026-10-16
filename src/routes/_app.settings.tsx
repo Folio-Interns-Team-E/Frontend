@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { api, setAccessToken } from "../lib/api";
 import { SocialSignIn } from "../components/SocialSignIn";
 import { SecurityActivity } from "../components/SecurityActivity";
+import { MfaSettings } from "../components/MfaSettings";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings · SalesSync AI" }] }),
@@ -34,7 +35,6 @@ function Settings() {
   const [calendarEmail, setCalendarEmail] = useState<string | null>(null);
   const [calendarLoading, setCalendarLoading] = useState(true);
   const [calendarError, setCalendarError] = useState("");
-
 
   const [apolloModalOpen, setApolloModalOpen] = useState(false);
   const [apolloApiKey, setApolloApiKey] = useState("");
@@ -73,7 +73,8 @@ function Settings() {
 
   useEffect(() => {
     if (!token) return;
-    api.getGoogleCalendarStatus(token)
+    api
+      .getGoogleCalendarStatus(token)
       .then((res) => {
         setCalendarConnected(res.data.connected);
         setCalendarEmail(res.data.email ?? null);
@@ -86,7 +87,8 @@ function Settings() {
   useEffect(() => {
     if (!token || !team.id) return;
     setApolloLoading(true);
-    api.getLeadProvider(token, team.id)
+    api
+      .getLeadProvider(token, team.id)
       .then((res) => {
         setApolloConnected(res.data.connected);
         setApolloMonthlyLimit(res.data.monthly_limit);
@@ -99,11 +101,14 @@ function Settings() {
 
   useEffect(() => {
     if (!token || !team.id) return;
-    api.getHunterProvider(token, team.id).then((res) => {
-      setHunterConnected(res.data.connected);
-      setHunterLimit(res.data.monthly_limit);
-      setHunterUsed(res.data.used_this_month);
-    }).catch(() => setHunterError("Could not check Hunter connection"));
+    api
+      .getHunterProvider(token, team.id)
+      .then((res) => {
+        setHunterConnected(res.data.connected);
+        setHunterLimit(res.data.monthly_limit);
+        setHunterUsed(res.data.used_this_month);
+      })
+      .catch(() => setHunterError("Could not check Hunter connection"));
   }, [token, team.id]);
 
   const saveHunter = async () => {
@@ -156,7 +161,9 @@ function Settings() {
       const res = await api.getGoogleCalendarAuthUrl(token);
       window.location.href = res.data.url;
     } catch (error) {
-      setCalendarError(error instanceof Error ? error.message : "Could not connect Google Calendar");
+      setCalendarError(
+        error instanceof Error ? error.message : "Could not connect Google Calendar",
+      );
     }
   };
 
@@ -203,18 +210,23 @@ function Settings() {
     setProfileError("");
     setSaved(false);
     try {
-      const response = await api.saveProfile({
-        full_name: draft.name,
-        company: draft.company,
-        job_title: draft.role,
-      }, token);
+      const response = await api.saveProfile(
+        {
+          full_name: draft.name,
+          company: draft.company,
+          job_title: draft.role,
+        },
+        token,
+      );
       const user = response.data;
-      dispatch(updateProfile({
-        name: user.full_name,
-        email: user.email,
-        company: user.company ?? "",
-        role: user.job_title ?? "",
-      }));
+      dispatch(
+        updateProfile({
+          name: user.full_name,
+          email: user.email,
+          company: user.company ?? "",
+          role: user.job_title ?? "",
+        }),
+      );
       setSaved(true);
     } catch (error) {
       setProfileError(error instanceof Error ? error.message : "Could not save profile");
@@ -233,7 +245,11 @@ function Settings() {
       dispatch(demoLogout());
       window.location.assign("/login");
     } catch (error) {
-      setLogoutAllError(error instanceof Error ? error.message : "Could not sign out all devices. Please try again.");
+      setLogoutAllError(
+        error instanceof Error
+          ? error.message
+          : "Could not sign out all devices. Please try again.",
+      );
       setLogoutAllBusy(false);
     }
   }
@@ -265,9 +281,15 @@ function Settings() {
               </label>
             ))}
             <div className="flex items-center gap-3 md:col-span-2">
-              <button className="primary-action" disabled={profileSaving || !token}>{profileSaving ? "Saving..." : "Save profile"}</button>
+              <button className="primary-action" disabled={profileSaving || !token}>
+                {profileSaving ? "Saving..." : "Save profile"}
+              </button>
               {saved && <span className="text-sm font-semibold text-green-700">Changes saved</span>}
-              {profileError && <span role="alert" className="text-sm text-error">{profileError}</span>}
+              {profileError && (
+                <span role="alert" className="text-sm text-error">
+                  {profileError}
+                </span>
+              )}
             </div>
           </form>
         </section>
@@ -293,12 +315,20 @@ function Settings() {
             <Integration
               icon="calendar_month"
               name="Google Calendar"
-              description={calendarEmail ? `Connected as ${calendarEmail}. Create meetings with Google Meet links.` : "Create meetings and Google Meet links from SalesSync."}
+              description={
+                calendarEmail
+                  ? `Connected as ${calendarEmail}. Create meetings with Google Meet links.`
+                  : "Create meetings and Google Meet links from SalesSync."
+              }
               connected={calendarConnected}
               loading={calendarLoading}
               onToggle={connectGoogleCalendar}
             />
-            {calendarError && <p role="alert" className="py-2 text-sm text-error">{calendarError}</p>}
+            {calendarError && (
+              <p role="alert" className="py-2 text-sm text-error">
+                {calendarError}
+              </p>
+            )}
             <Integration
               icon="person_search"
               name="Apollo"
@@ -314,7 +344,11 @@ function Settings() {
             <Integration
               icon="travel_explore"
               name="Hunter"
-              description={hunterConnected ? `${hunterUsed} of ${hunterLimit} workspace lookup attempts used this month` : "Discover companies and reveal contacts with your Hunter API key."}
+              description={
+                hunterConnected
+                  ? `${hunterUsed} of ${hunterLimit} workspace lookup attempts used this month`
+                  : "Discover companies and reveal contacts with your Hunter API key."
+              }
               connected={hunterConnected}
               loading={false}
               onToggle={() => setHunterOpen(true)}
@@ -324,15 +358,17 @@ function Settings() {
 
         <section className="section-panel space-y-4 p-5 sm:p-6">
           <h2 className="font-bold">Connected sign-in methods</h2>
-          <p className="text-sm text-on-surface-variant">Connect Google or GitHub to sign in to this account. This does not grant access to Gmail or repositories.</p>
+          <p className="text-sm text-on-surface-variant">
+            Connect Google or GitHub to sign in to this account. This does not grant access to Gmail
+            or repositories.
+          </p>
           <SocialSignIn link />
         </section>
+        {token && <MfaSettings accessToken={token} />}
         <section className="section-panel flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
           <div>
             <h2 className="font-bold">Account session</h2>
-            <p className="text-sm text-on-surface-variant">
-              Sign out of this browser session.
-            </p>
+            <p className="text-sm text-on-surface-variant">Sign out of this browser session.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -359,14 +395,42 @@ function Settings() {
 
       {logoutAllOpen && (
         <div className="modal-backdrop" role="presentation">
-          <div className="modal-surface w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="logout-all-title">
+          <div
+            className="modal-surface w-full max-w-md"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logout-all-title"
+          >
             <div className="space-y-3 p-5">
-              <h2 id="logout-all-title" className="text-lg font-bold">Sign out everywhere?</h2>
-              <p className="text-sm text-on-surface-variant">All current SalesSync sessions, including this one, will stop working. You will need to sign in again on every device. Workspace API keys are not affected.</p>
-              {logoutAllError && <p role="alert" className="text-sm text-error">{logoutAllError}</p>}
+              <h2 id="logout-all-title" className="text-lg font-bold">
+                Sign out everywhere?
+              </h2>
+              <p className="text-sm text-on-surface-variant">
+                All current SalesSync sessions, including this one, will stop working. You will need
+                to sign in again on every device. Workspace API keys are not affected.
+              </p>
+              {logoutAllError && (
+                <p role="alert" className="text-sm text-error">
+                  {logoutAllError}
+                </p>
+              )}
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" className="secondary-action" disabled={logoutAllBusy} onClick={() => setLogoutAllOpen(false)}>Cancel</button>
-                <button type="button" className="primary-action" disabled={logoutAllBusy} onClick={() => void signOutAllDevices()}>{logoutAllBusy ? "Signing out..." : "Sign out all devices"}</button>
+                <button
+                  type="button"
+                  className="secondary-action"
+                  disabled={logoutAllBusy}
+                  onClick={() => setLogoutAllOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="primary-action"
+                  disabled={logoutAllBusy}
+                  onClick={() => void signOutAllDevices()}
+                >
+                  {logoutAllBusy ? "Signing out..." : "Sign out all devices"}
+                </button>
               </div>
             </div>
           </div>
@@ -425,10 +489,7 @@ function Settings() {
                   Disconnect
                 </button>
               )}
-              <button
-                onClick={() => setApolloModalOpen(false)}
-                className="secondary-action"
-              >
+              <button onClick={() => setApolloModalOpen(false)} className="secondary-action">
                 Cancel
               </button>
               <button
@@ -446,19 +507,60 @@ function Settings() {
         <div className="modal-backdrop">
           <div className="modal-surface w-full max-w-md p-5">
             <h3 className="text-lg font-bold">Connect Hunter</h3>
-            <p className="mt-2 text-sm text-on-surface-variant">The key is stored encrypted and shared by this workspace. Any member can replace or disconnect it, which affects everyone. Company previews do not reveal emails.</p>
-            <label className="mt-4 block text-sm font-semibold">API key
-              <input type="password" autoComplete="off" className="control mt-2 w-full px-4 py-2.5" value={hunterKey} onChange={(e) => setHunterKey(e.target.value)} />
+            <p className="mt-2 text-sm text-on-surface-variant">
+              The key is stored encrypted and shared by this workspace. Any member can replace or
+              disconnect it, which affects everyone. Company previews do not reveal emails.
+            </p>
+            <label className="mt-4 block text-sm font-semibold">
+              API key
+              <input
+                type="password"
+                autoComplete="off"
+                className="control mt-2 w-full px-4 py-2.5"
+                value={hunterKey}
+                onChange={(e) => setHunterKey(e.target.value)}
+              />
             </label>
-            <label className="mt-4 block text-sm font-semibold">Monthly workspace lookup cap
-              <input type="number" min={1} max={1000} className="control mt-2 w-full px-4 py-2.5" value={hunterLimit} onChange={(e) => setHunterLimit(Number(e.target.value))} />
+            <label className="mt-4 block text-sm font-semibold">
+              Monthly workspace lookup cap
+              <input
+                type="number"
+                min={1}
+                max={1000}
+                className="control mt-2 w-full px-4 py-2.5"
+                value={hunterLimit}
+                onChange={(e) => setHunterLimit(Number(e.target.value))}
+              />
             </label>
-            <p className="mt-2 text-xs text-on-surface-variant">This is a local safety cap, not Hunter's actual credit balance. Each selected domain triggers at most one contact lookup.</p>
-            {hunterError && <p role="alert" className="mt-3 text-sm text-error">{hunterError}</p>}
+            <p className="mt-2 text-xs text-on-surface-variant">
+              This is a local safety cap, not Hunter's actual credit balance. Each selected domain
+              triggers at most one contact lookup.
+            </p>
+            {hunterError && (
+              <p role="alert" className="mt-3 text-sm text-error">
+                {hunterError}
+              </p>
+            )}
             <div className="mt-5 flex justify-end gap-2">
-              {hunterConnected && <button className="secondary-action mr-auto" disabled={hunterBusy} onClick={() => void disconnectHunter()}>Disconnect</button>}
-              <button className="secondary-action" onClick={() => setHunterOpen(false)}>Cancel</button>
-              <button className="primary-action" disabled={hunterBusy || hunterKey.length < 8 || hunterLimit < 1} onClick={() => void saveHunter()}>{hunterBusy ? "Saving..." : "Save securely"}</button>
+              {hunterConnected && (
+                <button
+                  className="secondary-action mr-auto"
+                  disabled={hunterBusy}
+                  onClick={() => void disconnectHunter()}
+                >
+                  Disconnect
+                </button>
+              )}
+              <button className="secondary-action" onClick={() => setHunterOpen(false)}>
+                Cancel
+              </button>
+              <button
+                className="primary-action"
+                disabled={hunterBusy || hunterKey.length < 8 || hunterLimit < 1}
+                onClick={() => void saveHunter()}
+              >
+                {hunterBusy ? "Saving..." : "Save securely"}
+              </button>
             </div>
           </div>
         </div>

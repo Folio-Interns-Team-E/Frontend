@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { AIChatPanel } from "../components/AIChatPanel";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -42,6 +42,7 @@ function AppLayout() {
   const chatRefreshKey = useAppSelector((state) => state.app.chatRefreshKey);
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(Boolean(auth.accessToken));
+  const redirectStarted = useRef(false);
 
   const accessToken = auth.accessToken;
 
@@ -52,13 +53,10 @@ function AppLayout() {
       return;
     }
     if (sessionChecked) return;
-    void dispatch(refreshSession()).then((result) => {
+    void dispatch(refreshSession()).then(() => {
       setSessionChecked(true);
-      if (refreshSession.rejected.match(result)) {
-        void navigate({ to: "/login", search: { redirect: location.href }, replace: true });
-      }
     });
-  }, [auth.accessToken, dispatch, location.href, navigate, sessionChecked]);
+  }, [auth.accessToken, dispatch, sessionChecked]);
 
   useEffect(() => {
     if (window.matchMedia("(min-width: 1280px)").matches) {
@@ -70,7 +68,8 @@ function AppLayout() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (!sessionChecked || auth.loggedIn || accessToken) return;
+    if (!sessionChecked || auth.loggedIn || accessToken || redirectStarted.current) return;
+    redirectStarted.current = true;
     void navigate({ to: "/login", search: { redirect: location.href }, replace: true });
   }, [accessToken, auth.loggedIn, location.href, navigate, sessionChecked]);
 

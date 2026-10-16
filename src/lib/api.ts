@@ -44,6 +44,18 @@ export type AuthResponse = {
   needs_verification?: boolean;
 };
 
+export type LoginApiResponse = Partial<AuthResponse> & {
+  needs_verification?: boolean;
+  needs_mfa?: boolean;
+  mfa_ticket?: string | null;
+};
+
+export type MfaSetupApi = {
+  secret: string;
+  otpauth_uri: string;
+  expires_in: number;
+};
+
 export type UserProfileApi = {
   full_name: string;
   email: string;
@@ -60,7 +72,11 @@ export type SecurityEventApi = {
     | "github_login"
     | "google_linked"
     | "github_linked"
-    | "logout_all";
+    | "logout_all"
+    | "mfa_enabled"
+    | "mfa_disabled"
+    | "mfa_login"
+    | "mfa_recovery_regenerated";
   created_at: string;
 };
 
@@ -458,10 +474,43 @@ export const api = {
     });
   },
   login(payload: { email: string; password: string }) {
-    return request<{ data: AuthResponse }>("/auth/login", {
+    return request<{ data: LoginApiResponse }>("/auth/login", {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  },
+  verifyMfaLogin(ticket: string, code: string) {
+    return request<{ data: AuthResponse }>("/auth/mfa/challenge", {
+      method: "POST",
+      body: JSON.stringify({ ticket, code }),
+    });
+  },
+  getMfaStatus(accessToken: string) {
+    return request<{ data: { enabled: boolean } }>("/auth/mfa", {}, accessToken);
+  },
+  beginMfaSetup(accessToken: string) {
+    return request<{ data: MfaSetupApi }>("/auth/mfa/setup", { method: "POST" }, accessToken);
+  },
+  enableMfa(code: string, accessToken: string) {
+    return request<{ data: { recovery_codes: string[] } }>(
+      "/auth/mfa/enable",
+      { method: "POST", body: JSON.stringify({ code }) },
+      accessToken,
+    );
+  },
+  regenerateMfaRecoveryCodes(code: string, accessToken: string) {
+    return request<{ data: { recovery_codes: string[] } }>(
+      "/auth/mfa/recovery-codes",
+      { method: "POST", body: JSON.stringify({ code }) },
+      accessToken,
+    );
+  },
+  disableMfa(password: string, code: string, accessToken: string) {
+    return request<void>(
+      "/auth/mfa/disable",
+      { method: "POST", body: JSON.stringify({ password, code }) },
+      accessToken,
+    );
   },
   refreshSession() {
     return request<{ data: AuthResponse }>("/auth/refresh", { method: "POST" });

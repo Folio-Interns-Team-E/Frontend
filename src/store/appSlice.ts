@@ -32,6 +32,7 @@ import {
   deleteEmailRemote,
   requestOtp,
   verifyOtp,
+  verifyMfaLogin,
   fetchChats,
   createChatRemote,
   renameChatRemote,
@@ -39,14 +40,7 @@ import {
 } from "./apiThunks";
 
 export type LeadStatus =
-  | "New"
-  | "Analyzed"
-  | "Qualified"
-  | "Discarded"
-  | "Drafted"
-  | "Sent"
-  | "Replied"
-  | "Converted";
+  "New" | "Analyzed" | "Qualified" | "Discarded" | "Drafted" | "Sent" | "Replied" | "Converted";
 
 export type Lead = {
   id: string;
@@ -150,6 +144,8 @@ type AppState = {
     error: string | null;
     needsVerification: boolean;
     verifyEmail: string | null;
+    needsMfa: boolean;
+    mfaTicket: string | null;
     userTeams: { id: string; name: string; role: "admin" | "manager" | "rep" }[];
     userTeamsStatus: "idle" | "loading" | "succeeded" | "failed";
   };
@@ -206,13 +202,19 @@ type AppState = {
   knowledgeAssetsStatus: "idle" | "loading" | "succeeded" | "failed";
   outreachLeads: Lead[];
   outreachLeadsStatus: "idle" | "loading" | "succeeded" | "failed";
-  leadDraftEmails: Record<string, Array<{ id: string; subject: string; body: string; status: string; sent_at?: string }>>;
+  leadDraftEmails: Record<
+    string,
+    Array<{ id: string; subject: string; body: string; status: string; sent_at?: string }>
+  >;
   leadEmailsLoading: boolean;
   selectedEmailId: string | null;
   sendingEmail: boolean;
   sidebarOpen: boolean;
   teamSwitching: boolean;
-  workspaceRequestIds: Record<"onboarding" | "leads" | "meetings" | "proposals" | "knowledge" | "chats", string | null>;
+  workspaceRequestIds: Record<
+    "onboarding" | "leads" | "meetings" | "proposals" | "knowledge" | "chats",
+    string | null
+  >;
 };
 
 export const initialState: AppState = {
@@ -226,6 +228,8 @@ export const initialState: AppState = {
     error: null,
     needsVerification: false,
     verifyEmail: null,
+    needsMfa: false,
+    mfaTicket: null,
     userTeams: [],
     userTeamsStatus: "idle",
   },
@@ -284,7 +288,14 @@ export const initialState: AppState = {
   sendingEmail: false,
   sidebarOpen: true,
   teamSwitching: false,
-  workspaceRequestIds: { onboarding: null, leads: null, meetings: null, proposals: null, knowledge: null, chats: null },
+  workspaceRequestIds: {
+    onboarding: null,
+    leads: null,
+    meetings: null,
+    proposals: null,
+    knowledge: null,
+    chats: null,
+  },
 };
 
 const appSlice = createSlice({
@@ -398,6 +409,12 @@ const appSlice = createSlice({
       state.team.error = null;
       state.team.message = null;
     },
+    clearMfaChallenge(state) {
+      state.auth.needsMfa = false;
+      state.auth.mfaTicket = null;
+      state.auth.error = null;
+      state.auth.status = "idle";
+    },
     clearNeedsVerification(state) {
       state.auth.needsVerification = false;
       state.auth.verifyEmail = null;
@@ -414,7 +431,9 @@ const appSlice = createSlice({
       });
     },
     generateLeadsFromIcp(state) {
-      state.leads = buildLeads(state.onboarding.icp).sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+      state.leads = buildLeads(state.onboarding.icp).sort(
+        (a, b) => (b.score ?? -1) - (a.score ?? -1),
+      );
       state.notifications.unshift({
         id: `notification-${Date.now()}`,
         title: "ICP-matched leads generated",
@@ -444,9 +463,13 @@ const appSlice = createSlice({
     },
     setIntegration(
       state,
-      action: PayloadAction<{ integration: keyof AppState["integrations"]; value: boolean | string }>,
+      action: PayloadAction<{
+        integration: keyof AppState["integrations"];
+        value: boolean | string;
+      }>,
     ) {
-      (state.integrations as Record<string, boolean | string>)[action.payload.integration] = action.payload.value;
+      (state.integrations as Record<string, boolean | string>)[action.payload.integration] =
+        action.payload.value;
     },
     updateProfile(state, action: PayloadAction<AppState["profile"]>) {
       state.profile = action.payload;
@@ -726,10 +749,7 @@ const appSlice = createSlice({
         summary: (meta.executive_summary as string) || "",
       };
     };
-    const applyProposal = (
-      state: AppState,
-      proposal: Parameters<typeof toProposal>[0] | null,
-    ) => {
+    const applyProposal = (state: AppState, proposal: Parameters<typeof toProposal>[0] | null) => {
       if (!proposal) return;
       const formatted = toProposal(proposal);
       const index = state.proposals.findIndex((item) => item.id === formatted.id);
@@ -775,35 +795,79 @@ const appSlice = createSlice({
           state.auth.verifyEmail = payload.email;
           state.auth.error = null;
         } else {
-          state.auth.error = typeof payload === "string" ? payload : "Authentication request failed";
+          state.auth.error =
+            typeof payload === "string" ? payload : "Authentication request failed";
         }
       })
       .addCase(loginAccount.fulfilled, (state, action) => {
+        if (action.payload.needs_mfa) {
+          state.auth.status = "succeeded";
+          state.auth.loggedIn = false;
+          state.auth.needsMfa = true;
+          state.auth.mfaTicket = action.payload.mfa_ticket ?? null;
+          state.auth.error = null;
+          return;
+        }
+        const authenticated = action.payload as Required<
+          Pick<typeof action.payload, "access_token" | "user_id" | "full_name" | "email">
+        >;
         if (state.auth.userId && state.auth.userId !== action.payload.user_id) {
           return {
             ...initialState,
             sidebarOpen: state.sidebarOpen,
-            auth: { ...initialState.auth, status: "succeeded" as const, loggedIn: true,
-              accessToken: action.payload.access_token, userId: action.payload.user_id },
-            profile: { ...initialState.profile, name: action.payload.full_name, email: action.payload.email },
+            auth: {
+              ...initialState.auth,
+              status: "succeeded" as const,
+              loggedIn: true,
+              accessToken: authenticated.access_token,
+              userId: authenticated.user_id,
+            },
+            profile: {
+              ...initialState.profile,
+              name: authenticated.full_name,
+              email: authenticated.email,
+            },
           };
         }
         state.auth.status = "succeeded";
         state.auth.loggedIn = true;
+        state.auth.accessToken = authenticated.access_token;
+        state.auth.userId = authenticated.user_id;
+        state.auth.needsMfa = false;
+        state.auth.mfaTicket = null;
+        state.profile.name = authenticated.full_name;
+        state.profile.email = authenticated.email;
+        // backend doesn't return teamChoiceCompleted; keep existing value
+      })
+      .addCase(verifyMfaLogin.pending, authPending)
+      .addCase(verifyMfaLogin.rejected, authRejected)
+      .addCase(verifyMfaLogin.fulfilled, (state, action) => {
+        state.auth.status = "succeeded";
+        state.auth.loggedIn = true;
+        state.auth.needsMfa = false;
+        state.auth.mfaTicket = null;
         state.auth.accessToken = action.payload.access_token;
         state.auth.userId = action.payload.user_id;
         state.profile.name = action.payload.full_name;
         state.profile.email = action.payload.email;
-        // backend doesn't return teamChoiceCompleted; keep existing value
       })
       .addCase(refreshSession.fulfilled, (state, action) => {
         if (state.auth.userId && state.auth.userId !== action.payload.user_id) {
           return {
             ...initialState,
             sidebarOpen: state.sidebarOpen,
-            auth: { ...initialState.auth, status: "succeeded" as const, loggedIn: true,
-              accessToken: action.payload.access_token, userId: action.payload.user_id },
-            profile: { ...initialState.profile, name: action.payload.full_name, email: action.payload.email },
+            auth: {
+              ...initialState.auth,
+              status: "succeeded" as const,
+              loggedIn: true,
+              accessToken: action.payload.access_token,
+              userId: action.payload.user_id,
+            },
+            profile: {
+              ...initialState.profile,
+              name: action.payload.full_name,
+              email: action.payload.email,
+            },
           };
         }
         if (state.auth.userId !== action.payload.user_id) {
@@ -1081,11 +1145,7 @@ const appSlice = createSlice({
           timezone: m.timezone || "UTC",
           durationMinutes: m.duration_minutes ?? 30,
           duration: m.duration_minutes ? `${m.duration_minutes} min` : m.duration || "30 min",
-          agenda: Array.isArray(m.agenda)
-            ? m.agenda
-            : m.agenda
-              ? [m.agenda]
-              : [],
+          agenda: Array.isArray(m.agenda) ? m.agenda : m.agenda ? [m.agenda] : [],
           status: m.status as Meeting["status"],
           transcript: m.transcript ?? [],
           notes: m.notes,
@@ -1225,15 +1285,13 @@ const appSlice = createSlice({
       })
       .addCase(fetchChatMessages.fulfilled, (state, action) => {
         state.chatMessagesStatus = "succeeded";
-        state.assistantMessages = [...action.payload]
-          .reverse()
-          .map((message) => ({
-            id: message.id,
-            author: message.sent_by === "user" ? "user" : "assistant",
-            userName: message.user_name,
-            body: message.content,
-            time: new Date(message.created_at).toLocaleString(),
-          }));
+        state.assistantMessages = [...action.payload].reverse().map((message) => ({
+          id: message.id,
+          author: message.sent_by === "user" ? "user" : "assistant",
+          userName: message.user_name,
+          body: message.content,
+          time: new Date(message.created_at).toLocaleString(),
+        }));
       })
       .addCase(sendChatMessage.pending, (state, action) => {
         state.assistantMessages.push({
@@ -1253,15 +1311,13 @@ const appSlice = createSlice({
       })
       .addCase(sendChatMessage.fulfilled, (state, action) => {
         state.chatRefreshKey += 1;
-        state.assistantMessages = [...action.payload]
-          .reverse()
-          .map((message) => ({
-            id: message.id,
-            author: message.sent_by === "user" ? "user" : "assistant",
-            userName: message.user_name,
-            body: message.content,
-            time: new Date(message.created_at).toLocaleString(),
-          }));
+        state.assistantMessages = [...action.payload].reverse().map((message) => ({
+          id: message.id,
+          author: message.sent_by === "user" ? "user" : "assistant",
+          userName: message.user_name,
+          body: message.content,
+          time: new Date(message.created_at).toLocaleString(),
+        }));
       })
       .addCase(sendChatMessage.rejected, (state) => {
         const msgs = state.assistantMessages;
@@ -1286,7 +1342,8 @@ const appSlice = createSlice({
       })
       .addCase(requestOtp.rejected, (state, action) => {
         state.auth.status = "failed";
-        state.auth.error = typeof action.payload === "string" ? action.payload : "Failed to send verification code";
+        state.auth.error =
+          typeof action.payload === "string" ? action.payload : "Failed to send verification code";
       })
       .addCase(requestOtp.fulfilled, (state) => {
         state.auth.status = "succeeded";
@@ -1297,7 +1354,8 @@ const appSlice = createSlice({
       })
       .addCase(verifyOtp.rejected, (state, action) => {
         state.auth.status = "failed";
-        state.auth.error = typeof action.payload === "string" ? action.payload : "Verification failed";
+        state.auth.error =
+          typeof action.payload === "string" ? action.payload : "Verification failed";
       })
       .addCase(verifyOtp.fulfilled, (state) => {
         state.auth.status = "succeeded";
@@ -1309,6 +1367,7 @@ const appSlice = createSlice({
 export const {
   acceptNotificationInvite,
   clearApiFeedback,
+  clearMfaChallenge,
   clearNeedsVerification,
   closeSidebar,
   completeOnboarding,
