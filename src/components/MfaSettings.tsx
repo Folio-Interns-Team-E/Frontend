@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { api, setAccessToken, type MfaSetupApi } from "../lib/api";
 
 export function MfaSettings({ accessToken }: { accessToken: string }) {
@@ -105,6 +106,17 @@ export function MfaSettings({ accessToken }: { accessToken: string }) {
     setMessage("Recovery codes copied. Store them in a password manager.");
   }
 
+  async function copySetupKey() {
+    if (!setup) return;
+    try {
+      await navigator.clipboard.writeText(setup.secret);
+      setMessage("Setup key copied.");
+      setError("");
+    } catch {
+      setError("Your browser could not copy the key. Select it and copy it manually.");
+    }
+  }
+
   return (
     <section
       className="section-panel space-y-4 p-5 sm:p-6"
@@ -154,15 +166,41 @@ export function MfaSettings({ accessToken }: { accessToken: string }) {
           <div>
             <p className="text-sm font-semibold">1. Add SalesSync to your authenticator app</p>
             <p className="mt-1 text-xs text-on-surface-variant">
-              Open the setup link on this device or enter the key manually. This setup expires in 10
-              minutes.
+              In Google Authenticator, Microsoft Authenticator, Authy, 1Password, or another TOTP
+              app, scan this QR code. Choose <strong>Time based</strong> if the app asks. This setup
+              expires in {Math.floor(setup.expires_in / 60)} minutes.
             </p>
-            <a href={setup.otpauth_uri} className="secondary-action mt-3 inline-flex">
-              Open authenticator app
-            </a>
-            <code className="mt-3 block select-all break-all rounded-md border border-outline-variant bg-white p-3 text-sm">
-              {setup.secret}
-            </code>
+            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="w-fit rounded-lg border border-outline-variant bg-white p-3">
+                <QRCodeSVG
+                  value={setup.otpauth_uri}
+                  size={176}
+                  level="M"
+                  marginSize={1}
+                  title="SalesSync authenticator setup QR code"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-on-surface-variant">
+                  Cannot scan the QR code? Enter this setup key manually:
+                </p>
+                <code className="mt-2 block select-all break-all rounded-md border border-outline-variant bg-white p-3 font-mono text-sm tracking-wider">
+                  {setup.secret.match(/.{1,4}/g)?.join(" ") ?? setup.secret}
+                </code>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="secondary-action"
+                    onClick={() => void copySetupKey()}
+                  >
+                    Copy setup key
+                  </button>
+                  <a href={setup.otpauth_uri} className="secondary-action inline-flex sm:hidden">
+                    Open authenticator app
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
           <label className="block text-sm font-semibold">
             2. Enter the current six-digit code

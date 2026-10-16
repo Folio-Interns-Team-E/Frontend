@@ -1,7 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 async function waitForApplication(page: import("@playwright/test").Page) {
-  await page.waitForLoadState("networkidle");
+  // SSR can display controls before React has attached event handlers. Waiting for
+  // this root marker verifies that the page is interactive without relying on
+  // network-idle, which integrations and background refreshes can delay forever.
+  await page.locator("html[data-hydrated='true']").waitFor();
 }
 
 test.describe("public sales journey", () => {
@@ -14,7 +17,7 @@ test.describe("public sales journey", () => {
     ).toBeVisible();
     await page.getByRole("link", { name: /live demo/i }).click();
 
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/login\??$/);
     await expect(page.getByRole("heading", { name: /log in to your workspace/i })).toBeVisible();
   });
 
@@ -69,7 +72,7 @@ test.describe("authentication boundaries", () => {
     await page.getByLabel("Password").fill("not-a-real-password");
     await page.getByRole("button", { name: /log in/i }).click();
 
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/login\??$/);
     await expect(page.getByText("Invalid email or password", { exact: true })).toBeVisible();
   });
 

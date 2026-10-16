@@ -154,6 +154,11 @@ function RootComponent() {
 
   useEffect(() => {
     initializeMonitoring();
+    document.documentElement.dataset.hydrated = "true";
+
+    return () => {
+      delete document.documentElement.dataset.hydrated;
+    };
   }, []);
 
   return (
