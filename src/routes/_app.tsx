@@ -174,7 +174,20 @@ function AppLayout() {
     location.pathname,
   ]);
 
-  if (!sessionChecked || auth.userTeamsStatus === "idle" || auth.userTeamsStatus === "loading") {
+  if (!sessionChecked) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#f4f7fb]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm text-on-surface-variant">Checking your session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!auth.loggedIn && !accessToken) return null;
+
+  if (auth.userTeamsStatus === "idle" || auth.userTeamsStatus === "loading") {
     return (
       <div className="flex h-screen items-center justify-center bg-[#f4f7fb]">
         <div className="flex flex-col items-center gap-3">
@@ -184,8 +197,6 @@ function AppLayout() {
       </div>
     );
   }
-
-  if (!auth.loggedIn && !accessToken) return null;
 
   if (teamSwitching) {
     return (

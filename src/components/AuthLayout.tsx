@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 
 export function AuthLayout({
   eyebrow,
@@ -89,13 +89,16 @@ export function AuthField({
   autoComplete?: string;
   action?: ReactNode;
 }) {
+  const inputId = useId();
+
   return (
-    <label className="block">
-      <span className="mb-2 flex items-center justify-between text-xs font-bold text-on-surface">
-        {label}
+    <div className="block">
+      <div className="mb-2 flex items-center justify-between text-xs font-bold text-on-surface">
+        <label htmlFor={inputId}>{label}</label>
         {action}
-      </span>
+      </div>
       <input
+        id={inputId}
         type={type}
         value={value}
         placeholder={placeholder}
@@ -104,7 +107,7 @@ export function AuthField({
         required
         className="h-12 w-full rounded-xl border border-outline-variant/70 bg-white px-4 text-sm shadow-sm outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10"
       />
-    </label>
+    </div>
   );
 }
 
