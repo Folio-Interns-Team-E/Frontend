@@ -5,14 +5,34 @@
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+const sentrySourceMapsEnabled = Boolean(process.env.SENTRY_AUTH_TOKEN);
 
 export default defineConfig({
+  plugins: sentrySourceMapsEnabled
+    ? [
+        sentryVitePlugin({
+          org: "hodacompany",
+          project: "salesync-frontend",
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+          telemetry: false,
+          sourcemaps: {
+            filesToDeleteAfterUpload: [".output/**/*.map"],
+          },
+        }),
+      ]
+    : [],
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
   },
   vite: {
+    build: {
+      // Hidden maps preserve readable Sentry traces without publishing map URLs.
+      sourcemap: "hidden",
+    },
     server: {
       proxy: {
         "/api": {
