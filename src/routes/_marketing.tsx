@@ -25,7 +25,7 @@ function MarketingLayout() {
               to="/"
               className="-m-1.5 p-1.5 flex items-center gap-2 font-black text-2xl tracking-tight text-[#131b2e]"
             >
-              <img src="/logo-blue.png" alt="SalesSync AI" className="h-20 pb-1 w-auto" />
+              <img src="/logo-white.png" alt="SalesSync AI" className="h-20 pb-1 w-auto" />
             </Link>
           </div>
           <div className="flex flex-1 justify-end items-center gap-x-6">
