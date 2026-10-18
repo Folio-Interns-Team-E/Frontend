@@ -7,6 +7,7 @@ import {
   fetchLeads,
   fetchLeadEmails,
   sendEmailRemote,
+  draftEmailRemote,
   deleteEmailRemote,
 } from "../store/apiThunks";
 import { selectEmail, clearSelectedEmail } from "../store/appSlice";
@@ -111,22 +112,61 @@ const ComposerContent = ({
 
 interface ComposerActionsProps {
   onSend: () => void;
-  disabled: boolean;
+  onSaveDraft: () => void;
+  draftDisabled: boolean;
+  sendDisabled: boolean;
+  showSaveDraft: boolean;
   sending: boolean;
+  savingDraft: boolean;
   isSent: boolean;
   sentTo: string;
 }
 
-const ComposerActions = ({ onSend, disabled, sending, isSent, sentTo }: ComposerActionsProps) => (
-  <div className="flex shrink-0 items-center justify-end border-t border-outline-variant/45 bg-surface-container-low/25 p-4">
+const ComposerActions = ({
+  onSend,
+  onSaveDraft,
+  draftDisabled,
+  sendDisabled,
+  showSaveDraft,
+  sending,
+  savingDraft,
+  isSent,
+  sentTo,
+}: ComposerActionsProps) => (
+  <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-outline-variant/45 bg-surface-container-low/25 p-4">
+    {!isSent && showSaveDraft && (
+      <button
+        type="button"
+        onClick={onSaveDraft}
+        disabled={draftDisabled || sending || savingDraft}
+        className="secondary-action min-w-32 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {savingDraft ? (
+          <>
+            <span className="material-symbols-outlined animate-spin text-[18px]">
+              progress_activity
+            </span>
+            Saving...
+          </>
+        ) : (
+          <>
+            <span className="material-symbols-outlined text-[18px]">draft</span>
+            Save draft
+          </>
+        )}
+      </button>
+    )}
     <button
+      type="button"
       onClick={onSend}
-      disabled={disabled || sending}
+      disabled={sendDisabled || sending || savingDraft}
       className="primary-action min-w-36 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {sending ? (
         <>
-          <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+          <span className="material-symbols-outlined text-[20px] animate-spin">
+            progress_activity
+          </span>
           Sending…
         </>
       ) : isSent ? (
@@ -145,7 +185,15 @@ const ComposerActions = ({ onSend, disabled, sending, isSent, sentTo }: Composer
 );
 
 // --- MAIN OUTREACH AREA ---
-const OUTREACH_STATUSES = ["Qualified", "Drafted", "Sent", "Replied", "Converted"];
+const OUTREACH_STATUSES = [
+  "New",
+  "Analyzed",
+  "Qualified",
+  "Drafted",
+  "Sent",
+  "Replied",
+  "Converted",
+];
 
 function Outreach() {
   const dispatch = useAppDispatch();
@@ -179,7 +227,7 @@ function Outreach() {
   }, [outreachLeads, selectedId]);
 
   const leadEmails = useMemo(
-    () => (selectedLead?.id ? leadDraftEmails[selectedLead.id] ?? [] : []),
+    () => (selectedLead?.id ? (leadDraftEmails[selectedLead.id] ?? []) : []),
     [selectedLead?.id, leadDraftEmails],
   );
   const selectedEmail = useMemo(
@@ -189,6 +237,9 @@ function Outreach() {
 
   const [subject, setSubject] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isComposingNew, setIsComposingNew] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [composerError, setComposerError] = useState("");
 
   // --- UNDO / REDO STATE MANAGEMENT ---
   const [body, setBodyState] = useState("");
@@ -244,6 +295,8 @@ function Outreach() {
   // Fetch emails when selected lead changes or after AI chat responds
   useEffect(() => {
     if (selectedLead?.id) {
+      setIsComposingNew(false);
+      setComposerError("");
       dispatch(clearSelectedEmail());
       dispatch(fetchLeadEmails(selectedLead.id));
     }
@@ -251,23 +304,103 @@ function Outreach() {
 
   // Sync composer fields when selected email changes
   useEffect(() => {
-    if (selectedEmail) {
+    if (selectedEmail && !isComposingNew) {
       setSubject(selectedEmail.subject);
       setBodyState(selectedEmail.body);
-    } else {
+    } else if (!isComposingNew) {
       setSubject("");
       setBodyState("");
     }
     setPast([]);
     setFuture([]);
-  }, [selectedEmail?.id]);
+  }, [selectedEmail?.id, isComposingNew]);
 
-  const handleSend = () => {
-    if (selectedLead && subject && body && !sendingEmail) {
-      dispatch(sendEmailRemote({ leadId: selectedLead.id, subject, body }));
-      setIsExpanded(false);
+  const startNewEmail = () => {
+    if (!selectedLead) return;
+    dispatch(clearSelectedEmail());
+    setIsComposingNew(true);
+    setSubject("");
+    setBodyState("");
+    setPast([]);
+    setFuture([]);
+    setComposerError(
+      selectedLead.email?.trim() ? "" : "Add an email address to this lead before composing.",
+    );
+  };
+
+  const validateComposer = () => {
+    if (!selectedLead?.email?.trim()) return "This lead does not have an email address.";
+    if (!subject.trim()) return "Add a subject before saving or sending.";
+    if (!body.trim()) return "Write an email message before saving or sending.";
+    return "";
+  };
+
+  const handleSend = async () => {
+    const error = validateComposer();
+    if (error) {
+      setComposerError(error);
+      return;
+    }
+    if (selectedLead && !sendingEmail) {
+      setComposerError("");
+      try {
+        await dispatch(
+          sendEmailRemote({ leadId: selectedLead.id, subject: subject.trim(), body: body.trim() }),
+        ).unwrap();
+        setIsComposingNew(false);
+        setIsExpanded(false);
+      } catch (requestError) {
+        setComposerError(
+          typeof requestError === "string"
+            ? requestError
+            : "The email could not be sent. Try again.",
+        );
+      }
     }
   };
+
+  const handleSaveDraft = async () => {
+    const error = validateComposer();
+    if (error) {
+      setComposerError(error);
+      return;
+    }
+    if (selectedLead && !savingDraft) {
+      setSavingDraft(true);
+      setComposerError("");
+      try {
+        await dispatch(
+          draftEmailRemote({ leadId: selectedLead.id, subject: subject.trim(), body: body.trim() }),
+        ).unwrap();
+        setIsComposingNew(false);
+      } catch (requestError) {
+        setComposerError(
+          typeof requestError === "string"
+            ? requestError
+            : "The draft could not be saved. Try again.",
+        );
+      } finally {
+        setSavingDraft(false);
+      }
+    }
+  };
+
+  const chooseEmail = (emailId: string) => {
+    setIsComposingNew(false);
+    setComposerError("");
+    dispatch(selectEmail(emailId));
+  };
+
+  const composerContentInvalid =
+    !selectedLead ||
+    !selectedLead.email?.trim() ||
+    !subject.trim() ||
+    !body.trim() ||
+    selectedEmail?.status.toLowerCase() === "sent";
+  const sendDisabled = composerContentInvalid || !gmailConnected;
+
+  const composerReadOnly =
+    selectedEmail?.status.toLowerCase() === "sent" || sendingEmail || savingDraft;
 
   const handleDelete = (emailId: string) => {
     if (selectedLead?.id) {
@@ -300,7 +433,7 @@ function Outreach() {
           ) : (
             <div className="section-panel flex min-h-64 w-full flex-col xl:w-[36%]">
               <div className="flex shrink-0 items-center justify-between border-b border-outline-variant/45 p-4">
-                <h3 className="font-headline-md text-body-base font-bold">Priority Leads</h3>
+                <h3 className="font-headline-md text-body-base font-bold">Leads</h3>
                 <span className="material-symbols-outlined text-on-surface-variant cursor-pointer">
                   filter_list
                 </span>
@@ -312,10 +445,10 @@ function Outreach() {
                       person_off
                     </span>
                     <p className="mt-2 text-body-sm text-on-surface-variant">
-                      No qualified leads yet.
+                      No leads available yet.
                     </p>
                     <p className="text-[11px] text-outline">
-                      Qualify leads from the Lead Generation page.
+                      Add or import leads from the Prospects page.
                     </p>
                   </div>
                 ) : (
@@ -369,13 +502,29 @@ function Outreach() {
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">edit_note</span>
                 <h3 className="font-headline-md text-body-base font-bold">
-                  Emails {leadEmails.length > 0 && <span className="text-on-surface-variant font-normal text-sm">({leadEmails.length})</span>}
+                  Emails{" "}
+                  {leadEmails.length > 0 && (
+                    <span className="text-on-surface-variant font-normal text-sm">
+                      ({leadEmails.length})
+                    </span>
+                  )}
                 </h3>
               </div>
               <div className="flex gap-2">
                 <button
+                  type="button"
+                  onClick={startNewEmail}
+                  disabled={!selectedLead}
+                  className="primary-action min-h-9 px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add</span>
+                  New email
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsExpanded(true)}
-                  className="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded transition-colors"
+                  disabled={!selectedLead || (!isComposingNew && leadEmails.length === 0)}
+                  className="rounded p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                   title="Expand Composer"
                 >
                   <span className="material-symbols-outlined text-[20px] block">open_in_full</span>
@@ -389,11 +538,19 @@ function Outreach() {
                 <Skeleton className="h-14 w-full rounded-lg" />
                 <Skeleton className="h-40 w-full" />
               </div>
-            ) : leadEmails.length === 0 ? (
+            ) : leadEmails.length === 0 && !isComposingNew ? (
               <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
                 <span className="material-symbols-outlined text-4xl text-outline">draft</span>
-                <p className="mt-2 text-body-sm text-on-surface-variant">No emails yet for this lead.</p>
-                <p className="text-[11px] text-outline">Use the AI Chat to draft outreach emails.</p>
+                <p className="mt-2 text-body-sm text-on-surface-variant">
+                  No emails yet for this lead.
+                </p>
+                <p className="text-[11px] text-outline">
+                  Write one yourself or ask the assistant to prepare a draft.
+                </p>
+                <button type="button" onClick={startNewEmail} className="primary-action mt-4">
+                  <span className="material-symbols-outlined text-[18px]">edit_square</span>
+                  Compose email
+                </button>
               </div>
             ) : (
               <>
@@ -402,7 +559,7 @@ function Outreach() {
                   {leadEmails.map((e) => (
                     <button
                       key={e.id}
-                      onClick={() => dispatch(selectEmail(e.id))}
+                      onClick={() => chooseEmail(e.id)}
                       className={`group flex items-center gap-2 whitespace-nowrap rounded-t-lg px-3 py-2 text-xs font-medium transition-colors ${
                         e.id === selectedEmailId
                           ? "bg-primary/10 text-primary border-b-2 border-primary"
@@ -410,21 +567,28 @@ function Outreach() {
                       }`}
                     >
                       <span className="material-symbols-outlined text-[14px]">
-                        {e.status.toLowerCase() === "sent" ? "send" : e.status.toLowerCase() === "draft" ? "edit" : "mark_email_read"}
+                        {e.status.toLowerCase() === "sent"
+                          ? "send"
+                          : e.status.toLowerCase() === "draft"
+                            ? "edit"
+                            : "mark_email_read"}
                       </span>
-                      <span className="truncate max-w-[120px]">
-                        {e.subject || "(no subject)"}
-                      </span>
-                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                        e.status.toLowerCase() === "sent"
-                          ? "bg-green-50 text-green-700"
-                          : "bg-surface-container text-on-surface-variant"
-                      }`}>
+                      <span className="truncate max-w-[120px]">{e.subject || "(no subject)"}</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                          e.status.toLowerCase() === "sent"
+                            ? "bg-green-50 text-green-700"
+                            : "bg-surface-container text-on-surface-variant"
+                        }`}
+                      >
                         {e.status}
                       </span>
                       {e.status.toLowerCase() === "draft" && (
                         <span
-                          onClick={(ev) => { ev.stopPropagation(); handleDelete(e.id); }}
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            handleDelete(e.id);
+                          }}
                           className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-error cursor-pointer"
                           title="Delete draft"
                         >
@@ -433,31 +597,50 @@ function Outreach() {
                       )}
                     </button>
                   ))}
+                  {isComposingNew && (
+                    <div className="flex items-center gap-2 whitespace-nowrap border-b-2 border-primary bg-primary/10 px-3 py-2 text-xs font-medium text-primary">
+                      <span className="material-symbols-outlined text-[14px]">edit_square</span>
+                      New email
+                    </div>
+                  )}
                 </div>
 
                 {/* Composer */}
                 <div className="custom-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-6">
-                <ComposerContent
-                  email={selectedLead?.email ?? ""}
-                  subject={subject}
-                  setSubject={setSubject}
-                  body={body}
-                  updateBody={updateBody}
-                  canUndo={past.length > 0}
-                  canRedo={future.length > 0}
-                  onUndo={handleUndo}
-                  onRedo={handleRedo}
-                  readOnly={selectedEmail?.status.toLowerCase() === "sent" || sendingEmail}
-                />
-              </div>
+                  <ComposerContent
+                    email={selectedLead?.email ?? ""}
+                    subject={subject}
+                    setSubject={setSubject}
+                    body={body}
+                    updateBody={updateBody}
+                    canUndo={past.length > 0}
+                    canRedo={future.length > 0}
+                    onUndo={handleUndo}
+                    onRedo={handleRedo}
+                    readOnly={composerReadOnly}
+                  />
+                  {composerError && (
+                    <p
+                      role="alert"
+                      className="flex items-center gap-2 text-xs font-medium text-error"
+                    >
+                      <span className="material-symbols-outlined text-[17px]">error</span>
+                      {composerError}
+                    </p>
+                  )}
+                </div>
 
-              <ComposerActions
-                onSend={handleSend}
-                disabled={!selectedLead || selectedEmail?.status.toLowerCase() === "sent"}
-                sending={sendingEmail}
-                isSent={selectedEmail?.status.toLowerCase() === "sent"}
-                sentTo={selectedLead?.email ?? ""}
-              />
+                <ComposerActions
+                  onSend={() => void handleSend()}
+                  onSaveDraft={() => void handleSaveDraft()}
+                  draftDisabled={composerContentInvalid}
+                  sendDisabled={sendDisabled}
+                  showSaveDraft={isComposingNew}
+                  sending={sendingEmail}
+                  savingDraft={savingDraft}
+                  isSent={selectedEmail?.status.toLowerCase() === "sent"}
+                  sentTo={selectedLead?.email ?? ""}
+                />
               </>
             )}
           </div>
@@ -509,15 +692,25 @@ function Outreach() {
                   canRedo={future.length > 0}
                   onUndo={handleUndo}
                   onRedo={handleRedo}
-                  readOnly={selectedEmail?.status.toLowerCase() === "sent" || sendingEmail}
+                  readOnly={composerReadOnly}
                 />
+              )}
+              {composerError && (
+                <p role="alert" className="flex items-center gap-2 text-xs font-medium text-error">
+                  <span className="material-symbols-outlined text-[17px]">error</span>
+                  {composerError}
+                </p>
               )}
             </div>
 
             <ComposerActions
-              onSend={handleSend}
-              disabled={!selectedLead || selectedEmail?.status.toLowerCase() === "sent"}
+              onSend={() => void handleSend()}
+              onSaveDraft={() => void handleSaveDraft()}
+              draftDisabled={composerContentInvalid}
+              sendDisabled={sendDisabled}
+              showSaveDraft={isComposingNew}
               sending={sendingEmail}
+              savingDraft={savingDraft}
               isSent={selectedEmail?.status.toLowerCase() === "sent"}
               sentTo={selectedLead?.email ?? ""}
             />
