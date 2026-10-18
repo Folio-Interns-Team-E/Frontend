@@ -31,6 +31,7 @@ function Settings() {
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailEmail, setGmailEmail] = useState<string | null>(null);
   const [gmailLoading, setGmailLoading] = useState(true);
+  const [gmailError, setGmailError] = useState("");
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [calendarEmail, setCalendarEmail] = useState<string | null>(null);
   const [calendarLoading, setCalendarLoading] = useState(true);
@@ -69,7 +70,7 @@ function Settings() {
       })
       .catch(() => {})
       .finally(() => setGmailLoading(false));
-  }, [token]);
+  }, [token, dispatch]);
 
   useEffect(() => {
     if (!token) return;
@@ -154,6 +155,28 @@ function Settings() {
     }
   };
 
+  const disconnectGmail = async () => {
+    if (
+      !token ||
+      !window.confirm(
+        "Disconnect Gmail from SalesSync? Email sending and reply detection will stop.",
+      )
+    )
+      return;
+    setGmailLoading(true);
+    setGmailError("");
+    try {
+      await api.disconnectGmail(token);
+      setGmailConnected(false);
+      setGmailEmail(null);
+      dispatch(setIntegration({ integration: "gmail", value: false }));
+    } catch (error) {
+      setGmailError(error instanceof Error ? error.message : "Could not disconnect Gmail");
+    } finally {
+      setGmailLoading(false);
+    }
+  };
+
   const connectGoogleCalendar = async () => {
     if (!token) return;
     setCalendarError("");
@@ -164,6 +187,30 @@ function Settings() {
       setCalendarError(
         error instanceof Error ? error.message : "Could not connect Google Calendar",
       );
+    }
+  };
+
+  const disconnectGoogleCalendar = async () => {
+    if (
+      !token ||
+      !window.confirm(
+        "Disconnect Google Calendar from SalesSync? New meetings and Google Meet links cannot be created until you reconnect.",
+      )
+    )
+      return;
+    setCalendarLoading(true);
+    setCalendarError("");
+    try {
+      await api.disconnectGoogleCalendar(token);
+      setCalendarConnected(false);
+      setCalendarEmail(null);
+      dispatch(setIntegration({ integration: "calendar", value: false }));
+    } catch (error) {
+      setCalendarError(
+        error instanceof Error ? error.message : "Could not disconnect Google Calendar",
+      );
+    } finally {
+      setCalendarLoading(false);
     }
   };
 
@@ -311,7 +358,13 @@ function Settings() {
               connected={gmailConnected}
               loading={gmailLoading}
               onToggle={connectGmail}
+              onDisconnect={disconnectGmail}
             />
+            {gmailError && (
+              <p role="alert" className="py-2 text-sm text-error">
+                {gmailError}
+              </p>
+            )}
             <Integration
               icon="calendar_month"
               name="Google Calendar"
@@ -323,6 +376,7 @@ function Settings() {
               connected={calendarConnected}
               loading={calendarLoading}
               onToggle={connectGoogleCalendar}
+              onDisconnect={disconnectGoogleCalendar}
             />
             {calendarError && (
               <p role="alert" className="py-2 text-sm text-error">
@@ -576,6 +630,7 @@ function Integration({
   connected,
   loading,
   onToggle,
+  onDisconnect,
 }: {
   icon: string;
   name: string;
@@ -583,6 +638,7 @@ function Integration({
   connected: boolean;
   loading?: boolean;
   onToggle: () => void;
+  onDisconnect?: () => void;
 }) {
   return (
     <div className="flex flex-col items-start gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:gap-4">
@@ -595,17 +651,25 @@ function Integration({
       </div>
       <button
         type="button"
-        onClick={onToggle}
+        onClick={connected && onDisconnect ? onDisconnect : onToggle}
         disabled={loading}
         className={`min-w-28 rounded-lg px-4 py-2 text-sm font-semibold transition ${
           loading
             ? "border border-outline-variant bg-surface text-on-surface-variant"
-            : connected
-              ? "border border-green-200 bg-green-50 text-green-700"
-              : "bg-primary text-white"
+            : connected && onDisconnect
+              ? "border border-error/30 bg-white text-error hover:border-error hover:bg-error/5"
+              : connected
+                ? "border border-green-200 bg-green-50 text-green-700"
+                : "bg-primary text-white"
         }`}
       >
-        {loading ? "Checking…" : connected ? "Connected" : "Connect"}
+        {loading
+          ? "Working..."
+          : connected && onDisconnect
+            ? "Disconnect"
+            : connected
+              ? "Connected"
+              : "Connect"}
       </button>
     </div>
   );

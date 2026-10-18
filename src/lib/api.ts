@@ -1296,6 +1296,13 @@ export const api = {
       accessToken,
     );
   },
+  disconnectGmail(accessToken: string) {
+    return request<{ success: boolean; message: string }>(
+      "/integrations/gmail",
+      { method: "DELETE" },
+      accessToken,
+    );
+  },
   getGoogleCalendarAuthUrl(accessToken: string) {
     return request<{ data: { url: string } }>(
       "/integrations/google-calendar/auth-url",
@@ -1307,6 +1314,13 @@ export const api = {
     return request<{ data: { connected: boolean; email?: string } }>(
       "/integrations/google-calendar/status",
       {},
+      accessToken,
+    );
+  },
+  disconnectGoogleCalendar(accessToken: string) {
+    return request<{ success: boolean; message: string }>(
+      "/integrations/google-calendar",
+      { method: "DELETE" },
       accessToken,
     );
   },
