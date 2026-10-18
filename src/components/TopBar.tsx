@@ -40,6 +40,13 @@ export function TopBar({ title }: { title: string }) {
   const helpButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    // Search is page-local transient UI. Clear browser-restored form values when
+    // the user changes screens or workspaces instead of re-running an old query.
+    setSearch("");
+    setSearchState({ scope: "", query: "", items: [] });
+  }, [title, scope]);
+
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
 
@@ -165,6 +172,13 @@ export function TopBar({ title }: { title: string }) {
           <span className="material-symbols-outlined text-[17px] text-slate-400">search</span>
           <input
             type="search"
+            name="salesync-workspace-record-search"
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            enterKeyHint="search"
+            data-1p-ignore="true"
+            data-lpignore="true"
             aria-label="Search workspace"
             placeholder="Search leads, accounts..."
             value={search}
