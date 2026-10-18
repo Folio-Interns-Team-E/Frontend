@@ -1221,6 +1221,19 @@ export const api = {
     }
     return response.blob();
   },
+  async downloadProposalDocument(proposalId: string, accessToken: string, teamId?: string | null) {
+    const headers = new Headers({ Authorization: `Bearer ${accessToken}` });
+    if (teamId) headers.set("X-Team-Id", teamId);
+    const response = await fetch(`${API_URL}/proposals/${proposalId}/download`, {
+      headers,
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as { detail?: string } | null;
+      throw new Error(data?.detail ?? `Download failed with status ${response.status}`);
+    }
+    return response.blob();
+  },
 
   // === Knowledge Base ===
   getKnowledgeAssets(accessToken: string, teamId?: string | null) {

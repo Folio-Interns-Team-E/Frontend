@@ -109,7 +109,9 @@ function Proposals() {
       anchor.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      setTemplateError(error instanceof Error ? error.message : "The template could not be downloaded.");
+      setTemplateError(
+        error instanceof Error ? error.message : "The template could not be downloaded.",
+      );
     } finally {
       setTemplateDownloading(false);
     }
@@ -430,32 +432,63 @@ function OutcomePanel({ proposal }: { proposal: Proposal }) {
 function ProposalActions({ proposal }: { proposal: Proposal }) {
   const dispatch = useAppDispatch();
   const accessToken = useAppSelector((state) => state.app.auth.accessToken);
+  const teamId = useAppSelector((state) => state.app.team.id);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+
+  const downloadDocument = async () => {
+    if (!accessToken) return;
+    setDownloadError("");
+    setDownloading(true);
+    try {
+      const blob = await api.downloadProposalDocument(proposal.id, accessToken, teamId);
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${proposal.title || "proposal"}.docx`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      setDownloadError(
+        error instanceof Error ? error.message : "The proposal could not be downloaded.",
+      );
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
-    <div className="mt-5 flex flex-wrap justify-end gap-2 border-t pt-5">
-      {proposal.presignedUrl && (
-        <a
-          href={proposal.presignedUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
+    <div className="mt-5 border-t pt-5">
+      {downloadError && (
+        <p role="alert" className="mb-3 text-right text-sm text-red-700">
+          {downloadError}
+        </p>
+      )}
+      <div className="flex flex-wrap justify-end gap-2">
+        <button
+          type="button"
+          disabled={downloading || !accessToken}
+          onClick={downloadDocument}
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
         >
           <span className="material-symbols-outlined text-[19px]">visibility</span>
-          View Document
-        </a>
-      )}
-      <button
-        onClick={() => {
-          if (accessToken) {
-            dispatch(updateProposalStatusRemote({ id: proposal.id, status: "Sent" }));
-          } else {
-            dispatch(updateProposalStatus({ id: proposal.id, status: "Sent" }));
-          }
-        }}
-        className="rounded-lg border border-primary/20 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
-      >
-        {proposal.status === "Sent" ? "Sent" : "Send"}
-      </button>
+          {downloading ? "Downloading…" : "Download Document"}
+        </button>
+        <button
+          onClick={() => {
+            if (accessToken) {
+              dispatch(updateProposalStatusRemote({ id: proposal.id, status: "Sent" }));
+            } else {
+              dispatch(updateProposalStatus({ id: proposal.id, status: "Sent" }));
+            }
+          }}
+          className="rounded-lg border border-primary/20 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
+        >
+          {proposal.status === "Sent" ? "Sent" : "Send"}
+        </button>
+      </div>
     </div>
   );
 }
