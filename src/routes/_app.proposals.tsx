@@ -52,6 +52,7 @@ function Proposals() {
   const [templateFile, setTemplateFile] = useState<File | null>(null);
   const [templateUploading, setTemplateUploading] = useState(false);
   const [templateError, setTemplateError] = useState("");
+  const [templateDownloading, setTemplateDownloading] = useState(false);
   const templateFileRef = useRef<HTMLInputElement>(null);
 
   const handleTemplateUpload = async () => {
@@ -90,6 +91,27 @@ function Proposals() {
       setTemplate(null);
     } catch {
       // ignore
+    }
+  };
+
+  const handleTemplateDownload = async () => {
+    if (!accessToken || !template) return;
+    setTemplateError("");
+    setTemplateDownloading(true);
+    try {
+      const blob = await api.downloadProposalTemplate(accessToken, teamId);
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${template.template_name || "proposal-template"}.docx`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      setTemplateError(error instanceof Error ? error.message : "The template could not be downloaded.");
+    } finally {
+      setTemplateDownloading(false);
     }
   };
 
@@ -138,16 +160,16 @@ function Proposals() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {template && template.presigned_url && (
-                <a
-                  href={template.presigned_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="secondary-action"
+              {template && (
+                <button
+                  type="button"
+                  disabled={templateDownloading}
+                  onClick={handleTemplateDownload}
+                  className="secondary-action disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-[16px]">visibility</span>
-                  View
-                </a>
+                  {templateDownloading ? "Downloading…" : "Download"}
+                </button>
               )}
               <button
                 onClick={() => {
@@ -183,6 +205,11 @@ function Proposals() {
                 </p>
               </div>
             </div>
+          )}
+          {templateError && !showTemplateUpload && (
+            <p role="alert" className="mt-3 text-sm text-red-700">
+              {templateError}
+            </p>
           )}
         </section>
 
