@@ -60,7 +60,15 @@ function MarketingLayout() {
             <img src="/logo-tr.png" alt="" className="h-6 w-auto" />
             <span>SalesSync AI</span>
           </div>
-          <p>&copy; {new Date().getFullYear()} SalesSync Inc. All capabilities autonomous.</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+            <Link to="/privacy" className="font-medium hover:text-primary">
+              Privacy
+            </Link>
+            <Link to="/terms" className="font-medium hover:text-primary">
+              Terms
+            </Link>
+            <p>&copy; {new Date().getFullYear()} SalesSync. All rights reserved.</p>
+          </div>
         </div>
       </footer>
     </div>

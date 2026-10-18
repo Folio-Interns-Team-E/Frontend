@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as MarketingRouteImport } from './routes/_marketing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppBillingRouteImport } from './routes/_app.billing'
 import { Route as AppCrmRouteImport } from './routes/_app.crm'
@@ -47,6 +49,16 @@ const AuthRoute = AuthRouteImport.update({
 } as any)
 const MarketingRoute = MarketingRouteImport.update({
   id: '/_marketing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAdminRoute = AppAdminRouteImport.update({
@@ -172,6 +184,8 @@ const AppBillingCancelRoute = AppBillingCancelRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
   '/billing': typeof AppBillingRouteWithChildren
   '/crm': typeof AppCrmRoute
@@ -198,6 +212,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
   '/billing': typeof AppBillingRouteWithChildren
   '/crm': typeof AppCrmRoute
@@ -227,6 +243,8 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
   '/_marketing': typeof MarketingRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/billing': typeof AppBillingRouteWithChildren
   '/_app/crm': typeof AppCrmRoute
@@ -256,6 +274,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/privacy'
+    | '/terms'
     | '/admin'
     | '/billing'
     | '/crm'
@@ -282,6 +302,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/privacy'
+    | '/terms'
     | '/admin'
     | '/billing'
     | '/crm'
@@ -310,6 +332,8 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_auth'
     | '/_marketing'
+    | '/privacy'
+    | '/terms'
     | '/_app/admin'
     | '/_app/billing'
     | '/_app/crm'
@@ -340,6 +364,8 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   MarketingRoute: typeof MarketingRouteWithChildren
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -363,6 +389,20 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof MarketingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/admin': {
@@ -624,6 +664,8 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   MarketingRoute: MarketingRouteWithChildren,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

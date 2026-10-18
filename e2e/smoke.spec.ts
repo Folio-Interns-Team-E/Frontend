@@ -8,6 +8,19 @@ async function waitForApplication(page: import("@playwright/test").Page) {
 }
 
 test.describe("public sales journey", () => {
+  test("privacy and terms are publicly accessible", async ({ page }) => {
+    await page.goto("/privacy");
+    await waitForApplication(page);
+    await expect(page.getByRole("heading", { name: "Privacy Policy", exact: true })).toBeVisible();
+    await expect(page.getByText(/Google API Services User Data Policy/i)).toBeVisible();
+
+    await page.getByRole("link", { name: "Terms", exact: true }).first().click();
+    await expect(page).toHaveURL(/\/terms$/);
+    await expect(
+      page.getByRole("heading", { name: "Terms of Service", exact: true }),
+    ).toBeVisible();
+  });
+
   test("a visitor can move from the landing page to login", async ({ page }) => {
     await page.goto("/");
     await waitForApplication(page);
