@@ -17,6 +17,7 @@ export function TopBar({ title }: { title: string }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [searchActivated, setSearchActivated] = useState(false);
   const [searchState, setSearchState] = useState<{
     scope: string;
     query: string;
@@ -43,6 +44,7 @@ export function TopBar({ title }: { title: string }) {
     // Search is page-local transient UI. Clear browser-restored form values when
     // the user changes screens or workspaces instead of re-running an old query.
     setSearch("");
+    setSearchActivated(false);
     setSearchState({ scope: "", query: "", items: [] });
   }, [title, scope]);
 
@@ -179,10 +181,25 @@ export function TopBar({ title }: { title: string }) {
             enterKeyHint="search"
             data-1p-ignore="true"
             data-lpignore="true"
+            readOnly={!searchActivated}
+            onPointerDown={(event) => {
+              // Browsers and password managers commonly ignore autocomplete="off".
+              // Keeping the field readonly until a real interaction prevents late autofill.
+              event.currentTarget.readOnly = false;
+              setSearchActivated(true);
+            }}
+            onKeyDown={(event) => {
+              if (!searchActivated) {
+                event.currentTarget.readOnly = false;
+                setSearchActivated(true);
+              }
+            }}
             aria-label="Search workspace"
             placeholder="Search leads, accounts..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            value={searchActivated ? search : ""}
+            onChange={(event) => {
+              if (searchActivated) setSearch(event.target.value);
+            }}
             className="min-w-0 flex-1 bg-transparent text-[11px] font-medium outline-none placeholder:text-slate-400"
           />
           <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[8px] font-bold text-slate-400">
