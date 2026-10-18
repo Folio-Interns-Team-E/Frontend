@@ -1184,12 +1184,21 @@ export const api = {
     const formData = new FormData();
     formData.append("file", payload.file);
     formData.append("template_name", payload.template_name);
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 45_000);
     return request<{ data: ProposalTemplateApi }>(
       "/proposals/template/upload",
-      { method: "POST", body: formData },
+      { method: "POST", body: formData, signal: controller.signal },
       accessToken,
       teamId,
-    );
+    )
+      .catch((error) => {
+        if (controller.signal.aborted) {
+          throw new Error("The upload timed out. Check the storage configuration and try again.");
+        }
+        throw error;
+      })
+      .finally(() => window.clearTimeout(timeout));
   },
   deleteProposalTemplate(accessToken: string, teamId?: string | null) {
     return request<{ data: Record<string, never> }>(

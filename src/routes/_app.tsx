@@ -23,6 +23,8 @@ import {
 } from "../store/apiThunks";
 import { api, setAccessToken } from "../lib/api";
 
+const activeTeamStorageKey = (userId: string) => `salesync.active-team.${userId}`;
+
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
@@ -120,7 +122,7 @@ function AppLayout() {
           .catch(() => {});
       }
     }
-  }, [teamId, dispatch]);
+  }, [teamId, accessToken, dispatch]);
 
   useEffect(() => {
     if (teamId && chatRefreshKey > 0) {
@@ -157,10 +159,19 @@ function AppLayout() {
     if (auth.userTeams.length === 0 && !auth.teamChoiceCompleted && !isOnTeamSetup) {
       navigate({ to: "/team-setup" });
     } else if (!auth.teamChoiceCompleted && auth.userTeams.length > 0) {
-      if (auth.userTeams.length === 1) {
+      const savedTeamId = auth.userId
+        ? window.localStorage.getItem(activeTeamStorageKey(auth.userId))
+        : null;
+      const savedTeam = auth.userTeams.find((team) => team.id === savedTeamId);
+
+      if (savedTeam) {
+        dispatch(setActiveTeam(savedTeam));
+      } else if (auth.userTeams.length === 1) {
         dispatch(setActiveTeam(auth.userTeams[0]));
-        navigate({ to: "/dashboard" });
       } else if (!isOnTeamSetup) {
+        if (savedTeamId && auth.userId) {
+          window.localStorage.removeItem(activeTeamStorageKey(auth.userId));
+        }
         navigate({ to: "/team-setup" });
       }
     }
@@ -168,10 +179,16 @@ function AppLayout() {
     auth.userTeamsStatus,
     auth.userTeams,
     auth.teamChoiceCompleted,
+    auth.userId,
     navigate,
     dispatch,
     location.pathname,
   ]);
+
+  useEffect(() => {
+    if (!auth.userId || !teamId) return;
+    window.localStorage.setItem(activeTeamStorageKey(auth.userId), teamId);
+  }, [auth.userId, teamId]);
 
   if (!sessionChecked) {
     return (

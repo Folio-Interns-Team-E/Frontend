@@ -51,10 +51,16 @@ function Proposals() {
   const [templateName, setTemplateName] = useState("");
   const [templateFile, setTemplateFile] = useState<File | null>(null);
   const [templateUploading, setTemplateUploading] = useState(false);
+  const [templateError, setTemplateError] = useState("");
   const templateFileRef = useRef<HTMLInputElement>(null);
 
   const handleTemplateUpload = async () => {
     if (!templateFile || !templateName.trim()) return;
+    if (templateFile.size > 10 * 1024 * 1024) {
+      setTemplateError("The template must be 10 MB or smaller.");
+      return;
+    }
+    setTemplateError("");
     setTemplateUploading(true);
     try {
       const res = await dispatch(
@@ -64,8 +70,14 @@ function Proposals() {
       setShowTemplateUpload(false);
       setTemplateName("");
       setTemplateFile(null);
-    } catch {
-      // handled by thunk
+    } catch (error) {
+      setTemplateError(
+        typeof error === "string"
+          ? error
+          : error instanceof Error
+            ? error.message
+            : "The template could not be uploaded. Please try again.",
+      );
     } finally {
       setTemplateUploading(false);
     }
@@ -137,7 +149,13 @@ function Proposals() {
                   View
                 </a>
               )}
-              <button onClick={() => setShowTemplateUpload(true)} className="primary-action">
+              <button
+                onClick={() => {
+                  setTemplateError("");
+                  setShowTemplateUpload(true);
+                }}
+                className="primary-action"
+              >
                 <span className="material-symbols-outlined text-[18px]">upload_file</span>
                 {template ? "Replace" : "Upload"}
               </button>
@@ -235,6 +253,15 @@ function Proposals() {
               className="control mb-5 w-full px-3 py-2 text-sm outline-none"
               placeholder="e.g. Branded Proposal 2026"
             />
+
+            {templateError && (
+              <div
+                role="alert"
+                className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              >
+                {templateError}
+              </div>
+            )}
 
             <div className="flex justify-end gap-3">
               <button
