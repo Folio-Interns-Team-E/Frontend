@@ -1034,6 +1034,32 @@ export const api = {
       teamId,
     );
   },
+  updateEmail(
+    emailId: string,
+    payload: { subject: string; body: string },
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: EmailApi }>(
+      `/emails/${emailId}`,
+      { method: "PATCH", body: JSON.stringify(payload) },
+      accessToken,
+      teamId,
+    );
+  },
+  sendDraftEmail(
+    emailId: string,
+    payload: { subject: string; body: string },
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: EmailApi }>(
+      `/emails/${emailId}/send`,
+      { method: "POST", body: JSON.stringify(payload) },
+      accessToken,
+      teamId,
+    );
+  },
   getEmails(leadId: string, accessToken: string, teamId?: string | null) {
     return request<{ data: EmailApi[] }>(`/emails/?lead_id=${leadId}`, {}, accessToken, teamId);
   },

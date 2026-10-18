@@ -336,6 +336,50 @@ export const draftEmailRemote = createAsyncThunk(
   },
 );
 
+export const updateEmailRemote = createAsyncThunk(
+  "app/updateEmailRemote",
+  async (
+    payload: { emailId: string; leadId: string; subject: string; body: string },
+    { rejectWithValue, getState },
+  ) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const res = await api.updateEmail(
+        payload.emailId,
+        { subject: payload.subject, body: payload.body },
+        token!,
+        state.app.team.id,
+      );
+      return { leadId: payload.leadId, ...res.data };
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
+export const sendDraftEmailRemote = createAsyncThunk(
+  "app/sendDraftEmailRemote",
+  async (
+    payload: { emailId: string; leadId: string; subject: string; body: string },
+    { rejectWithValue, getState },
+  ) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const res = await api.sendDraftEmail(
+        payload.emailId,
+        { subject: payload.subject, body: payload.body },
+        token!,
+        state.app.team.id,
+      );
+      return { leadId: payload.leadId, ...res.data };
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
 // === Outreach Thunks ===
 export const fetchOutreachLeads = createAsyncThunk(
   "app/fetchOutreachLeads",

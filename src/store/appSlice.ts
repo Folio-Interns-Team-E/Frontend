@@ -18,6 +18,8 @@ import {
   discardLeadRemote,
   sendEmailRemote,
   draftEmailRemote,
+  updateEmailRemote,
+  sendDraftEmailRemote,
   fetchMeetings,
   fetchProposals,
   updateProposalStatusRemote,
@@ -789,10 +791,11 @@ const appSlice = createSlice({
       .addCase(loginAccount.pending, authPending)
       .addCase(loginAccount.rejected, (state, action) => {
         state.auth.status = "failed";
-        const payload = action.payload as any;
-        if (payload?.needsVerification) {
+        const payload = action.payload as
+          { needsVerification?: boolean; email?: string } | string | undefined;
+        if (typeof payload === "object" && payload?.needsVerification) {
           state.auth.needsVerification = true;
-          state.auth.verifyEmail = payload.email;
+          state.auth.verifyEmail = payload.email ?? "";
           state.auth.error = null;
         } else {
           state.auth.error =
@@ -1109,6 +1112,37 @@ const appSlice = createSlice({
         });
         state.leadDraftEmails[action.payload.leadId] = arr;
         state.selectedEmailId = action.payload.id;
+      })
+      .addCase(updateEmailRemote.fulfilled, (state, action) => {
+        const emails = state.leadDraftEmails[action.payload.leadId] ?? [];
+        const email = emails.find((item) => item.id === action.payload.id);
+        if (email) {
+          email.subject = action.payload.subject;
+          email.body = action.payload.body;
+        }
+        state.selectedEmailId = action.payload.id;
+      })
+      .addCase(sendDraftEmailRemote.pending, (state) => {
+        state.sendingEmail = true;
+      })
+      .addCase(sendDraftEmailRemote.fulfilled, (state, action) => {
+        state.sendingEmail = false;
+        const lead = state.leads.find((item) => item.id === action.payload.leadId);
+        if (lead) lead.status = "Sent";
+        const outreachLead = state.outreachLeads.find((item) => item.id === action.payload.leadId);
+        if (outreachLead) outreachLead.status = "Sent";
+        const emails = state.leadDraftEmails[action.payload.leadId] ?? [];
+        const email = emails.find((item) => item.id === action.payload.id);
+        if (email) {
+          email.subject = action.payload.subject;
+          email.body = action.payload.body;
+          email.status = "sent";
+          email.sent_at = action.payload.sent_at;
+        }
+        state.selectedEmailId = action.payload.id;
+      })
+      .addCase(sendDraftEmailRemote.rejected, (state) => {
+        state.sendingEmail = false;
       })
       .addCase(deleteEmailRemote.fulfilled, (state, action) => {
         const { emailId, leadId } = action.payload;

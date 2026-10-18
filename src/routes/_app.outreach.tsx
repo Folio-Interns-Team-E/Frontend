@@ -8,6 +8,8 @@ import {
   fetchLeadEmails,
   sendEmailRemote,
   draftEmailRemote,
+  updateEmailRemote,
+  sendDraftEmailRemote,
   deleteEmailRemote,
 } from "../store/apiThunks";
 import { selectEmail, clearSelectedEmail } from "../store/appSlice";
@@ -344,12 +346,21 @@ function Outreach() {
     if (selectedLead && !sendingEmail) {
       setComposerError("");
       try {
-        await dispatch(
-          sendEmailRemote({ leadId: selectedLead.id, subject: subject.trim(), body: body.trim() }),
-        ).unwrap();
+        const payload = {
+          leadId: selectedLead.id,
+          subject: subject.trim(),
+          body: body.trim(),
+        };
+        if (selectedEmail?.status.toLowerCase() === "draft" && !isComposingNew) {
+          await dispatch(sendDraftEmailRemote({ ...payload, emailId: selectedEmail.id })).unwrap();
+        } else {
+          await dispatch(sendEmailRemote(payload)).unwrap();
+        }
         setIsComposingNew(false);
         setIsExpanded(false);
       } catch (requestError) {
+        setIsComposingNew(false);
+        await dispatch(fetchLeadEmails(selectedLead.id));
         setComposerError(
           typeof requestError === "string"
             ? requestError
@@ -369,9 +380,16 @@ function Outreach() {
       setSavingDraft(true);
       setComposerError("");
       try {
-        await dispatch(
-          draftEmailRemote({ leadId: selectedLead.id, subject: subject.trim(), body: body.trim() }),
-        ).unwrap();
+        const payload = {
+          leadId: selectedLead.id,
+          subject: subject.trim(),
+          body: body.trim(),
+        };
+        if (selectedEmail?.status.toLowerCase() === "draft" && !isComposingNew) {
+          await dispatch(updateEmailRemote({ ...payload, emailId: selectedEmail.id })).unwrap();
+        } else {
+          await dispatch(draftEmailRemote(payload)).unwrap();
+        }
         setIsComposingNew(false);
       } catch (requestError) {
         setComposerError(
@@ -635,7 +653,7 @@ function Outreach() {
                   onSaveDraft={() => void handleSaveDraft()}
                   draftDisabled={composerContentInvalid}
                   sendDisabled={sendDisabled}
-                  showSaveDraft={isComposingNew}
+                  showSaveDraft={selectedEmail?.status.toLowerCase() !== "sent"}
                   sending={sendingEmail}
                   savingDraft={savingDraft}
                   isSent={selectedEmail?.status.toLowerCase() === "sent"}
@@ -708,7 +726,7 @@ function Outreach() {
               onSaveDraft={() => void handleSaveDraft()}
               draftDisabled={composerContentInvalid}
               sendDisabled={sendDisabled}
-              showSaveDraft={isComposingNew}
+              showSaveDraft={selectedEmail?.status.toLowerCase() !== "sent"}
               sending={sendingEmail}
               savingDraft={savingDraft}
               isSent={selectedEmail?.status.toLowerCase() === "sent"}
