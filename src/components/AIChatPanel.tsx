@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   fetchChatMessages,
+  fetchChats,
   sendChatMessage,
   createChatRemote,
   deleteChatRemote,
@@ -118,11 +119,13 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
       const result = await dispatch(createChatRemote("New Chat"));
       if (createChatRemote.fulfilled.match(result)) {
         dispatch(switchChat(result.payload.id));
-        setTimeout(() => dispatch(sendChatMessage(value)), 100);
+        setTimeout(() => {
+          void dispatch(sendChatMessage(value)).then(() => dispatch(fetchChats()));
+        }, 100);
       }
       return;
     }
-    dispatch(sendChatMessage(value));
+    void dispatch(sendChatMessage(value)).then(() => dispatch(fetchChats()));
   }
 
   function handleSubmit(event: FormEvent) {
