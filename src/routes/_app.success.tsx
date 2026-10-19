@@ -19,26 +19,40 @@ function BillingSuccess() {
   const [processing, setProcessing] = useState(true);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get("session_id");
-
-    if (!sessionId || !token || !teamId) {
+    if (!token || !teamId) {
       setProcessing(false);
-      setError("Missing session information. Redirecting to billing...");
+      setError("Missing workspace information. Redirecting to billing...");
       setTimeout(() => navigate({ to: "/billing" }), 2000);
       return;
     }
 
-    api
-      .completeCheckout(sessionId, token, teamId)
-      .then((res) => {
-        setBilling(res.data);
+    let cancelled = false;
+    const confirmFromWebhook = async () => {
+      // Safepay redirects are UI-only. The signed webhook is authoritative, so allow
+      // a few seconds for it to update the workspace before showing the result.
+      for (let attempt = 0; attempt < 10 && !cancelled; attempt += 1) {
+        try {
+          const res = await api.getBillingStatus(token, teamId);
+          if (res.data.tier !== "free" && res.data.status === "active") {
+            setBilling(res.data);
+            setProcessing(false);
+            setTimeout(() => navigate({ to: "/billing" }), 3000);
+            return;
+          }
+        } catch {
+          // Retry while Safepay's webhook is in flight.
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+      if (!cancelled) {
+        setError("Payment is still being confirmed. Check Billing again in a moment.");
         setProcessing(false);
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Failed to confirm payment");
-        setProcessing(false);
-      });
+      }
+    };
+    void confirmFromWebhook();
+    return () => {
+      cancelled = true;
+    };
   }, [token, teamId, navigate]);
 
   const tierLabel = (tier: string) => {

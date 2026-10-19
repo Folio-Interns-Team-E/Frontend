@@ -1332,16 +1332,6 @@ export const api = {
     );
     return { data: "data" in response ? response.data : response };
   },
-  async completeCheckout(sessionId: string, accessToken: string, teamId?: string | null) {
-    const response = await request<BillingStatus | { data: BillingStatus }>(
-      "/billing/checkout/complete",
-      { method: "POST", body: JSON.stringify({ session_id: sessionId }) },
-      accessToken,
-      teamId,
-    );
-    return { data: "data" in response ? response.data : response };
-  },
-
   // === Integrations ===
   getGmailAuthUrl(accessToken: string) {
     return request<{ data: { url: string } }>("/integrations/gmail/auth-url", {}, accessToken);
