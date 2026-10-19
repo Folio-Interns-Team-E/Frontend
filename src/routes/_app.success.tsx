@@ -42,8 +42,8 @@ function BillingSuccess() {
   }, [token, teamId, navigate]);
 
   const tierLabel = (tier: string) => {
-    if (tier === "growth") return "Growth";
-    if (tier === "enterprise") return "Enterprise";
+    if (tier === "plus" || tier === "growth") return "Plus";
+    if (tier === "pro" || tier === "enterprise") return "Pro";
     return "Free";
   };
 

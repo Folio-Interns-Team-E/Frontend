@@ -1314,11 +1314,7 @@ export const api = {
       teamId,
     );
   },
-  async createCheckoutSession(
-    tier: "growth" | "enterprise",
-    accessToken: string,
-    teamId?: string | null,
-  ) {
+  async createCheckoutSession(tier: "plus" | "pro", accessToken: string, teamId?: string | null) {
     const response = await request<{ checkout_url: string } | { data: { checkout_url: string } }>(
       `/billing/checkout/${tier}`,
       { method: "POST" },
@@ -1541,6 +1537,22 @@ export type BillingStatus = {
   status: string;
   ends_at: string | null;
   cancel_at_period_end: boolean;
+  limits: {
+    members: number;
+    leads: number;
+    ai_actions_monthly: number;
+    emails_monthly: number;
+    active_sequences: number;
+    proposals_monthly: number;
+  };
+  usage: {
+    members: number;
+    leads: number;
+    ai_actions_monthly: number;
+    emails_monthly: number;
+    active_sequences: number;
+    proposals_monthly: number;
+  };
 };
 
 export type KnowledgeAssetApi = {
