@@ -19,6 +19,7 @@ function Billing() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token || !teamId) return;
@@ -33,11 +34,13 @@ function Billing() {
   const handleUpgrade = async (tier: "plus" | "pro") => {
     if (!token || !teamId) return;
     setCheckoutLoading(tier);
+    setCheckoutError(null);
     try {
       const res = await api.createCheckoutSession(tier, token, teamId);
-      window.location.href = res.data.checkout_url;
+      if (!res.data.checkout_url) throw new Error("Safepay did not return a checkout URL");
+      window.location.assign(res.data.checkout_url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Checkout failed");
+      setCheckoutError(err instanceof Error ? err.message : "Checkout failed");
       setCheckoutLoading(null);
     }
   };
@@ -234,6 +237,14 @@ function Billing() {
               );
             })}
           </div>
+          {checkoutError && (
+            <div
+              role="alert"
+              className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              {checkoutError}
+            </div>
+          )}
         </section>
       </div>
     </>
