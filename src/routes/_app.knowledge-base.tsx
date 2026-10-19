@@ -13,7 +13,7 @@ import {
 export const Route = createFileRoute("/_app/knowledge-base")({
   head: () => ({
     meta: [
-      { title: "Knowledge Base · SalesSync AI" },
+      { title: "Knowledge Base · SaleSync AI" },
       {
         name: "description",
         content: "Source library used to ground sales agents and proposal generation.",

@@ -8,7 +8,7 @@ import { fetchLeads, fetchMeetings } from "../store/apiThunks";
 import { api } from "../lib/api";
 
 export const Route = createFileRoute("/_app/meetings")({
-  head: () => ({ meta: [{ title: "Meetings - SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Meetings - SaleSync AI" }] }),
   component: Meetings,
 });
 

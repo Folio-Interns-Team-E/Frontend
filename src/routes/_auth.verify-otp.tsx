@@ -5,7 +5,7 @@ import { requestOtp, verifyOtp } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_auth/verify-otp")({
-  head: () => ({ meta: [{ title: "Verify email · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Verify email · SaleSync AI" }] }),
   component: VerifyOtp,
   validateSearch: (search: Record<string, unknown>) => ({
     email: (search.email as string) ?? "",

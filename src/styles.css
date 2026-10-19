@@ -4,7 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* SalesSync enterprise product design system. */
+/* SaleSync enterprise product design system. */
 
 @theme {
   --color-on-secondary: #ffffff;

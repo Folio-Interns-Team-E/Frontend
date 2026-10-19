@@ -10,7 +10,7 @@ import { SecurityActivity } from "../components/SecurityActivity";
 import { MfaSettings } from "../components/MfaSettings";
 
 export const Route = createFileRoute("/_app/settings")({
-  head: () => ({ meta: [{ title: "Settings · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Settings · SaleSync AI" }] }),
   component: Settings,
 });
 
@@ -159,7 +159,7 @@ function Settings() {
     if (
       !token ||
       !window.confirm(
-        "Disconnect Gmail from SalesSync? Email sending and reply detection will stop.",
+        "Disconnect Gmail from SaleSync? Email sending and reply detection will stop.",
       )
     )
       return;
@@ -194,7 +194,7 @@ function Settings() {
     if (
       !token ||
       !window.confirm(
-        "Disconnect Google Calendar from SalesSync? New meetings and Google Meet links cannot be created until you reconnect.",
+        "Disconnect Google Calendar from SaleSync? New meetings and Google Meet links cannot be created until you reconnect.",
       )
     )
       return;
@@ -371,7 +371,7 @@ function Settings() {
               description={
                 calendarEmail
                   ? `Connected as ${calendarEmail}. Create meetings with Google Meet links.`
-                  : "Create meetings and Google Meet links from SalesSync."
+                  : "Create meetings and Google Meet links from SaleSync."
               }
               connected={calendarConnected}
               loading={calendarLoading}
@@ -460,7 +460,7 @@ function Settings() {
                 Sign out everywhere?
               </h2>
               <p className="text-sm text-on-surface-variant">
-                All current SalesSync sessions, including this one, will stop working. You will need
+                All current SaleSync sessions, including this one, will stop working. You will need
                 to sign in again on every device. Workspace API keys are not affected.
               </p>
               {logoutAllError && (

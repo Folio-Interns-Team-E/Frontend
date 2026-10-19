@@ -9,7 +9,7 @@ import { fetchLeads } from "../store/apiThunks";
 export const Route = createFileRoute("/_app/qualification")({
   head: () => ({
     meta: [
-      { title: "Qualification · SalesSync AI" },
+      { title: "Qualification · SaleSync AI" },
       {
         name: "description",
         content: "Review qualified leads scored on ICP match and intent signals.",

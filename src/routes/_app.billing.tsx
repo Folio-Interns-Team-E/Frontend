@@ -6,7 +6,7 @@ import { useAppSelector } from "../store/hooks";
 import { formatPkr, PLANS } from "../lib/plans";
 
 export const Route = createFileRoute("/_app/billing")({
-  head: () => ({ meta: [{ title: "Billing · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Billing · SaleSync AI" }] }),
   component: Billing,
 });
 

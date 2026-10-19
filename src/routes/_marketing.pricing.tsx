@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatPkr, PLANS } from "../lib/plans";
 
 export const Route = createFileRoute("/_marketing/pricing")({
-  head: () => ({ meta: [{ title: "Pricing · SalesSync" }] }),
+  head: () => ({ meta: [{ title: "Pricing · SaleSync" }] }),
   component: PricingPage,
 });
 

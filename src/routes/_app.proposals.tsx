@@ -16,7 +16,7 @@ import { api } from "../lib/api";
 export const Route = createFileRoute("/_app/proposals")({
   head: () => ({
     meta: [
-      { title: "Proposals · SalesSync AI" },
+      { title: "Proposals · SaleSync AI" },
       {
         name: "description",
         content: "Track and view AI-generated proposal documents.",

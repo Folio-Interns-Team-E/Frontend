@@ -47,7 +47,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       <div className="relative border-b border-slate-800 px-3 py-3">
         <div className="flex items-center justify-between gap-3">
           <Link to="/dashboard" onClick={handleNavigate}>
-            <img src="/logo-white.png" alt="SalesSync AI" className="h-7 w-auto object-contain" />
+            <img src="/logo-white.png" alt="SaleSync AI" className="h-7 w-auto object-contain" />
           </Link>
           <button
             onClick={onClose}
@@ -67,7 +67,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-xs font-semibold text-slate-100">
-              {team.name || "SalesSync workspace"}
+              {team.name || "SaleSync workspace"}
             </span>
             <span className="block text-[10px] capitalize text-slate-400">
               {team.currentUserRole || "member"} workspace

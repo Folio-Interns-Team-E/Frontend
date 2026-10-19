@@ -4,10 +4,10 @@ import { LegalPage, LegalSection, legalListClass } from "@/components/legal/Lega
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy | SalesSync" },
+      { title: "Privacy Policy | SaleSync" },
       {
         name: "description",
-        content: "How SalesSync collects, uses, shares, and protects personal information.",
+        content: "How SaleSync collects, uses, shares, and protects personal information.",
       },
     ],
   }),
@@ -18,12 +18,12 @@ function PrivacyPolicy() {
   return (
     <LegalPage
       title="Privacy Policy"
-      description="This policy explains how SalesSync handles information when you use our sales workflow, outreach, meeting, and AI-assistance services."
+      description="This policy explains how SaleSync handles information when you use our sales workflow, outreach, meeting, and AI-assistance services."
       effectiveDate="October 18, 2026"
     >
       <LegalSection title="1. Scope">
         <p>
-          This Privacy Policy applies to the SalesSync website, application, APIs, and related
+          This Privacy Policy applies to the SaleSync website, application, APIs, and related
           services (collectively, the “Service”). It applies to workspace owners, administrators,
           members, and visitors. If your organization provides your account, it may separately
           control the information in its workspace.
@@ -73,14 +73,14 @@ function PrivacyPolicy() {
 
       <LegalSection title="4. Google user data">
         <p>
-          When you connect a Google account, SalesSync accesses only the data covered by the scopes
+          When you connect a Google account, SaleSync accesses only the data covered by the scopes
           you approve. Depending on the features you enable, this may include your basic Google
           profile, Gmail messages and sending capability, and Google Calendar events.
         </p>
         <ul className={legalListClass}>
           <li>
             Gmail data is used to send user-requested outreach and to detect relevant replies or
-            delivery events for SalesSync records.
+            delivery events for SaleSync records.
           </li>
           <li>
             Calendar data is used to create, display, update, and cancel meetings and generate
@@ -92,11 +92,11 @@ function PrivacyPolicy() {
           </li>
           <li>
             Access tokens are protected and used only to provide the connected features. You may
-            disconnect Google in SalesSync settings or revoke access from your Google Account.
+            disconnect Google in SaleSync settings or revoke access from your Google Account.
           </li>
         </ul>
         <p>
-          SalesSync’s use and transfer of information received from Google APIs adheres to the{" "}
+          SaleSync’s use and transfer of information received from Google APIs adheres to the{" "}
           <a
             href="https://developers.google.com/terms/api-services-user-data-policy"
             className="font-medium text-[#155eef] underline underline-offset-2"
@@ -167,7 +167,7 @@ function PrivacyPolicy() {
         <p>
           We may update this policy as our Service or legal obligations change. We will post the new
           effective date and provide additional notice when required. For privacy questions or
-          requests, contact us through the support channel in your SalesSync workspace.
+          requests, contact us through the support channel in your SaleSync workspace.
         </p>
       </LegalSection>
     </LegalPage>

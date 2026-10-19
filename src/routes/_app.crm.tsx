@@ -6,7 +6,7 @@ import { useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_app/crm")({
   component: CrmPage,
-  head: () => ({ meta: [{ title: "CRM · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "CRM · SaleSync AI" }] }),
 });
 type Tab = "accounts" | "contacts" | "tasks";
 

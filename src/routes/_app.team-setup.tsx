@@ -5,7 +5,7 @@ import { createTeamRemote, joinTeamRemote, fetchMyTeams } from "../store/apiThun
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_app/team-setup")({
-  head: () => ({ meta: [{ title: "Choose your team · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Choose your team · SaleSync AI" }] }),
   component: TeamSetup,
 });
 
@@ -146,7 +146,7 @@ function TeamSetup() {
               <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
             </div>
             <div>
-              <p className="font-extrabold">SalesSync AI</p>
+              <p className="font-extrabold">SaleSync AI</p>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
                 Workspace setup
               </p>
@@ -163,7 +163,7 @@ function TeamSetup() {
             One quick choice
           </span>
           <h1 className="mt-5 text-3xl font-black tracking-[-0.04em] text-on-surface sm:text-4xl">
-            How will you work in SalesSync AI?
+            How will you work in SaleSync AI?
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-on-surface-variant">
             Join an existing sales team with an invite code, create a new workspace, or explore on

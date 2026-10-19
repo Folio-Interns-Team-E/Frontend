@@ -17,7 +17,7 @@ import { selectEmail, clearSelectedEmail } from "../store/appSlice";
 export const Route = createFileRoute("/_app/outreach")({
   head: () => ({
     meta: [
-      { title: "Outreach · SalesSync AI" },
+      { title: "Outreach · SaleSync AI" },
       {
         name: "description",
         content: "AI-drafted email outreach with per-lead context.",

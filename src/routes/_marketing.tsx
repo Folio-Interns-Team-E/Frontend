@@ -25,7 +25,7 @@ function MarketingLayout() {
               to="/"
               className="-m-1.5 p-1.5 flex items-center gap-2 font-black text-2xl tracking-tight text-[#131b2e]"
             >
-              <img src="/logo-white.png" alt="SalesSync AI" className="h-20 pb-1 w-auto" />
+              <img src="/logo-white.png" alt="SaleSync AI" className="h-20 pb-1 w-auto" />
             </Link>
           </div>
           <div className="flex flex-1 justify-end items-center gap-x-6">
@@ -58,7 +58,7 @@ function MarketingLayout() {
         <div className="page-shell flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#505f76]">
           <div className="flex items-center gap-2 font-bold text-sm text-[#131b2e]">
             <img src="/logo-tr.png" alt="" className="h-6 w-auto" />
-            <span>SalesSync AI</span>
+            <span>SaleSync AI</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <Link to="/privacy" className="font-medium hover:text-primary">
@@ -67,7 +67,7 @@ function MarketingLayout() {
             <Link to="/terms" className="font-medium hover:text-primary">
               Terms
             </Link>
-            <p>&copy; {new Date().getFullYear()} SalesSync. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} SaleSync. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -14,7 +14,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { api } from "../lib/api";
 
 export const Route = createFileRoute("/_app/team")({
-  head: () => ({ meta: [{ title: "Team management · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Team management · SaleSync AI" }] }),
   component: TeamManagement,
 });
 

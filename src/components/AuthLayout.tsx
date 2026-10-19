@@ -16,7 +16,7 @@ export function AuthLayout({
     <main className="grid min-h-screen bg-slate-50 lg:grid-cols-[1fr_0.92fr]">
       <section className="relative hidden min-h-screen overflow-hidden border-r border-slate-800 bg-[#111827] p-10 text-white lg:flex lg:flex-col lg:justify-between">
         <Link to="/dashboard">
-          <img src="/logo-white.png" alt="SalesSync AI" className="h-20 w-auto object-contain" />
+          <img src="/logo-white.png" alt="SaleSync AI" className="h-20 w-auto object-contain" />
         </Link>
 
         <div className="relative max-w-xl">
@@ -47,7 +47,7 @@ export function AuthLayout({
         </div>
 
         <div className="relative flex items-center gap-3 text-[11px] text-slate-500">
-          <span>© 2026 SalesSync AI</span>
+          <span>© 2026 SaleSync AI</span>
           <span className="h-1 w-1 rounded-full bg-slate-600" />
           <span>Built for modern B2B teams</span>
         </div>
@@ -56,7 +56,7 @@ export function AuthLayout({
       <section className="flex min-h-screen items-center justify-center px-5 py-8 sm:px-10">
         <div className="w-full max-w-[410px] rounded-lg border border-slate-200 bg-white p-7 shadow-sm">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <img src="/logo-blue.png" alt="SalesSync" className="h-9 w-auto" />
+            <img src="/logo-blue.png" alt="SaleSync" className="h-9 w-auto" />
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-primary">
             {eyebrow}

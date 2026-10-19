@@ -4,7 +4,7 @@ import { AuthField, AuthLayout } from "../components/AuthLayout";
 import { api, setAccessToken } from "../lib/api";
 
 export const Route = createFileRoute("/_auth/forgot-password")({
-  head: () => ({ meta: [{ title: "Reset password · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Reset password · SaleSync AI" }] }),
   component: PasswordRecovery,
 });
 

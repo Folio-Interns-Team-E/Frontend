@@ -16,8 +16,8 @@ export function LegalPage({ title, description, effectiveDate, children }: Legal
           className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 lg:px-8"
           aria-label="Legal page navigation"
         >
-          <Link to="/" aria-label="SalesSync home">
-            <img src="/logo-blue.png" alt="SalesSync" className="h-12 w-auto" />
+          <Link to="/" aria-label="SaleSync home">
+            <img src="/logo-blue.png" alt="SaleSync" className="h-12 w-auto" />
           </Link>
           <div className="flex items-center gap-5 text-sm font-medium text-[#475467]">
             <Link to="/privacy" className="hover:text-[#155eef]">
@@ -59,7 +59,7 @@ export function LegalPage({ title, description, effectiveDate, children }: Legal
 
         <article className="rounded-xl border border-[#dfe3e8] bg-white px-6 py-9 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:px-10 lg:px-14 lg:py-12">
           <header className="border-b border-[#e4e7ec] pb-8">
-            <p className="text-sm font-semibold text-[#155eef]">SalesSync legal</p>
+            <p className="text-sm font-semibold text-[#155eef]">SaleSync legal</p>
             <h1 className="mt-3 text-4xl font-semibold tracking-[-0.03em] text-[#101828]">
               {title}
             </h1>
@@ -74,8 +74,8 @@ export function LegalPage({ title, description, effectiveDate, children }: Legal
 
       <footer className="border-t border-[#dfe3e8] bg-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-7 text-sm text-[#667085] sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <span>&copy; {new Date().getFullYear()} SalesSync. All rights reserved.</span>
-          <span>Questions? Contact us through your SalesSync workspace.</span>
+          <span>&copy; {new Date().getFullYear()} SaleSync. All rights reserved.</span>
+          <span>Questions? Contact us through your SaleSync workspace.</span>
         </div>
       </footer>
     </div>

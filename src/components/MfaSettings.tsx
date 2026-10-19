@@ -164,7 +164,7 @@ export function MfaSettings({ accessToken }: { accessToken: string }) {
       {setup && (
         <div className="space-y-4 rounded-lg border border-outline-variant bg-surface-container p-4">
           <div>
-            <p className="text-sm font-semibold">1. Add SalesSync to your authenticator app</p>
+            <p className="text-sm font-semibold">1. Add SaleSync to your authenticator app</p>
             <p className="mt-1 text-xs text-on-surface-variant">
               In Google Authenticator, Microsoft Authenticator, Authy, 1Password, or another TOTP
               app, scan this QR code. Choose <strong>Time based</strong> if the app asks. This setup
@@ -177,7 +177,7 @@ export function MfaSettings({ accessToken }: { accessToken: string }) {
                   size={176}
                   level="M"
                   marginSize={1}
-                  title="SalesSync authenticator setup QR code"
+                  title="SaleSync authenticator setup QR code"
                 />
               </div>
               <div className="min-w-0 flex-1">

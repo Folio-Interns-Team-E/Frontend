@@ -6,7 +6,7 @@ import { clearApiFeedback, demoRegister } from "../store/appSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_auth/register")({
-  head: () => ({ meta: [{ title: "Create account · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Create account · SaleSync AI" }] }),
   component: Register,
 });
 

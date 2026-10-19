@@ -1,4 +1,4 @@
-# SalesSync enterprise design system
+# SaleSync enterprise design system
 
 This system is optimized for dense, daily-use sales workflows. It favors clarity, hierarchy, and predictable interaction over decorative effects.
 

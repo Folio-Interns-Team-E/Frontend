@@ -81,27 +81,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient; stor
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SalesSync AI" },
+      { title: "SaleSync AI" },
       {
         name: "description",
         content:
-          "SalesSync AI — automate lead generation, qualification, outreach, meetings, and proposals.",
+          "SaleSync AI — automate lead generation, qualification, outreach, meetings, and proposals.",
       },
-      { name: "author", content: "SalesSync AI" },
-      { property: "og:title", content: "SalesSync AI" },
+      { name: "author", content: "SaleSync AI" },
+      { property: "og:title", content: "SaleSync AI" },
       {
         property: "og:description",
         content:
-          "SalesSync AI — automate lead generation, qualification, outreach, meetings, and proposals.",
+          "SaleSync AI — automate lead generation, qualification, outreach, meetings, and proposals.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "SalesSync AI" },
+      { name: "twitter:title", content: "SaleSync AI" },
       {
         name: "twitter:description",
         content:
-          "SalesSync AI — automate lead generation, qualification, outreach, meetings, and proposals.",
+          "SaleSync AI — automate lead generation, qualification, outreach, meetings, and proposals.",
       },
       {
         property: "og:image",

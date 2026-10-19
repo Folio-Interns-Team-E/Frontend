@@ -1,6 +1,6 @@
 # End-to-end testing
 
-SalesSync uses Playwright to protect its public sign-in journey and authentication boundary. The default suite is intentionally non-destructive: it runs against the local frontend and mocks only the authentication responses needed to verify browser behavior.
+SaleSync uses Playwright to protect its public sign-in journey and authentication boundary. The default suite is intentionally non-destructive: it runs against the local frontend and mocks only the authentication responses needed to verify browser behavior.
 
 ## Run locally
 

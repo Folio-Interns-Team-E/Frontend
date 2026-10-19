@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_app/onboarding")({
   head: () => ({
-    meta: [{ title: "Set up your sales copilot · SalesSync AI" }],
+    meta: [{ title: "Set up your sales copilot · SaleSync AI" }],
   }),
   component: Onboarding,
 });

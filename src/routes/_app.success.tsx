@@ -4,7 +4,7 @@ import { api, type BillingStatus } from "../lib/api";
 import { useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_app/success")({
-  head: () => ({ meta: [{ title: "Payment Successful · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Payment Successful · SaleSync AI" }] }),
   component: BillingSuccess,
 });
 

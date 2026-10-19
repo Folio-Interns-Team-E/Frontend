@@ -6,7 +6,7 @@ import { useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_app/sequences")({
   component: SequencesPage,
-  head: () => ({ meta: [{ title: "Sequences · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Sequences · SaleSync AI" }] }),
 });
 
 function SequencesPage() {

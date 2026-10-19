@@ -658,7 +658,7 @@ const appSlice = createSlice({
         title: "Proposal template updated",
         body: state.proposalTemplate.companyName
           ? `${state.proposalTemplate.companyName} branding will be used on proposal previews.`
-          : "Generic SalesSync proposal branding will be used.",
+          : "Generic SaleSync proposal branding will be used.",
         time: "Now",
         unread: true,
       });
@@ -673,7 +673,7 @@ const appSlice = createSlice({
       state.notifications.unshift({
         id: `notification-${Date.now()}`,
         title: "Generic proposal template enabled",
-        body: "Proposal previews will use the default SalesSync AI template.",
+        body: "Proposal previews will use the default SaleSync AI template.",
         time: "Now",
         unread: true,
       });

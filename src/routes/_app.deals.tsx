@@ -13,7 +13,7 @@ import { useAppSelector } from "../store/hooks";
 export const Route = createFileRoute("/_app/deals")({
   head: () => ({
     meta: [
-      { title: "Deals · SalesSync AI" },
+      { title: "Deals · SaleSync AI" },
       {
         name: "description",
         content: "Manage opportunities, pipeline value and revenue outcomes.",

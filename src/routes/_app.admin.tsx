@@ -5,7 +5,7 @@ import { api, AdminOverview, AuditEventApi, WorkspaceApiKey } from "../lib/api";
 import { useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_app/admin")({
-  head: () => ({ meta: [{ title: "Admin Overview · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Admin Overview · SaleSync AI" }] }),
   component: AdminDashboard,
 });
 

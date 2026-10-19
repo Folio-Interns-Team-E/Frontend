@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { SocialSignIn } from "../components/SocialSignIn";
 
 export const Route = createFileRoute("/_auth/login")({
-  head: () => ({ meta: [{ title: "Log in · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Log in · SaleSync AI" }] }),
   component: Login,
 });
 
@@ -153,7 +153,7 @@ function Login() {
 
       {!auth.needsMfa && (
         <p className="mt-7 text-center text-xs text-on-surface-variant">
-          New to SalesSync AI?{" "}
+          New to SaleSync AI?{" "}
           <Link to="/register" className="font-bold text-primary hover:underline">
             Create your account
           </Link>

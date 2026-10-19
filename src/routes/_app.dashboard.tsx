@@ -9,9 +9,9 @@ import { Skeleton, SkeletonKPIGrid } from "../components/ui/skeleton";
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard · SalesSync AI" },
+      { title: "Dashboard · SaleSync AI" },
       { name: "description", content: "Sales funnel pipeline, KPIs and live AI agent activity." },
-      { property: "og:title", content: "Dashboard · SalesSync AI" },
+      { property: "og:title", content: "Dashboard · SaleSync AI" },
       {
         property: "og:description",
         content: "Sales funnel pipeline, KPIs and live AI agent activity.",

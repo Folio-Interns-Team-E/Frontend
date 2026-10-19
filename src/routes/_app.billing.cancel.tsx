@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/_app/billing/cancel")({
-  head: () => ({ meta: [{ title: "Checkout Cancelled · SalesSync AI" }] }),
+  head: () => ({ meta: [{ title: "Checkout Cancelled · SaleSync AI" }] }),
   component: BillingCancel,
 });
 

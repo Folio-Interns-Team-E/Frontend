@@ -17,7 +17,7 @@ import { fetchLeads } from "../store/apiThunks";
 export const Route = createFileRoute("/_app/lead-generation")({
   head: () => ({
     meta: [
-      { title: "Lead Generation · SalesSync AI" },
+      { title: "Lead Generation · SaleSync AI" },
       {
         name: "description",
         content:
@@ -142,8 +142,8 @@ function LeadGeneration() {
     void dispatch(
       draftEmailRemote({
         leadId: lead.id,
-        subject: `Intro - ${lead.company || "SalesSync"}`,
-        body: `Hi ${lead.name},\n\nI would like to discuss how SalesSync can support ${lead.company || "your team"}.`,
+        subject: `Intro - ${lead.company || "SaleSync"}`,
+        body: `Hi ${lead.name},\n\nI would like to discuss how SaleSync can support ${lead.company || "your team"}.`,
       }),
     );
   };
