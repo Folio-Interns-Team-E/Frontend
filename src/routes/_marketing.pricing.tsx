@@ -15,8 +15,8 @@ function PricingPage() {
           Plans built for Pakistani sales teams
         </h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">
-          Start free, then upgrade as your team and outbound volume grow. Prices are per workspace
-          and billed monthly in Pakistani rupees.
+          Start free, then upgrade as your team and outbound volume grow. Paid plans provide 30
+          days of workspace access per payment, with no automatic renewal.
         </p>
       </header>
 
@@ -42,7 +42,7 @@ function PricingPage() {
               <span className="text-3xl font-bold tabular-nums text-slate-950">
                 {formatPkr(plan.price)}
               </span>
-              {plan.price > 0 && <span className="ml-1 text-sm text-slate-500">/ month</span>}
+              {plan.price > 0 && <span className="ml-1 text-sm text-slate-500">/ 30 days</span>}
             </div>
             <ul className="mt-5 flex-1 space-y-3">
               {plan.features.map((feature) => (
@@ -58,7 +58,7 @@ function PricingPage() {
               to="/register"
               className={`mt-6 w-full justify-center ${plan.popular ? "primary-action" : "secondary-action"}`}
             >
-              {plan.tier === "free" ? "Start free" : `Choose ${plan.name}`}
+              {plan.tier === "free" ? "Start free" : `Buy ${plan.name} for 30 days`}
             </Link>
           </article>
         ))}
@@ -66,7 +66,8 @@ function PricingPage() {
 
       <p className="mx-auto mt-8 max-w-3xl text-center text-xs leading-5 text-slate-500">
         Hunter and Apollo require your own provider credentials and may charge separately. Gmail
-        sending limits also apply. Prices exclude applicable taxes.
+        sending limits also apply. Paid plans require manual renewal. Prices exclude applicable
+        taxes.
       </p>
     </main>
   );

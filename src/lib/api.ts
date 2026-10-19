@@ -1323,15 +1323,6 @@ export const api = {
     );
     return { data: "data" in response ? response.data : response };
   },
-  async cancelSubscription(accessToken: string, teamId?: string | null) {
-    const response = await request<{ message: string } | { data: { message: string } }>(
-      "/billing/cancel",
-      { method: "POST" },
-      accessToken,
-      teamId,
-    );
-    return { data: "data" in response ? response.data : response };
-  },
   // === Integrations ===
   getGmailAuthUrl(accessToken: string) {
     return request<{ data: { url: string } }>("/integrations/gmail/auth-url", {}, accessToken);

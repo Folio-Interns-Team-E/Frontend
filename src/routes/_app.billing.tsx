@@ -18,7 +18,6 @@ function Billing() {
   const [billing, setBilling] = useState<BillingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cancelling, setCancelling] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,20 +39,6 @@ function Billing() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed");
       setCheckoutLoading(null);
-    }
-  };
-
-  const handleCancel = async () => {
-    if (!token || !teamId) return;
-    setCancelling(true);
-    try {
-      await api.cancelSubscription(token, teamId);
-      const res = await api.getBillingStatus(token, teamId);
-      setBilling(res.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Cancellation failed");
-    } finally {
-      setCancelling(false);
     }
   };
 
@@ -140,7 +125,7 @@ function Billing() {
               {billing.ends_at && (
                 <div>
                   <p className="text-xs font-semibold text-on-surface-variant mb-1">
-                    {billing.cancel_at_period_end ? "Cancels on" : "Renews on"}
+                    Access until
                   </p>
                   <span className="text-sm font-semibold text-on-surface">
                     {new Date(billing.ends_at).toLocaleDateString("en-US", {
@@ -152,19 +137,9 @@ function Billing() {
                 </div>
               )}
               {billing.tier !== "free" && (
-                <div className="w-full sm:ml-auto sm:w-auto">
-                  <button
-                    onClick={handleCancel}
-                    disabled={cancelling || billing.cancel_at_period_end}
-                    className="secondary-action w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 sm:w-auto"
-                  >
-                    {billing.cancel_at_period_end
-                      ? "Cancellation scheduled"
-                      : cancelling
-                        ? "Cancelling..."
-                        : "Cancel subscription"}
-                  </button>
-                </div>
+                <p className="w-full text-xs text-on-surface-variant sm:ml-auto sm:w-auto">
+                  Manual renewal · no automatic charges
+                </p>
               )}
             </div>
           ) : null}
@@ -206,7 +181,7 @@ function Billing() {
           <div className="mb-4">
             <h2 className="text-lg font-bold">Upgrade Your Plan</h2>
             <p className="text-sm text-on-surface-variant">
-              Choose a plan that fits your team's needs.
+              Pay securely for 30 days of access. No Safepay account or automatic renewal required.
             </p>
           </div>
           <div className="grid gap-5 md:grid-cols-2">
@@ -228,7 +203,7 @@ function Billing() {
                   <h3 className="text-xl font-extrabold">{plan.name}</h3>
                   <div className="mt-3 flex items-baseline gap-1">
                     <span className="text-3xl font-black">{formatPkr(plan.price)}</span>
-                    <span className="text-sm text-on-surface-variant">/ month</span>
+                    <span className="text-sm text-on-surface-variant">/ 30 days</span>
                   </div>
                   <ul className="mt-5 space-y-2.5">
                     {plan.features.map((f) => (
@@ -253,7 +228,7 @@ function Billing() {
                       ? "Current plan"
                       : isLoading
                         ? "Redirecting to checkout..."
-                        : `Upgrade to ${plan.name}`}
+                        : `Buy ${plan.name} for 30 days`}
                   </button>
                 </div>
               );

@@ -99,7 +99,7 @@ function BillingSuccess() {
               Welcome to {billing ? tierLabel(billing.tier) : "your new plan"}!
             </h1>
             <p className="mt-3 text-sm text-slate-500">
-              Your subscription is now active. Redirecting to billing in 3 seconds...
+              Your plan is active for 30 days. Redirecting to billing in 3 seconds...
             </p>
             <button
               onClick={() => navigate({ to: "/billing" })}
