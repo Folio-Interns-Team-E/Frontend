@@ -43,11 +43,11 @@ export function Sidebar({ onClose }: SidebarProps) {
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-50 flex h-full w-[280px] flex-col overflow-hidden border-r border-slate-800 bg-[#111827] text-white md:z-30 md:w-[var(--spacing-sidebar_width)]">
-      <div className="relative border-b border-slate-800 px-4 pb-4 pt-5">
+    <aside className="fixed left-0 top-0 z-50 flex h-full w-[260px] flex-col overflow-hidden border-r border-slate-800 bg-[#111827] text-white md:z-30 md:w-[var(--spacing-sidebar_width)]">
+      <div className="relative border-b border-slate-800 px-3 py-3">
         <div className="flex items-center justify-between gap-3">
           <Link to="/dashboard" onClick={handleNavigate}>
-            <img src="/logo-white.png" alt="SalesSync AI" className="h-10 w-auto object-contain" />
+            <img src="/logo-white.png" alt="SalesSync AI" className="h-7 w-auto object-contain" />
           </Link>
           <button
             onClick={onClose}
@@ -60,9 +60,9 @@ export function Sidebar({ onClose }: SidebarProps) {
         <Link
           to="/team"
           onClick={handleNavigate}
-          className="mt-4 flex items-center gap-3 rounded-md border border-slate-700 bg-slate-800/60 p-2.5 transition-colors hover:border-slate-600 hover:bg-slate-800"
+          className="mt-3 flex items-center gap-2 rounded border border-slate-700 bg-slate-800/60 p-2 transition-colors hover:border-slate-600 hover:bg-slate-800"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-blue-600 text-[11px] font-semibold">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-blue-600 text-[10px] font-semibold">
             {(team.name || "SS").slice(0, 2).toUpperCase()}
           </span>
           <span className="min-w-0 flex-1">
@@ -77,10 +77,10 @@ export function Sidebar({ onClose }: SidebarProps) {
         </Link>
       </div>
 
-      <nav className="custom-scrollbar relative flex-1 overflow-y-auto px-2.5 pb-4">
+      <nav className="custom-scrollbar relative flex-1 overflow-y-auto px-2 pb-3 pt-1">
         {isAdmin && (
-          <div className="mb-3">
-            <p className="px-3 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+          <div className="mb-2">
+            <p className="px-2 pb-1 pt-2 text-[9px] font-semibold uppercase tracking-[0.1em] text-slate-500">
               Administration
             </p>
             <NavItem
@@ -92,8 +92,8 @@ export function Sidebar({ onClose }: SidebarProps) {
           </div>
         )}
         {navigation.map((group) => (
-          <div key={group.label} className="mb-3">
-            <p className="px-3 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+          <div key={group.label} className="mb-2">
+            <p className="px-2 pb-1 pt-2 text-[9px] font-semibold uppercase tracking-[0.1em] text-slate-500">
               {group.label}
             </p>
             <div className="space-y-0.5">
@@ -105,24 +105,24 @@ export function Sidebar({ onClose }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="relative border-t border-white/8 p-2.5">
-        <div className="mb-2 grid grid-cols-2 gap-1">
+      <div className="relative border-t border-white/8 p-2">
+        <div className="mb-1.5 grid grid-cols-2 gap-1">
           <Link
             to="/billing"
             onClick={handleNavigate}
-            className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[10px] font-semibold text-slate-400 hover:bg-white/[0.06] hover:text-white"
+            className="flex items-center gap-1.5 rounded px-2 py-1.5 text-[10px] font-semibold text-slate-400 hover:bg-white/[0.06] hover:text-white"
           >
             <span className="material-symbols-outlined text-[17px]">credit_card</span>Billing
           </Link>
           <Link
             to="/settings"
             onClick={handleNavigate}
-            className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[10px] font-semibold text-slate-400 hover:bg-white/[0.06] hover:text-white"
+            className="flex items-center gap-1.5 rounded px-2 py-1.5 text-[10px] font-semibold text-slate-400 hover:bg-white/[0.06] hover:text-white"
           >
             <span className="material-symbols-outlined text-[17px]">settings</span>Settings
           </Link>
         </div>
-        <div className="flex items-center gap-2 rounded border border-slate-700 bg-slate-800/50 px-3 py-2 text-[10px] font-medium text-slate-300">
+        <div className="flex items-center gap-2 rounded border border-slate-700 bg-slate-800/50 px-2 py-1.5 text-[9px] font-medium text-slate-300">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
           Automation engine operational
         </div>
@@ -147,13 +147,13 @@ function NavItem({
       to={to}
       onClick={onNavigate}
       activeOptions={{ exact: to === "/dashboard" }}
-      className="group relative flex items-center gap-3 rounded px-3 py-2 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+      className="group relative flex items-center gap-2 rounded px-2 py-1.5 text-[11px] font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
       activeProps={{
         className:
-          "group relative flex items-center gap-3 rounded bg-slate-800 px-3 py-2 text-xs font-semibold text-white before:absolute before:bottom-1.5 before:left-0 before:top-1.5 before:w-0.5 before:bg-blue-500",
+          "group relative flex items-center gap-2 rounded bg-slate-800 px-2 py-1.5 text-[11px] font-semibold text-white before:absolute before:bottom-1 before:left-0 before:top-1 before:w-0.5 before:bg-blue-500",
       }}
     >
-      <span className="material-symbols-outlined text-[18px] text-slate-500 transition-colors group-hover:text-blue-400 group-aria-[current=page]:text-blue-400">
+      <span className="material-symbols-outlined text-[16px] text-slate-500 transition-colors group-hover:text-blue-400 group-aria-[current=page]:text-blue-400">
         {icon}
       </span>
       <span>{label}</span>

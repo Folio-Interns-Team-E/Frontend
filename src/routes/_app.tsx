@@ -226,7 +226,7 @@ function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-on-surface">
+    <div className="crm-app flex h-screen overflow-hidden bg-background text-on-surface">
       {sidebarOpen && (
         <>
           <button

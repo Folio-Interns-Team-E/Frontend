@@ -290,37 +290,21 @@ function Index() {
     <>
       <TopBar title="Dashboard" />
       <div className="page-shell space-y-5 sm:space-y-6">
-        <section className="relative overflow-hidden rounded-lg border border-slate-800 bg-slate-900 px-5 py-5 text-white sm:px-7 sm:py-6">
-          <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <img
-                  src="/logo-white.png"
-                  alt="SalesSync AI"
-                  className="h-9 w-auto object-contain"
-                />
-
-                <span className="text-[10px] mt-1 font-bold uppercase tracking-[0.2em] text-[#83e9eb]">
-                  AI sales command center
-                </span>
-              </div>
-              <h1 className="max-w-2xl text-[22px] font-black tracking-[-0.035em] sm:text-[27px]">
-                Hi{profile.name ? ` ${profile.name.split(" ")[0]}` : ""}. Your pipeline is moving.
-              </h1>
-            </div>
-            <div className="flex shrink-0 flex-wrap gap-3">
-              <Link
-                to="/lead-generation"
-                className="inline-flex items-center gap-2 rounded-lg bg-white/8 px-4 py-2.5 text-xs font-semibold text-white ring-1 ring-inset ring-white/14 transition hover:bg-white/13"
-              >
-                <span className="material-symbols-outlined text-[18px]">person_search</span>
-                Find leads
-              </Link>
-              <Link to="/proposals" className="primary-action px-4">
-                <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
-                Draft proposal
-              </Link>
-            </div>
+        <section className="crm-page-header">
+          <div>
+            <h1 className="crm-page-title">Pipeline overview</h1>
+            <p className="crm-page-description">
+              Current activity and next actions for{" "}
+              {profile.name ? profile.name.split(" ")[0] : "your team"}.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Link to="/lead-generation" className="secondary-action">
+              Find prospects
+            </Link>
+            <Link to="/proposals" className="primary-action">
+              New proposal
+            </Link>
           </div>
         </section>
 

@@ -145,7 +145,7 @@ export function TopBar({ title }: { title: string }) {
   }
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 w-full items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6">
+    <header className="sticky top-0 z-20 flex h-12 w-full items-center justify-between border-b border-slate-200 bg-white px-3">
       <div className="flex min-w-0 items-center gap-1">
         <button
           onClick={() => dispatch(toggleSidebar())}
@@ -160,17 +160,14 @@ export function TopBar({ title }: { title: string }) {
         </button>
 
         <div className="min-w-0 border-l border-outline-variant/45 pl-3">
-          <p className="hidden text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 sm:block">
-            Workspace
-          </p>
-          <h2 className="truncate text-base font-semibold tracking-[-0.01em] text-on-surface sm:text-[17px]">
+          <h2 className="truncate text-sm font-semibold tracking-[-0.01em] text-on-surface">
             {title}
           </h2>
         </div>
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2">
-        <label className="control relative hidden h-9 min-h-0 w-[220px] items-center gap-2 px-3 lg:flex">
+        <label className="control relative hidden h-8 min-h-0 w-[260px] items-center gap-2 px-2.5 lg:flex">
           <span className="material-symbols-outlined text-[17px] text-slate-400">search</span>
           <input
             type="search"
@@ -200,7 +197,7 @@ export function TopBar({ title }: { title: string }) {
             onChange={(event) => {
               if (searchActivated) setSearch(event.target.value);
             }}
-            className="min-w-0 flex-1 bg-transparent text-[11px] font-medium outline-none placeholder:text-slate-400"
+            className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400"
           />
           <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[8px] font-bold text-slate-400">
             ⌘ K
@@ -262,9 +259,9 @@ export function TopBar({ title }: { title: string }) {
         {notificationsOpen && (
           <div
             ref={notificationsRef}
-            className="absolute right-3 top-[52px] w-[calc(100vw-1.5rem)] max-w-[360px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg sm:right-20"
+            className="absolute right-3 top-[44px] w-[calc(100vw-1.5rem)] max-w-[340px] overflow-hidden rounded border border-slate-200 bg-white shadow-lg sm:right-16"
           >
-            <div className="border-b border-outline-variant/50 px-5 py-4">
+            <div className="border-b border-outline-variant/50 px-3 py-2.5">
               <p className="text-sm font-extrabold">Notifications</p>
               <p className="text-[10px] text-on-surface-variant">Workspace activity</p>
             </div>

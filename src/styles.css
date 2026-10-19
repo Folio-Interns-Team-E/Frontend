@@ -58,12 +58,12 @@
   --color-primary-container: #1d4ed8;
   --color-on-background: #172033;
 
-  --spacing-container_padding: 24px;
-  --spacing-sidebar_width: 240px;
-  --spacing-ai_panel_width: 340px;
-  --spacing-stack_gap_md: 16px;
-  --spacing-stack_gap_sm: 8px;
-  --spacing-gutter: 16px;
+  --spacing-container_padding: 16px;
+  --spacing-sidebar_width: 216px;
+  --spacing-ai_panel_width: 320px;
+  --spacing-stack_gap_md: 12px;
+  --spacing-stack_gap_sm: 6px;
+  --spacing-gutter: 12px;
 
   --font-body-base: Inter, sans-serif;
   --font-headline-md: Inter, sans-serif;
@@ -91,7 +91,7 @@
   --text-display-lg--letter-spacing: -0.02em;
   --text-display-lg--font-weight: 600;
 
-  --radius: 0.375rem;
+  --radius: 0.25rem;
 }
 
 @layer base {
@@ -111,8 +111,8 @@
     font-family: "Inter", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 13px;
+    line-height: 1.45;
     min-width: 320px;
   }
 
@@ -171,7 +171,7 @@
 @layer components {
   .app-card {
     border: 1px solid #d8dee8;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
     background: #ffffff;
     box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
   }
@@ -191,11 +191,11 @@
 
   .icon-button {
     display: inline-flex;
-    height: 2.25rem;
-    width: 2.25rem;
+    height: 2rem;
+    width: 2rem;
     align-items: center;
     justify-content: center;
-    border-radius: 0.375rem;
+    border-radius: 0.25rem;
     color: var(--color-on-surface-variant);
     transition:
       color 150ms ease,
@@ -208,8 +208,8 @@
   }
 
   .page-shell {
-    margin-inline: auto;
-    max-width: 1440px;
+    width: 100%;
+    max-width: none;
     padding: var(--spacing-container_padding);
   }
 
@@ -223,7 +223,7 @@
 
   .soft-panel {
     border: 1px solid #d8dee8;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
     background: white;
     box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
   }
@@ -233,12 +233,12 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    min-height: 2.375rem;
+    min-height: 2rem;
     border: 1px solid #1d4ed8;
-    border-radius: 0.375rem;
+    border-radius: 0.25rem;
     background: #2563eb;
-    padding: 0.5rem 0.875rem;
-    font-size: 0.8125rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: white;
     box-shadow: 0 1px 2px rgb(15 23 42 / 8%);
@@ -254,15 +254,15 @@
 
   .secondary-action {
     display: inline-flex;
-    min-height: 2.375rem;
+    min-height: 2rem;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     border: 1px solid #cbd5e1;
-    border-radius: 0.375rem;
+    border-radius: 0.25rem;
     background: white;
-    padding: 0.5rem 0.875rem;
-    font-size: 0.8125rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--color-on-surface-variant);
     box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
@@ -279,9 +279,9 @@
   }
 
   .control {
-    min-height: 2.375rem;
+    min-height: 2rem;
     border: 1px solid #cbd5e1;
-    border-radius: 0.375rem;
+    border-radius: 0.25rem;
     background: white;
     box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
     transition:
@@ -303,7 +303,7 @@
   .section-panel {
     overflow: hidden;
     border: 1px solid #d8dee8;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
     background: white;
     box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
   }
@@ -312,16 +312,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.75rem;
     border-bottom: 1px solid rgb(189 200 206 / 38%);
-    padding: 1rem 1.25rem;
+    padding: 0.625rem 0.875rem;
   }
 
   .metric-card {
     position: relative;
     overflow: hidden;
     border: 1px solid #d8dee8;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
     background: white;
     box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
     transition:
@@ -338,13 +338,13 @@
 
   .kanban-column {
     border: 1px solid #d8dee8;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
     background: #f8fafc;
   }
 
   .kanban-card {
     border: 1px solid #d8dee8;
-    border-radius: 0.375rem;
+    border-radius: 0.25rem;
     background: white;
     box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
     transition:
@@ -362,7 +362,7 @@
   .table-shell {
     overflow: hidden;
     border: 1px solid #d8dee8;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
     background: white;
     box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
   }
@@ -389,12 +389,12 @@
 
   .empty-state {
     display: flex;
-    min-height: 12rem;
+    min-height: 8rem;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 2rem;
+    padding: 1.25rem;
     text-align: center;
     color: var(--color-on-surface-variant);
   }
@@ -415,7 +415,7 @@
     max-height: calc(100dvh - 2rem);
     overflow-y: auto;
     border: 1px solid #cbd5e1;
-    border-radius: 0.5rem;
+    border-radius: 0.375rem;
     background: white;
     box-shadow: 0 20px 32px rgb(15 23 42 / 16%);
   }
@@ -448,12 +448,12 @@
 
   .tertiary-action {
     display: inline-flex;
-    min-height: 2.375rem;
+    min-height: 2rem;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border-radius: 0.375rem;
-    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.625rem;
     color: #334155;
     font-size: 0.8125rem;
     font-weight: 600;
@@ -466,13 +466,13 @@
 
   .destructive-action {
     display: inline-flex;
-    min-height: 2.375rem;
+    min-height: 2rem;
     align-items: center;
     justify-content: center;
     border: 1px solid #b42318;
-    border-radius: 0.375rem;
+    border-radius: 0.25rem;
     background: #b42318;
-    padding: 0.5rem 0.875rem;
+    padding: 0.375rem 0.75rem;
     color: white;
     font-size: 0.8125rem;
     font-weight: 600;
@@ -492,6 +492,40 @@
     color: #475569;
     font-size: 0.6875rem;
     font-weight: 600;
+  }
+
+  .crm-page-header {
+    display: flex;
+    min-height: 2.5rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .crm-page-title {
+    color: #172033;
+    font-size: 1.125rem;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    line-height: 1.5rem;
+  }
+
+  .crm-page-description {
+    margin-top: 0.125rem;
+    color: #64748b;
+    font-size: 0.75rem;
+  }
+
+  .crm-toolbar {
+    display: flex;
+    min-height: 2.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid #d8dee8;
+    border-radius: 0.25rem;
+    background: #ffffff;
+    padding: 0.375rem 0.5rem;
   }
 
   .data-table td,
@@ -519,6 +553,70 @@
   .shadow-2xl {
     box-shadow: 0 12px 24px rgb(15 23 42 / 12%);
   }
+}
+
+/* Compact density guardrails for authenticated product screens. These tame
+   legacy one-off utility sizes while routes migrate to the shared CRM classes. */
+.crm-app .page-shell > * + * {
+  margin-top: 0.75rem;
+}
+
+.crm-app [class~="p-6"],
+.crm-app [class~="p-5"],
+.crm-app [class~="p-4"] {
+  padding: 0.75rem;
+}
+
+.crm-app [class~="px-6"],
+.crm-app [class~="px-5"],
+.crm-app [class~="px-4"] {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.crm-app [class~="py-6"],
+.crm-app [class~="py-5"],
+.crm-app [class~="py-4"] {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+
+.crm-app [class~="text-2xl"] {
+  font-size: 1.25rem;
+  line-height: 1.65rem;
+}
+
+.crm-app [class~="text-xl"] {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+}
+
+.crm-app [class~="text-lg"] {
+  font-size: 0.9375rem;
+  line-height: 1.35rem;
+}
+
+.crm-app [class~="rounded-xl"],
+.crm-app [class~="rounded-2xl"],
+.crm-app [class~="rounded-3xl"] {
+  border-radius: 0.375rem;
+}
+
+.crm-app .data-table th,
+.crm-app .data-table td {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.crm-app .metric-card {
+  box-shadow: none;
+}
+
+.crm-app .metric-card:hover,
+.crm-app .app-card-hover:hover,
+.crm-app .kanban-card:hover {
+  box-shadow: none;
 }
 
 @media (max-width: 767px) {

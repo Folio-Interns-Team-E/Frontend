@@ -151,7 +151,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
   return (
     <aside className="fixed right-0 top-0 z-40 flex h-full w-full max-w-[380px] flex-col border-l border-slate-200 bg-white xl:z-20 xl:w-[var(--spacing-ai_panel_width)]">
       {/* Header */}
-      <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
+      <div className="flex h-12 items-center justify-between border-b border-slate-200 px-3">
         <div className="flex items-center gap-3">
           <div>
             <h3 className="text-sm font-semibold text-on-surface">SalesSync Assistant</h3>
@@ -245,7 +245,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Messages */}
-      <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto bg-slate-50 p-4">
+      <div className="custom-scrollbar flex-1 space-y-3 overflow-y-auto bg-slate-50 p-3">
         {chatMessagesStatus === "loading" && (
           <div className="space-y-4 animate-pulse">
             {[1, 2, 3].map((i) => (

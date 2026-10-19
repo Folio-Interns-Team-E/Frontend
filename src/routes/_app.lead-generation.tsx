@@ -47,7 +47,9 @@ function LeadGeneration() {
   const [generationMessage, setGenerationMessage] = useState<string | null>(null);
   const [hunterOpen, setHunterOpen] = useState(false);
   const [hunterQuery, setHunterQuery] = useState("");
-  const [hunterCompanies, setHunterCompanies] = useState<{ domain: string; name: string; email_count: number }[]>([]);
+  const [hunterCompanies, setHunterCompanies] = useState<
+    { domain: string; name: string; email_count: number }[]
+  >([]);
   const [hunterSelected, setHunterSelected] = useState<string[]>([]);
   const [hunterBusy, setHunterBusy] = useState(false);
   const [hunterError, setHunterError] = useState("");
@@ -67,7 +69,9 @@ function LeadGeneration() {
       );
       await dispatch(fetchLeads()).unwrap();
     } catch (error) {
-      setGenerationError(typeof error === "string" ? error : "Lead generation failed. Please try again.");
+      setGenerationError(
+        typeof error === "string" ? error : "Lead generation failed. Please try again.",
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -85,7 +89,9 @@ function LeadGeneration() {
       );
       await dispatch(fetchLeads()).unwrap();
     } catch (error) {
-      setGenerationError(typeof error === "string" ? error : "CSV import failed. Please try again.");
+      setGenerationError(
+        typeof error === "string" ? error : "CSV import failed. Please try again.",
+      );
     } finally {
       setIsGenerating(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -110,12 +116,19 @@ function LeadGeneration() {
 
   const revealHunter = async () => {
     if (!token || !teamId || !hunterSelected.length || hunterBusy) return;
-    if (!window.confirm(`Look up at most one contact from each of ${hunterSelected.length} selected companies? Hunter may charge credits for found emails.`)) return;
+    if (
+      !window.confirm(
+        `Look up at most one contact from each of ${hunterSelected.length} selected companies? Hunter may charge credits for found emails.`,
+      )
+    )
+      return;
     setHunterBusy(true);
     setHunterError("");
     try {
       const result = await api.revealHunter(hunterSelected, token, teamId);
-      setGenerationMessage(`Imported ${result.data.created} Hunter contacts; skipped ${result.data.skipped_duplicates} duplicates.`);
+      setGenerationMessage(
+        `Imported ${result.data.created} Hunter contacts; skipped ${result.data.skipped_duplicates} duplicates.`,
+      );
       setHunterOpen(false);
       await dispatch(fetchLeads()).unwrap();
     } catch (error) {
@@ -141,7 +154,11 @@ function LeadGeneration() {
     setGenerationError(null);
     try {
       const result = await api.convertProspect(leadId, token, teamId);
-      setGenerationMessage(result.data.already_converted ? "Prospect is already linked to CRM." : "Prospect converted to CRM. Its history remains linked.");
+      setGenerationMessage(
+        result.data.already_converted
+          ? "Prospect is already linked to CRM."
+          : "Prospect converted to CRM. Its history remains linked.",
+      );
       await dispatch(fetchLeads()).unwrap();
     } catch (error) {
       setGenerationError(error instanceof Error ? error.message : "Could not convert prospect");
@@ -165,9 +182,9 @@ function LeadGeneration() {
 
   return (
     <>
-      <TopBar title="Lead Generation" />
+      <TopBar title="Prospects" />
       <section className="page-shell">
-        <div className="section-panel flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5">
+        <div className="crm-toolbar flex-col sm:flex-row">
           <div className="flex-1 min-w-[200px] relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
               search
@@ -175,7 +192,7 @@ function LeadGeneration() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              className="control w-full py-2.5 pl-10 pr-4 text-body-base outline-none"
+              className="control w-full py-1.5 pl-9 pr-3 text-body-base outline-none"
               placeholder="Search name, company, title, email, ICP reasoning..."
               type="text"
             />
@@ -184,7 +201,7 @@ function LeadGeneration() {
             <select
               value={fitFilter}
               onChange={(event) => setFitFilter(event.target.value)}
-              className="control w-full px-3 py-2.5 text-body-sm text-on-surface outline-none sm:w-auto"
+              className="control w-full px-2.5 py-1.5 text-body-sm text-on-surface outline-none sm:w-auto"
             >
               <option value="all">Fit: All</option>
               <option value="high">High fit 85+</option>
@@ -200,8 +217,16 @@ function LeadGeneration() {
             <span className="material-symbols-outlined text-[18px]">bolt</span>
             {isGenerating ? "Generating..." : "Generate with Apollo"}
           </button>
-          <button type="button" onClick={() => { setHunterQuery((current) => current || icp); setHunterOpen(true); }} className="secondary-action w-full sm:w-auto">
-            <span className="material-symbols-outlined text-[18px]">travel_explore</span>Discover with Hunter
+          <button
+            type="button"
+            onClick={() => {
+              setHunterQuery((current) => current || icp);
+              setHunterOpen(true);
+            }}
+            className="secondary-action w-full sm:w-auto"
+          >
+            <span className="material-symbols-outlined text-[18px]">travel_explore</span>Discover
+            with Hunter
           </button>
           <input
             ref={fileInputRef}
@@ -235,24 +260,77 @@ function LeadGeneration() {
           <div className="modal-backdrop">
             <div className="modal-surface w-full max-w-2xl p-5">
               <h2 className="text-lg font-bold">Discover companies with Hunter</h2>
-              <p className="mt-1 text-sm text-on-surface-variant">Company search uses no email credits, but Hunter may limit AI searches. Contact lookup may use credits and happens only after your confirmation.</p>
+              <p className="mt-1 text-sm text-on-surface-variant">
+                Company search uses no email credits, but Hunter may limit AI searches. Contact
+                lookup may use credits and happens only after your confirmation.
+              </p>
               <div className="mt-4 flex gap-2">
-                <input className="control min-w-0 flex-1 px-3" placeholder="e.g. restaurants in Karachi with 10–50 employees" value={hunterQuery} onChange={(e) => setHunterQuery(e.target.value)} />
-                <button className="primary-action" disabled={hunterBusy || hunterQuery.trim().length < 3} onClick={() => void discoverHunter()}>{hunterBusy ? "Searching..." : "Search"}</button>
+                <input
+                  className="control min-w-0 flex-1 px-3"
+                  placeholder="e.g. restaurants in Karachi with 10–50 employees"
+                  value={hunterQuery}
+                  onChange={(e) => setHunterQuery(e.target.value)}
+                />
+                <button
+                  className="primary-action"
+                  disabled={hunterBusy || hunterQuery.trim().length < 3}
+                  onClick={() => void discoverHunter()}
+                >
+                  {hunterBusy ? "Searching..." : "Search"}
+                </button>
               </div>
-              {hunterError && <p role="alert" className="mt-3 text-sm text-error">{hunterError}</p>}
+              {hunterError && (
+                <p role="alert" className="mt-3 text-sm text-error">
+                  {hunterError}
+                </p>
+              )}
               <div className="mt-4 max-h-80 overflow-y-auto divide-y divide-outline-variant">
                 {hunterCompanies.map((company) => (
                   <label key={company.domain} className="flex items-center gap-3 py-2 text-sm">
-                    <input type="checkbox" checked={hunterSelected.includes(company.domain)} disabled={!hunterSelected.includes(company.domain) && hunterSelected.length >= 3} onChange={(e) => setHunterSelected(e.target.checked ? [...hunterSelected, company.domain] : hunterSelected.filter((domain) => domain !== company.domain))} />
-                    <span className="min-w-0 flex-1"><span className="block font-semibold">{company.name}</span><span className="text-xs text-on-surface-variant">{company.domain} · {company.email_count} listed contacts</span></span>
+                    <input
+                      type="checkbox"
+                      checked={hunterSelected.includes(company.domain)}
+                      disabled={
+                        !hunterSelected.includes(company.domain) && hunterSelected.length >= 3
+                      }
+                      onChange={(e) =>
+                        setHunterSelected(
+                          e.target.checked
+                            ? [...hunterSelected, company.domain]
+                            : hunterSelected.filter((domain) => domain !== company.domain),
+                        )
+                      }
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold">{company.name}</span>
+                      <span className="text-xs text-on-surface-variant">
+                        {company.domain} · {company.email_count} listed contacts
+                      </span>
+                    </span>
                   </label>
                 ))}
-                {!hunterBusy && !hunterCompanies.length && <p className="py-4 text-sm text-on-surface-variant">Search to preview matching companies.</p>}
+                {!hunterBusy && !hunterCompanies.length && (
+                  <p className="py-4 text-sm text-on-surface-variant">
+                    Search to preview matching companies.
+                  </p>
+                )}
               </div>
               <div className="mt-4 flex items-center justify-between gap-3">
-                <span className="text-xs text-on-surface-variant">Select up to 3 companies. At most 1 personal contact per company.</span>
-                <div className="flex gap-2"><button className="secondary-action" onClick={() => setHunterOpen(false)}>Close</button><button className="primary-action" disabled={hunterBusy || !hunterSelected.length} onClick={() => void revealHunter()}>Find contacts</button></div>
+                <span className="text-xs text-on-surface-variant">
+                  Select up to 3 companies. At most 1 personal contact per company.
+                </span>
+                <div className="flex gap-2">
+                  <button className="secondary-action" onClick={() => setHunterOpen(false)}>
+                    Close
+                  </button>
+                  <button
+                    className="primary-action"
+                    disabled={hunterBusy || !hunterSelected.length}
+                    onClick={() => void revealHunter()}
+                  >
+                    Find contacts
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -261,7 +339,7 @@ function LeadGeneration() {
         {leadsStatus === "loading" ? (
           <SkeletonTable rows={5} cols={6} />
         ) : (
-          <div className="table-shell mt-5 sm:mt-6">
+          <div className="table-shell mt-3">
             <div className="custom-scrollbar overflow-x-auto">
               <table className="data-table min-w-[920px] w-full border-collapse text-left">
                 <thead>
@@ -368,14 +446,23 @@ function LeadGeneration() {
                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-1.5">
                             {r.crmContactId ? (
-                              <Link to="/crm" className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary">View in CRM</Link>
+                              <Link
+                                to="/crm"
+                                className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary"
+                              >
+                                View in CRM
+                              </Link>
                             ) : ["Qualified", "Drafted", "Sent", "Replied"].includes(r.status) ? (
-                              <button type="button" onClick={() => void convertLead(r.id)} disabled={convertingId === r.id} className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary disabled:opacity-50">
+                              <button
+                                type="button"
+                                onClick={() => void convertLead(r.id)}
+                                disabled={convertingId === r.id}
+                                className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary disabled:opacity-50"
+                              >
                                 {convertingId === r.id ? "Converting…" : "Convert to CRM"}
                               </button>
                             ) : null}
-                           
-                          
+
                             <button
                               onClick={() => dispatch(discardLeadRemote(r.id))}
                               className="rounded-lg border border-error/20 bg-error/5 px-2.5 py-1 text-[10px] font-bold text-error hover:bg-error/10"
@@ -385,7 +472,6 @@ function LeadGeneration() {
                           </div>
                         </td>
                       </tr>
-                      
                     </Fragment>
                   ))}
                 </tbody>

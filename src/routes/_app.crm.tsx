@@ -79,7 +79,14 @@ function CrmPage() {
               account_id: "",
               lifecycle_stage: "Lead",
             }
-          : { title: "", task_type: "Follow-up", priority: "Medium", due_at: "", description: "", contact_id: "" },
+          : {
+              title: "",
+              task_type: "Follow-up",
+              priority: "Medium",
+              due_at: "",
+              description: "",
+              contact_id: "",
+            },
     );
     setModal(true);
   }
@@ -136,11 +143,11 @@ function CrmPage() {
     if (!token || !team.id) return;
     const next = task.status === "Completed" ? "Open" : "Completed";
     setError("");
-    setTasks((current) => current.map((x) => x.id === task.id ? { ...x, status: next } : x));
+    setTasks((current) => current.map((x) => (x.id === task.id ? { ...x, status: next } : x)));
     try {
       await api.updateSalesTask(task.id, { status: next }, token, team.id);
     } catch (err) {
-      setTasks((current) => current.map((x) => x.id === task.id ? task : x));
+      setTasks((current) => current.map((x) => (x.id === task.id ? task : x)));
       setError(err instanceof Error ? err.message : "Could not update task");
     }
   }
@@ -167,11 +174,10 @@ function CrmPage() {
     <>
       <TopBar title="CRM" />
       <div className="page-shell space-y-5">
-        <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <section className="crm-page-header">
           <div>
-            <p className="section-heading">Customer operations</p>
-            <h1 className="mt-1 text-2xl font-black tracking-tight">Accounts & Contacts</h1>
-            <p className="mt-1 text-xs text-slate-500">
+            <h1 className="crm-page-title">Accounts & Contacts</h1>
+            <p className="crm-page-description">
               Companies, people and the next actions required to move revenue.
             </p>
           </div>
@@ -246,22 +252,41 @@ function CrmPage() {
               </button>
             </div>
           ) : tab === "accounts" ? (
-            <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
-              {(records as AccountApi[]).map((x) => (
-                <div key={x.id} className="app-card p-4">
-                  <div className="flex items-start justify-between">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 font-black text-blue-700">
-                      {x.name.slice(0, 2).toUpperCase()}
-                    </span>
-                    <span className="text-[9px] text-slate-400">{x.country || "—"}</span>
-                  </div>
-                  <h3 className="mt-3 text-sm font-black">{x.name}</h3>
-                  <p className="text-[10px] text-primary">{x.domain || "No domain"}</p>
-                  <div className="mt-3 border-t border-slate-100 pt-3 text-[10px] text-slate-500">
-                    {x.industry || "Industry not set"}
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="data-table w-full min-w-[720px]">
+                <thead>
+                  <tr>
+                    {["Account", "Domain", "Industry", "Country", "Employees", "Updated"].map(
+                      (heading) => (
+                        <th key={heading} className="text-left">
+                          {heading}
+                        </th>
+                      ),
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(records as AccountApi[]).map((x) => (
+                    <tr key={x.id} className="border-t border-slate-100">
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-blue-50 text-[9px] font-semibold text-blue-700">
+                            {x.name.slice(0, 2).toUpperCase()}
+                          </span>
+                          <span className="font-semibold text-slate-800">{x.name}</span>
+                        </div>
+                      </td>
+                      <td className="text-primary">{x.domain || "No domain"}</td>
+                      <td>{x.industry || "Not set"}</td>
+                      <td>{x.country || "Not set"}</td>
+                      <td data-numeric>{x.employee_count || "Not set"}</td>
+                      <td className="text-slate-500" data-numeric>
+                        {new Date(x.updated_at || x.created_at).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : tab === "contacts" ? (
             <div className="overflow-x-auto">
@@ -277,7 +302,11 @@ function CrmPage() {
                 </thead>
                 <tbody>
                   {(records as ContactApi[]).map((x) => (
-                    <tr key={x.id} className="cursor-pointer border-t border-slate-100 hover:bg-slate-50" onClick={() => void viewContact(x)}>
+                    <tr
+                      key={x.id}
+                      className="cursor-pointer border-t border-slate-100 hover:bg-slate-50"
+                      onClick={() => void viewContact(x)}
+                    >
                       <td className="px-5 py-3">
                         <p className="text-xs font-bold">
                           {x.first_name} {x.last_name}
@@ -332,17 +361,55 @@ function CrmPage() {
         {selectedContact && (
           <section className="section-panel p-5" aria-label="Contact history">
             <div className="flex items-center justify-between gap-3">
-              <div><h2 className="text-lg font-bold">{selectedContact.first_name} {selectedContact.last_name}</h2><p className="text-sm text-slate-500">{selectedContact.account_name || "No account"} · {selectedContact.email || "No email"}</p></div>
-              <button type="button" className="secondary-action" onClick={() => setSelectedContact(null)}>Close</button>
-            </div>
-            {contextLoading ? <p className="mt-4 text-sm">Loading history…</p> : contactContext && (
-              <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <History title="Prospects" items={contactContext.leads.map((x) => `${x.name} · ${x.status}${x.score != null ? ` · Fit ${x.score}` : ""}`)} />
-                <History title="Emails" items={contactContext.emails.map((x) => `${x.subject} · ${x.status}`)} />
-                <History title="Meetings" items={contactContext.meetings.map((x) => `${x.date} ${x.time} · ${x.status}${x.meet_url ? ` · ${x.meet_url}` : ""}`)} />
-                <History title="Deals" items={contactContext.deals.map((x) => `${x.name} · ${x.stage} · ${x.amount}`)} />
-                <History title="Follow-up tasks" items={contactContext.tasks.map((x) => `${x.title} · ${x.status}`)} />
+              <div>
+                <h2 className="text-lg font-bold">
+                  {selectedContact.first_name} {selectedContact.last_name}
+                </h2>
+                <p className="text-sm text-slate-500">
+                  {selectedContact.account_name || "No account"} ·{" "}
+                  {selectedContact.email || "No email"}
+                </p>
               </div>
+              <button
+                type="button"
+                className="secondary-action"
+                onClick={() => setSelectedContact(null)}
+              >
+                Close
+              </button>
+            </div>
+            {contextLoading ? (
+              <p className="mt-4 text-sm">Loading history…</p>
+            ) : (
+              contactContext && (
+                <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  <History
+                    title="Prospects"
+                    items={contactContext.leads.map(
+                      (x) => `${x.name} · ${x.status}${x.score != null ? ` · Fit ${x.score}` : ""}`,
+                    )}
+                  />
+                  <History
+                    title="Emails"
+                    items={contactContext.emails.map((x) => `${x.subject} · ${x.status}`)}
+                  />
+                  <History
+                    title="Meetings"
+                    items={contactContext.meetings.map(
+                      (x) =>
+                        `${x.date} ${x.time} · ${x.status}${x.meet_url ? ` · ${x.meet_url}` : ""}`,
+                    )}
+                  />
+                  <History
+                    title="Deals"
+                    items={contactContext.deals.map((x) => `${x.name} · ${x.stage} · ${x.amount}`)}
+                  />
+                  <History
+                    title="Follow-up tasks"
+                    items={contactContext.tasks.map((x) => `${x.title} · ${x.status}`)}
+                  />
+                </div>
+              )
             )}
           </section>
         )}
@@ -401,10 +468,19 @@ function CrmPage() {
               ) : (
                 <>
                   <Input label="Task title" name="title" form={form} setForm={setForm} required />
-                  <label className="text-[10px] font-bold uppercase text-slate-500">Contact
-                    <select value={form.contact_id || ""} onChange={(e) => setForm({ ...form, contact_id: e.target.value })} className="control mt-1.5 w-full px-3 text-sm">
+                  <label className="text-[10px] font-bold uppercase text-slate-500">
+                    Contact
+                    <select
+                      value={form.contact_id || ""}
+                      onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
+                      className="control mt-1.5 w-full px-3 text-sm"
+                    >
                       <option value="">No contact</option>
-                      {contacts.map((contact) => <option key={contact.id} value={contact.id}>{contact.first_name} {contact.last_name}</option>)}
+                      {contacts.map((contact) => (
+                        <option key={contact.id} value={contact.id}>
+                          {contact.first_name} {contact.last_name}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <Input
@@ -457,8 +533,20 @@ function CrmPage() {
 function History({ title, items }: { title: string; items: string[] }) {
   return (
     <div className="rounded-xl border border-slate-200 p-4">
-      <h3 className="text-sm font-bold">{title} <span className="text-slate-400">{items.length}</span></h3>
-      {items.length ? <ul className="mt-3 space-y-2">{items.map((item, index) => <li key={`${index}-${item}`} className="break-words text-xs text-slate-600">{item}</li>)}</ul> : <p className="mt-3 text-xs text-slate-400">No records yet</p>}
+      <h3 className="text-sm font-bold">
+        {title} <span className="text-slate-400">{items.length}</span>
+      </h3>
+      {items.length ? (
+        <ul className="mt-3 space-y-2">
+          {items.map((item, index) => (
+            <li key={`${index}-${item}`} className="break-words text-xs text-slate-600">
+              {item}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 text-xs text-slate-400">No records yet</p>
+      )}
     </div>
   );
 }

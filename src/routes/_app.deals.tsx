@@ -176,13 +176,10 @@ function DealsPage() {
     <>
       <TopBar title="Deals" />
       <div className="page-shell space-y-5">
-        <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <section className="crm-page-header">
           <div>
-            <p className="section-heading">Revenue pipeline</p>
-            <h1 className="mt-1 text-2xl font-black tracking-[-0.035em] text-slate-900">
-              Opportunities
-            </h1>
-            <p className="mt-1 text-xs text-slate-500">
+            <h1 className="crm-page-title">Opportunities</h1>
+            <p className="crm-page-description">
               Track every qualified deal from discovery through close.
             </p>
           </div>
