@@ -29,6 +29,7 @@ import {
   uploadKnowledgeAsset,
   sendChatMessage,
   fetchChatMessages,
+  rateChatMessage,
   fetchOutreachLeads,
   fetchLeadEmails,
   deleteEmailRemote,
@@ -127,7 +128,19 @@ type AssistantMessage = {
     score: number;
   }>;
   retryable?: boolean;
+  feedback?: "up" | "down";
 };
+
+function chatMessageFeedback(metadata: Record<string, unknown>, userId: string | null) {
+  if (!userId) return undefined;
+  const allFeedback = metadata?.feedback_by_user;
+  if (!allFeedback || typeof allFeedback !== "object" || !(userId in allFeedback)) {
+    return undefined;
+  }
+  const feedback = allFeedback[userId as keyof typeof allFeedback];
+  if (!feedback || typeof feedback !== "object" || !("rating" in feedback)) return undefined;
+  return feedback.rating === "up" || feedback.rating === "down" ? feedback.rating : undefined;
+}
 
 function chatMessageRetryable(metadata: Record<string, unknown>) {
   const error = metadata?.assistant_error;
@@ -1438,6 +1451,7 @@ const appSlice = createSlice({
           action: chatMessageAction(message.metadata_log),
           sources: chatMessageSources(message.metadata_log),
           retryable: chatMessageRetryable(message.metadata_log),
+          feedback: chatMessageFeedback(message.metadata_log, state.auth.userId),
         }));
       })
       .addCase(sendChatMessage.pending, (state, action) => {
@@ -1484,7 +1498,14 @@ const appSlice = createSlice({
           action: chatMessageAction(message.metadata_log),
           sources: chatMessageSources(message.metadata_log),
           retryable: chatMessageRetryable(message.metadata_log),
+          feedback: chatMessageFeedback(message.metadata_log, state.auth.userId),
         }));
+      })
+      .addCase(rateChatMessage.fulfilled, (state, action) => {
+        const message = state.assistantMessages.find(
+          (item) => item.id === action.payload.message_id,
+        );
+        if (message) message.feedback = action.payload.rating;
       })
       .addCase(sendChatMessage.rejected, (state) => {
         const msgs = state.assistantMessages;

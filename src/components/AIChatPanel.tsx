@@ -7,6 +7,7 @@ import {
   createChatRemote,
   deleteChatRemote,
   renameChatRemote,
+  rateChatMessage,
 } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { openAiDraft, selectMeeting, selectProposal, switchChat } from "../store/appSlice";
@@ -412,7 +413,31 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
               </div>
             )}
             {item.body !== "Thinking..." && (
-              <span className="text-[10px] text-outline mt-1 px-1">{item.time}</span>
+              <div className="mt-1 flex items-center gap-1 px-1">
+                <span className="text-[10px] text-outline">{item.time}</span>
+                {item.author === "assistant" && !item.id.startsWith("assistant-") && (
+                  <>
+                    <button
+                      type="button"
+                      className={`icon-button !h-6 !w-6 ${item.feedback === "up" ? "text-primary" : "text-outline"}`}
+                      aria-label="Helpful response"
+                      aria-pressed={item.feedback === "up"}
+                      onClick={() => void dispatch(rateChatMessage({ messageId: item.id, rating: "up" }))}
+                    >
+                      <span className="material-symbols-outlined text-[14px]">thumb_up</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`icon-button !h-6 !w-6 ${item.feedback === "down" ? "text-error" : "text-outline"}`}
+                      aria-label="Unhelpful response"
+                      aria-pressed={item.feedback === "down"}
+                      onClick={() => void dispatch(rateChatMessage({ messageId: item.id, rating: "down" }))}
+                    >
+                      <span className="material-symbols-outlined text-[14px]">thumb_down</span>
+                    </button>
+                  </>
+                )}
+              </div>
             )}
           </div>
         ))}

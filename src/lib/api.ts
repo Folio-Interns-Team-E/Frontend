@@ -1378,6 +1378,19 @@ export const api = {
       teamId,
     );
   },
+  rateChatMessage(
+    messageId: string,
+    rating: "up" | "down",
+    accessToken: string,
+    teamId?: string | null,
+  ) {
+    return request<{ data: { message_id: string; rating: "up" | "down" } }>(
+      `/chat/messages/${messageId}/feedback`,
+      { method: "PUT", body: JSON.stringify({ rating }) },
+      accessToken,
+      teamId,
+    );
+  },
 
   // === Multi-Chat ===
   listChats(accessToken: string, teamId?: string | null) {

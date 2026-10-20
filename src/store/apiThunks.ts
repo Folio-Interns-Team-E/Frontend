@@ -522,6 +522,24 @@ export const fetchChatMessages = createAsyncThunk(
   },
 );
 
+export const rateChatMessage = createAsyncThunk(
+  "app/rateChatMessage",
+  async (
+    { messageId, rating }: { messageId: string; rating: "up" | "down" },
+    { rejectWithValue, getState },
+  ) => {
+    try {
+      const token = getToken();
+      const state = getState() as RootState;
+      const teamId = state.app.team.id;
+      const response = await api.rateChatMessage(messageId, rating, token!, teamId);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(errorMessage(error));
+    }
+  },
+);
+
 // === Meetings Thunks ===
 export const fetchMeetings = createAsyncThunk(
   "app/fetchMeetings",
