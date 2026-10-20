@@ -308,6 +308,34 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                 }`}
               >
                 <p className="whitespace-pre-line font-body-sm text-body-sm">{item.body}</p>
+                {item.sources && item.sources.length > 0 && (
+                  <div className="mt-3 border-t border-blue-200 pt-2.5">
+                    <div className="mb-1.5 flex items-center justify-between gap-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                        Sources
+                      </p>
+                      <button
+                        type="button"
+                        className="text-[10px] font-semibold text-primary hover:underline"
+                        onClick={() => void navigate({ to: "/knowledge-base" })}
+                      >
+                        Open knowledge base
+                      </button>
+                    </div>
+                    <ol className="space-y-1">
+                      {item.sources.map((source, index) => (
+                        <li
+                          key={`${source.assetId}-${source.chunkIndex}-${index}`}
+                          className="flex min-w-0 items-center gap-1.5 text-[11px] text-on-surface-variant"
+                          title={`Relevance: ${Math.round(source.score * 100)}%`}
+                        >
+                          <span className="shrink-0 font-semibold text-primary">[{index + 1}]</span>
+                          <span className="truncate">{source.title}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
                 {item.action?.type === "open_email_draft" && (
                   <button
                     type="button"

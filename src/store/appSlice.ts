@@ -120,7 +120,42 @@ type AssistantMessage = {
     | { type: "open_email_draft"; leadId: string; emailId: string }
     | { type: "open_meeting"; meetingId: string; meetUrl?: string }
     | { type: "open_proposal"; proposalId: string };
+  sources?: Array<{
+    assetId: string;
+    title: string;
+    chunkIndex: number;
+    score: number;
+  }>;
 };
+
+function chatMessageSources(metadata: Record<string, unknown>) {
+  const sources = metadata?.knowledge_sources;
+  if (!Array.isArray(sources)) return undefined;
+
+  const validSources = sources.flatMap((source) => {
+    if (
+      !source ||
+      typeof source !== "object" ||
+      !("asset_id" in source) ||
+      !("title" in source) ||
+      typeof source.asset_id !== "string" ||
+      typeof source.title !== "string"
+    ) {
+      return [];
+    }
+    return [{
+      assetId: source.asset_id,
+      title: source.title,
+      chunkIndex:
+        "chunk_index" in source && typeof source.chunk_index === "number"
+          ? source.chunk_index
+          : 0,
+      score: "score" in source && typeof source.score === "number" ? source.score : 0,
+    }];
+  });
+
+  return validSources.length > 0 ? validSources : undefined;
+}
 
 function chatMessageAction(metadata: Record<string, unknown>) {
   const draft = metadata?.draft_email;
@@ -1390,6 +1425,7 @@ const appSlice = createSlice({
           body: message.content,
           time: new Date(message.created_at).toLocaleString(),
           action: chatMessageAction(message.metadata_log),
+          sources: chatMessageSources(message.metadata_log),
         }));
       })
       .addCase(sendChatMessage.pending, (state, action) => {
@@ -1434,6 +1470,7 @@ const appSlice = createSlice({
           body: message.content,
           time: new Date(message.created_at).toLocaleString(),
           action: chatMessageAction(message.metadata_log),
+          sources: chatMessageSources(message.metadata_log),
         }));
       })
       .addCase(sendChatMessage.rejected, (state) => {
