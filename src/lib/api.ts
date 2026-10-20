@@ -1381,12 +1381,13 @@ export const api = {
   rateChatMessage(
     messageId: string,
     rating: "up" | "down",
+    reason: "incorrect" | "incomplete" | "irrelevant" | "action_failed" | undefined,
     accessToken: string,
     teamId?: string | null,
   ) {
     return request<{ data: { message_id: string; rating: "up" | "down" } }>(
       `/chat/messages/${messageId}/feedback`,
-      { method: "PUT", body: JSON.stringify({ rating }) },
+      { method: "PUT", body: JSON.stringify({ rating, reason }) },
       accessToken,
       teamId,
     );

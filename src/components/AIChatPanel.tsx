@@ -23,6 +23,13 @@ const THINKING_MESSAGES = [
   "✨ Almost there",
 ];
 
+const NEGATIVE_FEEDBACK_REASONS = [
+  ["incorrect", "Incorrect"],
+  ["incomplete", "Incomplete"],
+  ["irrelevant", "Not relevant"],
+  ["action_failed", "Action failed"],
+] as const;
+
 export function AIChatPanel({ onClose }: { onClose: () => void }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -35,6 +42,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [thinkingText, setThinkingText] = useState(THINKING_MESSAGES[0]);
+  const [feedbackTargetId, setFeedbackTargetId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -422,7 +430,10 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                       className={`icon-button !h-6 !w-6 ${item.feedback === "up" ? "text-primary" : "text-outline"}`}
                       aria-label="Helpful response"
                       aria-pressed={item.feedback === "up"}
-                      onClick={() => void dispatch(rateChatMessage({ messageId: item.id, rating: "up" }))}
+                      onClick={() => {
+                        setFeedbackTargetId(null);
+                        void dispatch(rateChatMessage({ messageId: item.id, rating: "up" }));
+                      }}
                     >
                       <span className="material-symbols-outlined text-[14px]">thumb_up</span>
                     </button>
@@ -431,12 +442,38 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                       className={`icon-button !h-6 !w-6 ${item.feedback === "down" ? "text-error" : "text-outline"}`}
                       aria-label="Unhelpful response"
                       aria-pressed={item.feedback === "down"}
-                      onClick={() => void dispatch(rateChatMessage({ messageId: item.id, rating: "down" }))}
+                      onClick={() => setFeedbackTargetId(
+                        feedbackTargetId === item.id ? null : item.id,
+                      )}
                     >
                       <span className="material-symbols-outlined text-[14px]">thumb_down</span>
                     </button>
                   </>
                 )}
+              </div>
+            )}
+            {feedbackTargetId === item.id && (
+              <div className="mt-1 flex max-w-[92%] flex-wrap gap-1.5 px-1">
+                <span className="w-full text-[10px] text-on-surface-variant">
+                  What went wrong?
+                </span>
+                {NEGATIVE_FEEDBACK_REASONS.map(([reason, label]) => (
+                  <button
+                    key={reason}
+                    type="button"
+                    className="rounded border border-slate-200 bg-white px-2 py-1 text-[10px] font-medium text-on-surface-variant hover:border-primary hover:text-primary"
+                    onClick={() => {
+                      setFeedbackTargetId(null);
+                      void dispatch(rateChatMessage({
+                        messageId: item.id,
+                        rating: "down",
+                        reason,
+                      }));
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             )}
           </div>

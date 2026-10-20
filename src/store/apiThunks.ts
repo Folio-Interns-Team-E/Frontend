@@ -525,14 +525,22 @@ export const fetchChatMessages = createAsyncThunk(
 export const rateChatMessage = createAsyncThunk(
   "app/rateChatMessage",
   async (
-    { messageId, rating }: { messageId: string; rating: "up" | "down" },
+    {
+      messageId,
+      rating,
+      reason,
+    }: {
+      messageId: string;
+      rating: "up" | "down";
+      reason?: "incorrect" | "incomplete" | "irrelevant" | "action_failed";
+    },
     { rejectWithValue, getState },
   ) => {
     try {
       const token = getToken();
       const state = getState() as RootState;
       const teamId = state.app.team.id;
-      const response = await api.rateChatMessage(messageId, rating, token!, teamId);
+      const response = await api.rateChatMessage(messageId, rating, reason, token!, teamId);
       return response.data;
     } catch (error) {
       return rejectWithValue(errorMessage(error));
