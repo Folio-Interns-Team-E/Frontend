@@ -24,7 +24,7 @@ export const PLANS: Array<{
     price: 0,
     description: "For individuals testing a complete sales workflow.",
     limits: {
-      members: 1,
+      members: 3,
       leads: 100,
       ai_actions_monthly: 25,
       emails_monthly: 50,
@@ -32,7 +32,7 @@ export const PLANS: Array<{
       proposals_monthly: 3,
     },
     features: [
-      "1 user",
+      "Up to 3 users",
       "100 leads",
       "25 AI assistant actions per month",
       "50 sent emails per month",
