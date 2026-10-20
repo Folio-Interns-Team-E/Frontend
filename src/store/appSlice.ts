@@ -126,7 +126,18 @@ type AssistantMessage = {
     chunkIndex: number;
     score: number;
   }>;
+  retryable?: boolean;
 };
+
+function chatMessageRetryable(metadata: Record<string, unknown>) {
+  const error = metadata?.assistant_error;
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "retryable" in error &&
+      error.retryable === true,
+  );
+}
 
 function chatMessageSources(metadata: Record<string, unknown>) {
   const sources = metadata?.knowledge_sources;
@@ -1426,6 +1437,7 @@ const appSlice = createSlice({
           time: new Date(message.created_at).toLocaleString(),
           action: chatMessageAction(message.metadata_log),
           sources: chatMessageSources(message.metadata_log),
+          retryable: chatMessageRetryable(message.metadata_log),
         }));
       })
       .addCase(sendChatMessage.pending, (state, action) => {
@@ -1471,6 +1483,7 @@ const appSlice = createSlice({
           time: new Date(message.created_at).toLocaleString(),
           action: chatMessageAction(message.metadata_log),
           sources: chatMessageSources(message.metadata_log),
+          retryable: chatMessageRetryable(message.metadata_log),
         }));
       })
       .addCase(sendChatMessage.rejected, (state) => {

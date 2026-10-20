@@ -275,7 +275,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
             </p>
           </div>
         )}
-        {messages.map((item) => (
+        {messages.map((item, messageIndex) => (
           <div
             key={item.id}
             className={`flex flex-col ${item.author === "user" ? "items-end" : "items-start"}`}
@@ -390,6 +390,23 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                   >
                     <span className="material-symbols-outlined text-[16px]">description</span>
                     Open proposal
+                  </button>
+                )}
+                {item.retryable && (
+                  <button
+                    type="button"
+                    disabled={isSending}
+                    className="secondary-action mt-3 !min-h-8 !px-3 !py-1.5 text-xs disabled:opacity-50"
+                    onClick={() => {
+                      const originalRequest = messages
+                        .slice(0, messageIndex)
+                        .reverse()
+                        .find((messageItem) => messageItem.author === "user")?.body;
+                      if (originalRequest) void doSend(originalRequest);
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">refresh</span>
+                    Try again
                   </button>
                 )}
               </div>
