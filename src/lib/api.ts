@@ -398,6 +398,9 @@ export const api = {
   getAdminOverview(accessToken: string, teamId: string) {
     return request<{ data: AdminOverview }>("/admin/overview", {}, accessToken, teamId);
   },
+  getAiFeedback(accessToken: string, teamId: string) {
+    return request<{ data: AiFeedbackSummary }>("/admin/ai-feedback", {}, accessToken, teamId);
+  },
   getSequenceWorkerStatus() {
     return request<{ data: { sequence_worker: boolean } }>("/ready/sequence-worker");
   },
@@ -1598,6 +1601,21 @@ export type AdminOverview = {
     label: string;
     detail: string;
     timestamp: string;
+  }>;
+};
+
+export type AiFeedbackSummary = {
+  total_ratings: number;
+  helpful: number;
+  unhelpful: number;
+  helpful_rate: number;
+  reasons: Record<"incorrect" | "incomplete" | "irrelevant" | "action_failed", number>;
+  recent_negative: Array<{
+    message_id: string;
+    chat_id: string;
+    response: string;
+    reason: string | null;
+    updated_at: string;
   }>;
 };
 

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { TopBar } from "../components/TopBar";
-import { api, AdminOverview, AuditEventApi, WorkspaceApiKey } from "../lib/api";
+import { api, AdminOverview, AiFeedbackSummary, AuditEventApi, WorkspaceApiKey } from "../lib/api";
 import { useAppSelector } from "../store/hooks";
 
 export const Route = createFileRoute("/_app/admin")({
@@ -23,6 +23,7 @@ function AdminDashboard() {
   const token = useAppSelector((state) => state.app.auth.accessToken);
   const team = useAppSelector((state) => state.app.team);
   const [data, setData] = useState<AdminOverview | null>(null);
+  const [aiFeedback, setAiFeedback] = useState<AiFeedbackSummary | null>(null);
   const [auditEvents, setAuditEvents] = useState<AuditEventApi[]>([]);
   const [auditCursor, setAuditCursor] = useState<string | null>(null);
   const [loadingAudit, setLoadingAudit] = useState(false);
@@ -51,13 +52,15 @@ function AdminDashboard() {
       api.getAdminOverview(token, team.id),
       api.getAuditEvents(token, team.id),
       api.getWorkspaceApiKeys(token, team.id),
+      api.getAiFeedback(token, team.id),
     ])
-      .then(([overview, audit, keys]) => {
+      .then(([overview, audit, keys, feedback]) => {
         if (!active) return;
         setData(overview.data);
         setAuditEvents(audit.data.events);
         setAuditCursor(audit.data.next_cursor);
         setApiKeys(keys.data);
+        setAiFeedback(feedback.data);
       })
       .catch((reason) => {
         if (active)
@@ -357,6 +360,62 @@ function AdminDashboard() {
           </div>
         </section>
 
+        {aiFeedback && (
+          <section className="section-panel overflow-hidden">
+            <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
+              <div>
+                <h2 className="text-base font-bold">AI response quality</h2>
+                <p className="text-xs text-on-surface-variant">
+                  Workspace feedback from the latest 500 assistant responses.
+                </p>
+              </div>
+              <span className="material-symbols-outlined text-primary">monitoring</span>
+            </div>
+            <div className="grid divide-y divide-outline-variant lg:grid-cols-[0.8fr_1.2fr] lg:divide-x lg:divide-y-0">
+              <div className="p-5">
+                <div className="grid grid-cols-3 gap-3">
+                  <QualityMetric label="Helpful rate" value={`${aiFeedback.helpful_rate}%`} />
+                  <QualityMetric label="Helpful" value={aiFeedback.helpful} />
+                  <QualityMetric label="Unhelpful" value={aiFeedback.unhelpful} />
+                </div>
+                <p className="mt-5 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                  Why responses missed
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-x-5 gap-y-2 text-sm">
+                  {Object.entries(aiFeedback.reasons).map(([reason, count]) => (
+                    <div key={reason} className="flex justify-between border-b border-outline-variant py-1.5">
+                      <span className="capitalize text-on-surface-variant">{reason.replace("_", " ")}</span>
+                      <span className="font-semibold tabular-nums">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                  Recent negative feedback
+                </p>
+                <div className="mt-2 divide-y divide-outline-variant">
+                  {aiFeedback.recent_negative.length ? aiFeedback.recent_negative.slice(0, 5).map((item) => (
+                    <div key={`${item.message_id}-${item.updated_at}`} className="py-2.5">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="line-clamp-2 text-sm">{item.response}</p>
+                        <span className="shrink-0 rounded-md bg-error/10 px-2 py-0.5 text-xs font-semibold capitalize text-error">
+                          {(item.reason || "Unspecified").replace("_", " ")}
+                        </span>
+                      </div>
+                      <time className="mt-1 block text-xs text-on-surface-variant">
+                        {new Date(item.updated_at).toLocaleString()}
+                      </time>
+                    </div>
+                  )) : (
+                    <p className="py-6 text-sm text-on-surface-variant">No negative feedback yet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="grid gap-5 xl:grid-cols-[1fr_0.45fr]">
           <div className="section-panel overflow-hidden">
             <div className="border-b border-outline-variant p-5">
@@ -642,6 +701,14 @@ function Status({ label, good }: { label: string; good: boolean }) {
     >
       {label}: {good ? "Ready" : "Needs setup"}
     </span>
+  );
+}
+function QualityMetric({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-lg border border-outline-variant bg-surface-container px-3 py-2.5">
+      <p className="text-lg font-bold tabular-nums">{value}</p>
+      <p className="text-xs text-on-surface-variant">{label}</p>
+    </div>
   );
 }
 function Readiness({ label, good }: { label: string; good: boolean }) {
