@@ -116,7 +116,27 @@ type AssistantMessage = {
   userName: string;
   body: string;
   time: string;
+  action?: { type: "open_email_draft"; leadId: string; emailId: string };
 };
+
+function chatMessageAction(metadata: Record<string, unknown>) {
+  const draft = metadata?.draft_email;
+  if (
+    draft &&
+    typeof draft === "object" &&
+    "lead_id" in draft &&
+    "email_id" in draft &&
+    typeof draft.lead_id === "string" &&
+    typeof draft.email_id === "string"
+  ) {
+    return {
+      type: "open_email_draft" as const,
+      leadId: draft.lead_id,
+      emailId: draft.email_id,
+    };
+  }
+  return undefined;
+}
 
 type Chat = {
   id: string;
@@ -367,6 +387,11 @@ const appSlice = createSlice({
     },
     clearSelectedEmail(state) {
       state.selectedEmailId = null;
+    },
+    openAiDraft(state, action: PayloadAction<{ leadId: string; emailId: string }>) {
+      state.latestAiDraft = action.payload;
+      state.selectedEmailId = action.payload.emailId;
+      state.chatRefreshKey += 1;
     },
     demoRegister(
       state,
@@ -1327,6 +1352,7 @@ const appSlice = createSlice({
           userName: message.user_name,
           body: message.content,
           time: new Date(message.created_at).toLocaleString(),
+          action: chatMessageAction(message.metadata_log),
         }));
       })
       .addCase(sendChatMessage.pending, (state, action) => {
@@ -1370,6 +1396,7 @@ const appSlice = createSlice({
           userName: message.user_name,
           body: message.content,
           time: new Date(message.created_at).toLocaleString(),
+          action: chatMessageAction(message.metadata_log),
         }));
       })
       .addCase(sendChatMessage.rejected, (state) => {
@@ -1449,6 +1476,7 @@ export const {
   toggleSidebar,
   selectEmail,
   clearSelectedEmail,
+  openAiDraft,
   updateMemberRoleLocal,
   updateProfile,
   updateProposalOutcome,

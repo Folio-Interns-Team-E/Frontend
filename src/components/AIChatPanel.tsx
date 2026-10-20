@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   fetchChatMessages,
   fetchChats,
@@ -8,7 +9,7 @@ import {
   renameChatRemote,
 } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { switchChat } from "../store/appSlice";
+import { openAiDraft, switchChat } from "../store/appSlice";
 
 const THINKING_MESSAGES = [
   "🔌 Plugging into the ICP engine",
@@ -23,6 +24,7 @@ const THINKING_MESSAGES = [
 
 export function AIChatPanel({ onClose }: { onClose: () => void }) {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const messages = useAppSelector((state) => state.app.assistantMessages);
   const chats = useAppSelector((state) => state.app.chats);
   const activeChatId = useAppSelector((state) => state.app.activeChatId);
@@ -306,6 +308,24 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                 }`}
               >
                 <p className="whitespace-pre-line font-body-sm text-body-sm">{item.body}</p>
+                {item.action?.type === "open_email_draft" && (
+                  <button
+                    type="button"
+                    className="secondary-action mt-3 !min-h-8 !px-3 !py-1.5 text-xs"
+                    onClick={() => {
+                      dispatch(
+                        openAiDraft({
+                          leadId: item.action!.leadId,
+                          emailId: item.action!.emailId,
+                        }),
+                      );
+                      void navigate({ to: "/outreach" });
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">draft</span>
+                    Open draft
+                  </button>
+                )}
               </div>
             )}
             {item.body !== "Thinking..." && (
