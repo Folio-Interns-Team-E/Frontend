@@ -207,6 +207,7 @@ function Outreach() {
   const selectedEmailId = useAppSelector((state) => state.app.selectedEmailId);
   const sendingEmail = useAppSelector((state) => state.app.sendingEmail);
   const chatRefreshKey = useAppSelector((state) => state.app.chatRefreshKey);
+  const latestAiDraft = useAppSelector((state) => state.app.latestAiDraft);
 
   const outreachLeads = useMemo(
     () => allLeads.filter((l) => OUTREACH_STATUSES.includes(l.status)),
@@ -233,9 +234,22 @@ function Outreach() {
     [selectedLead?.id, leadDraftEmails],
   );
   const selectedEmail = useMemo(
-    () => leadEmails.find((e) => e.id === selectedEmailId) ?? null,
+    () =>
+      leadEmails.find((e) => e.id === selectedEmailId) ??
+      leadEmails.find((e) => e.status.toLowerCase() === "draft") ??
+      leadEmails[0] ??
+      null,
     [leadEmails, selectedEmailId],
   );
+
+  useEffect(() => {
+    if (!latestAiDraft || chatRefreshKey === 0) return;
+    if (outreachLeads.some((lead) => lead.id === latestAiDraft.leadId)) {
+      setSelectedId(latestAiDraft.leadId);
+      dispatch(selectEmail(latestAiDraft.emailId));
+      dispatch(fetchLeadEmails(latestAiDraft.leadId));
+    }
+  }, [latestAiDraft, chatRefreshKey, outreachLeads, dispatch]);
 
   const [subject, setSubject] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);

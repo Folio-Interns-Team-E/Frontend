@@ -189,6 +189,7 @@ type AppState = {
   assistantMessages: AssistantMessage[];
   chatMessagesStatus: "idle" | "loading" | "succeeded" | "failed";
   chatRefreshKey: number;
+  latestAiDraft: { leadId: string; emailId: string } | null;
   chats: Chat[];
   activeChatId: string | null;
   knowledgeAssets: {
@@ -278,6 +279,7 @@ export const initialState: AppState = {
   assistantMessages: [],
   chatMessagesStatus: "idle",
   chatRefreshKey: 0,
+  latestAiDraft: null,
   chats: [],
   activeChatId: null,
   knowledgeAssets: [],
@@ -1345,6 +1347,23 @@ const appSlice = createSlice({
       })
       .addCase(sendChatMessage.fulfilled, (state, action) => {
         state.chatRefreshKey += 1;
+        const latestAssistantMessage = action.payload.find(
+          (message) => message.sent_by === "ai" && message.metadata_log?.draft_email,
+        );
+        const draftMetadata = latestAssistantMessage?.metadata_log?.draft_email;
+        if (
+          draftMetadata &&
+          typeof draftMetadata === "object" &&
+          "lead_id" in draftMetadata &&
+          "email_id" in draftMetadata &&
+          typeof draftMetadata.lead_id === "string" &&
+          typeof draftMetadata.email_id === "string"
+        ) {
+          state.latestAiDraft = {
+            leadId: draftMetadata.lead_id,
+            emailId: draftMetadata.email_id,
+          };
+        }
         state.assistantMessages = [...action.payload].reverse().map((message) => ({
           id: message.id,
           author: message.sent_by === "user" ? "user" : "assistant",

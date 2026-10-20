@@ -1451,6 +1451,7 @@ export type ChatMessageApi = {
   sent_by: "user" | "ai";
   user_name: string;
   content: string;
+  metadata_log: Record<string, unknown>;
   created_at: string;
 };
 
