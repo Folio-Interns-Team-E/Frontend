@@ -30,6 +30,7 @@ function Proposals() {
   const dispatch = useAppDispatch();
   const proposals = useAppSelector((state) => state.app.proposals);
   const proposalsStatus = useAppSelector((state) => state.app.proposalsStatus);
+  const selectedProposalId = useAppSelector((state) => state.app.selectedProposalId);
 
   const [template, setTemplate] = useState<ProposalTemplateApi | null>(null);
   const accessToken = useAppSelector((state) => state.app.auth.accessToken);
@@ -118,6 +119,17 @@ function Proposals() {
   };
 
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (!selectedProposalId || proposalsStatus !== "succeeded") return;
+    setSearch("");
+    const frame = window.requestAnimationFrame(() => {
+      document
+        .getElementById(`proposal-${selectedProposalId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [selectedProposalId, proposalsStatus]);
 
   const filteredProposals = useMemo(() => {
     const query = search.toLowerCase();
@@ -225,7 +237,12 @@ function Proposals() {
             {filteredProposals.map((proposal) => (
               <div
                 key={proposal.id}
-                className="app-card app-card-hover overflow-hidden p-5 ring-1 ring-primary/10"
+                id={`proposal-${proposal.id}`}
+                className={`app-card app-card-hover overflow-hidden p-5 ring-1 transition-colors ${
+                  proposal.id === selectedProposalId
+                    ? "ring-2 ring-primary"
+                    : "ring-primary/10"
+                }`}
               >
                 <ProposalHeader proposal={proposal} />
                 <div className="mb-5 rounded-md border border-blue-200 bg-blue-50/60 p-5">

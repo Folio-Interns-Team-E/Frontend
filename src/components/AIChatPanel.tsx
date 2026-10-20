@@ -9,7 +9,7 @@ import {
   renameChatRemote,
 } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { openAiDraft, selectMeeting, switchChat } from "../store/appSlice";
+import { openAiDraft, selectMeeting, selectProposal, switchChat } from "../store/appSlice";
 
 const THINKING_MESSAGES = [
   "🔌 Plugging into the ICP engine",
@@ -355,7 +355,10 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                   <button
                     type="button"
                     className="secondary-action mt-3 !min-h-8 !px-3 !py-1.5 text-xs"
-                    onClick={() => void navigate({ to: "/proposals" })}
+                    onClick={() => {
+                      dispatch(selectProposal(item.action!.proposalId));
+                      void navigate({ to: "/proposals" });
+                    }}
                   >
                     <span className="material-symbols-outlined text-[16px]">description</span>
                     Open proposal

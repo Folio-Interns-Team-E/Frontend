@@ -234,6 +234,7 @@ type AppState = {
   meetings: Meeting[];
   meetingsStatus: "idle" | "loading" | "succeeded" | "failed";
   selectedMeetingId: string | null;
+  selectedProposalId: string | null;
   proposalTemplate: ProposalTemplate;
   proposals: Proposal[];
   proposalsStatus: "idle" | "loading" | "succeeded" | "failed";
@@ -319,6 +320,7 @@ export const initialState: AppState = {
   meetings: [],
   meetingsStatus: "idle",
   selectedMeetingId: null,
+  selectedProposalId: null,
   proposalTemplate: {
     companyName: "",
     templateName: "",
@@ -376,6 +378,7 @@ const appSlice = createSlice({
         state.outreachLeadsStatus = "idle";
         state.notifications = [];
         state.selectedMeetingId = null;
+        state.selectedProposalId = null;
         state.proposalTemplate = { ...initialState.proposalTemplate };
         state.leadDraftEmails = {};
         state.selectedEmailId = null;
@@ -520,6 +523,9 @@ const appSlice = createSlice({
     },
     selectMeeting(state, action: PayloadAction<string>) {
       state.selectedMeetingId = action.payload;
+    },
+    selectProposal(state, action: PayloadAction<string>) {
+      state.selectedProposalId = action.payload;
     },
     setIntegration(
       state,
@@ -1499,6 +1505,7 @@ export const {
   resetProposalTemplate,
   reviseProposal,
   selectMeeting,
+  selectProposal,
   sendEmail,
   setActiveTeam,
   setIntegration,
