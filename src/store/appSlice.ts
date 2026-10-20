@@ -116,7 +116,10 @@ type AssistantMessage = {
   userName: string;
   body: string;
   time: string;
-  action?: { type: "open_email_draft"; leadId: string; emailId: string };
+  action?:
+    | { type: "open_email_draft"; leadId: string; emailId: string }
+    | { type: "open_meeting"; meetingId: string; meetUrl?: string }
+    | { type: "open_proposal"; proposalId: string };
 };
 
 function chatMessageAction(metadata: Record<string, unknown>) {
@@ -134,6 +137,34 @@ function chatMessageAction(metadata: Record<string, unknown>) {
       leadId: draft.lead_id,
       emailId: draft.email_id,
     };
+  }
+
+  const result = metadata?.action_result;
+  if (result && typeof result === "object" && "type" in result) {
+    if (
+      (result.type === "meeting_created" || result.type === "meeting_cancelled") &&
+      "meeting_id" in result &&
+      typeof result.meeting_id === "string"
+    ) {
+      return {
+        type: "open_meeting" as const,
+        meetingId: result.meeting_id,
+        meetUrl:
+          "meet_url" in result && typeof result.meet_url === "string"
+            ? result.meet_url
+            : undefined,
+      };
+    }
+    if (
+      result.type === "proposal_created" &&
+      "proposal_id" in result &&
+      typeof result.proposal_id === "string"
+    ) {
+      return {
+        type: "open_proposal" as const,
+        proposalId: result.proposal_id,
+      };
+    }
   }
   return undefined;
 }

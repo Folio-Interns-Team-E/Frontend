@@ -9,7 +9,7 @@ import {
   renameChatRemote,
 } from "../store/apiThunks";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { openAiDraft, switchChat } from "../store/appSlice";
+import { openAiDraft, selectMeeting, switchChat } from "../store/appSlice";
 
 const THINKING_MESSAGES = [
   "🔌 Plugging into the ICP engine",
@@ -324,6 +324,41 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
                   >
                     <span className="material-symbols-outlined text-[16px]">draft</span>
                     Open draft
+                  </button>
+                )}
+                {item.action?.type === "open_meeting" && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="secondary-action !min-h-8 !px-3 !py-1.5 text-xs"
+                      onClick={() => {
+                        dispatch(selectMeeting(item.action!.meetingId));
+                        void navigate({ to: "/meetings" });
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">event</span>
+                      Open meeting
+                    </button>
+                    {item.action.meetUrl && (
+                      <button
+                        type="button"
+                        className="tertiary-action !min-h-8 !px-3 !py-1.5 text-xs"
+                        onClick={() => void navigator.clipboard.writeText(item.action!.meetUrl!)}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                        Copy Meet link
+                      </button>
+                    )}
+                  </div>
+                )}
+                {item.action?.type === "open_proposal" && (
+                  <button
+                    type="button"
+                    className="secondary-action mt-3 !min-h-8 !px-3 !py-1.5 text-xs"
+                    onClick={() => void navigate({ to: "/proposals" })}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">description</span>
+                    Open proposal
                   </button>
                 )}
               </div>
