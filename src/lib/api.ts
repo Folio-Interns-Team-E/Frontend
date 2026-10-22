@@ -142,6 +142,36 @@ export type OpportunitySummaryApi = {
   won_value: string;
 };
 
+export type FinancialDashboardApi = {
+  period: { from: string | null; to: string | null };
+  summary: {
+    won_deals: number;
+    lost_deals: number;
+    win_rate: number;
+    average_sales_cycle_days: number;
+    revenue: Record<string, string>;
+    average_deal_size: Record<string, string>;
+    revenue_growth: Record<string, number | null>;
+  };
+  monthly_revenue: Array<{ month: string; revenue: Record<string, string> }>;
+  owner_performance: Array<{
+    owner_id: string | null;
+    owner_name: string;
+    won_deals: number;
+    revenue: Record<string, string>;
+  }>;
+  won_deals: Array<{
+    id: string;
+    name: string;
+    company_name: string;
+    owner_name: string;
+    amount: string;
+    currency: string;
+    closed_at: string;
+    sales_cycle_days: number;
+  }>;
+};
+
 export type AccountApi = {
   id: string;
   team_id: string;
@@ -637,6 +667,23 @@ export const api = {
   getOpportunitySummary(accessToken: string, teamId?: string | null) {
     return request<{ data: OpportunitySummaryApi }>(
       "/opportunities/summary",
+      {},
+      accessToken,
+      teamId,
+    );
+  },
+  getFinancialDashboard(
+    accessToken: string,
+    teamId?: string | null,
+    fromDate?: string,
+    toDate?: string,
+  ) {
+    const params = new URLSearchParams();
+    if (fromDate) params.set("from_date", fromDate);
+    if (toDate) params.set("to_date", toDate);
+    const query = params.size ? `?${params.toString()}` : "";
+    return request<{ data: FinancialDashboardApi }>(
+      `/opportunities/financial-dashboard${query}`,
       {},
       accessToken,
       teamId,

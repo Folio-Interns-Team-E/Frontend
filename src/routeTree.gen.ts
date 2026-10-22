@@ -19,6 +19,7 @@ import { Route as AppBillingRouteImport } from './routes/_app.billing'
 import { Route as AppCrmRouteImport } from './routes/_app.crm'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDealsRouteImport } from './routes/_app.deals'
+import { Route as AppFinancialsRouteImport } from './routes/_app.financials'
 import { Route as AppKnowledgeBaseRouteImport } from './routes/_app.knowledge-base'
 import { Route as AppLeadGenerationRouteImport } from './routes/_app.lead-generation'
 import { Route as AppMeetingsRouteImport } from './routes/_app.meetings'
@@ -84,6 +85,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 const AppDealsRoute = AppDealsRouteImport.update({
   id: '/deals',
   path: '/deals',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFinancialsRoute = AppFinancialsRouteImport.update({
+  id: '/financials',
+  path: '/financials',
   getParentRoute: () => AppRoute,
 } as any)
 const AppKnowledgeBaseRoute = AppKnowledgeBaseRouteImport.update({
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/crm': typeof AppCrmRoute
   '/dashboard': typeof AppDashboardRoute
   '/deals': typeof AppDealsRoute
+  '/financials': typeof AppFinancialsRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
   '/lead-generation': typeof AppLeadGenerationRoute
   '/meetings': typeof AppMeetingsRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/crm': typeof AppCrmRoute
   '/dashboard': typeof AppDashboardRoute
   '/deals': typeof AppDealsRoute
+  '/financials': typeof AppFinancialsRoute
   '/knowledge-base': typeof AppKnowledgeBaseRoute
   '/lead-generation': typeof AppLeadGenerationRoute
   '/meetings': typeof AppMeetingsRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/_app/crm': typeof AppCrmRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/deals': typeof AppDealsRoute
+  '/_app/financials': typeof AppFinancialsRoute
   '/_app/knowledge-base': typeof AppKnowledgeBaseRoute
   '/_app/lead-generation': typeof AppLeadGenerationRoute
   '/_app/meetings': typeof AppMeetingsRoute
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/crm'
     | '/dashboard'
     | '/deals'
+    | '/financials'
     | '/knowledge-base'
     | '/lead-generation'
     | '/meetings'
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
     | '/crm'
     | '/dashboard'
     | '/deals'
+    | '/financials'
     | '/knowledge-base'
     | '/lead-generation'
     | '/meetings'
@@ -339,6 +350,7 @@ export interface FileRouteTypes {
     | '/_app/crm'
     | '/_app/dashboard'
     | '/_app/deals'
+    | '/_app/financials'
     | '/_app/knowledge-base'
     | '/_app/lead-generation'
     | '/_app/meetings'
@@ -438,6 +450,13 @@ declare module '@tanstack/react-router' {
       path: '/deals'
       fullPath: '/deals'
       preLoaderRoute: typeof AppDealsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/financials': {
+      id: '/_app/financials'
+      path: '/financials'
+      fullPath: '/financials'
+      preLoaderRoute: typeof AppFinancialsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/knowledge-base': {
@@ -594,6 +613,7 @@ interface AppRouteChildren {
   AppCrmRoute: typeof AppCrmRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDealsRoute: typeof AppDealsRoute
+  AppFinancialsRoute: typeof AppFinancialsRoute
   AppKnowledgeBaseRoute: typeof AppKnowledgeBaseRoute
   AppLeadGenerationRoute: typeof AppLeadGenerationRoute
   AppMeetingsRoute: typeof AppMeetingsRoute
@@ -614,6 +634,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCrmRoute: AppCrmRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDealsRoute: AppDealsRoute,
+  AppFinancialsRoute: AppFinancialsRoute,
   AppKnowledgeBaseRoute: AppKnowledgeBaseRoute,
   AppLeadGenerationRoute: AppLeadGenerationRoute,
   AppMeetingsRoute: AppMeetingsRoute,
